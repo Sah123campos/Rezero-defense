@@ -6,6 +6,9 @@
 <meta name="theme-color" content="#0b0a1f">
 <title>Re:Zero Defense</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23c79bff'/%3E%3Cstop offset='1' stop-color='%238fd4ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%230b0a1f'/%3E%3Cpath d='M32 7 L53 16 V34 C53 46 43 55 32 59 C21 55 11 46 11 34 V16 Z' fill='url(%23g)'/%3E%3Cpath d='M32 19 l3.2 8.4 h8.8 l-6.6 6 2.2 9.2 -7.6-5.4 -7.6 5.4 2.2-9.2 -6.6-6 h8.8 z' fill='%230b0a1f'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#0b0a1f; --panel:#16132e; --panel2:#201a42; --ink:#eae6ff; --muted:#a9a2d6;
@@ -14,7 +17,7 @@
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
-    font-family:"Trebuchet MS",system-ui,Segoe UI,Roboto,sans-serif;overflow:hidden;
+    font-family:'Inter',system-ui,Segoe UI,Roboto,sans-serif;overflow:hidden;
     user-select:none;-webkit-user-select:none;touch-action:none}
   #app{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
   #stage{position:relative;width:100%;height:100%;overflow:hidden}
@@ -184,9 +187,49 @@
   .ptile.lock{opacity:.4}
   @keyframes pulseT{0%,100%{box-shadow:0 0 0 1px var(--gold)}50%{box-shadow:0 0 0 2px var(--gold),0 0 12px rgba(255,209,102,.55)}}
   .ppips{display:flex;gap:3px;justify-content:center;margin-top:2px}
-  #scMenu{background:transparent}
-  #scMenu .logo{filter:drop-shadow(0 4px 22px rgba(0,0,0,.8))}
-  #scMenu .sub{text-shadow:0 2px 8px rgba(0,0,0,.9)}
+  /* ===== menu premium (glassmorphism + pétalas + névoa) ===== */
+  #scMenu{background:transparent;justify-content:flex-start;align-items:center;
+    padding:0 0 0 clamp(14px,6vw,96px)}
+  #scMenu .fog{position:absolute;left:-20%;right:-20%;height:70%;pointer-events:none;z-index:1;
+    background:radial-gradient(55% 55% at 50% 50%,rgba(199,155,255,.12),transparent 72%);
+    filter:blur(22px);animation:fogDrift 42s linear infinite}
+  #scMenu .fog.f1{top:-6%}
+  #scMenu .fog.f2{top:34%;animation-duration:58s;animation-direction:reverse;opacity:.7;
+    background:radial-gradient(55% 55% at 50% 50%,rgba(143,212,255,.10),transparent 72%)}
+  @keyframes fogDrift{from{transform:translateX(-8%)}to{transform:translateX(8%)}}
+  #petals{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1}
+  .petal{position:absolute;top:-6%;width:11px;height:11px;border-radius:50% 0 50% 50%;
+    background:radial-gradient(circle at 30% 30%,#ffe0ee,#c77b9e);opacity:.85;
+    animation:petalFall linear infinite, petalSway ease-in-out infinite alternate}
+  @keyframes petalFall{from{top:-6%}to{top:106%}}
+  @keyframes petalSway{from{transform:translateX(calc(var(--sway,18px)*-1)) rotate(0)}
+    to{transform:translateX(var(--sway,18px)) rotate(200deg)}}
+  .menuPanel{position:relative;z-index:2;background:rgba(18,14,40,.52);
+    -webkit-backdrop-filter:blur(16px) saturate(1.2);backdrop-filter:blur(16px) saturate(1.2);
+    border:1px solid rgba(255,255,255,.16);border-radius:24px;text-align:left;
+    padding:clamp(20px,3.6vmin,38px) clamp(22px,3.6vmin,40px);max-width:min(460px,90vw);
+    box-shadow:0 24px 70px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.12)}
+  #scMenu .logo{font-family:'Cinzel',serif;text-align:left;line-height:.95;
+    animation:titleGlow 4.5s ease-in-out infinite}
+  @keyframes titleGlow{0%,100%{filter:drop-shadow(0 0 10px rgba(199,155,255,.45))}
+    50%{filter:drop-shadow(0 0 24px rgba(143,212,255,.65))}}
+  #scMenu .logo small{letter-spacing:3px}
+  #scMenu .sub{margin:.8em 0 0;max-width:none}
+  .menuNav{display:flex;flex-direction:column;gap:9px;margin-top:16px}
+  .mbtn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;
+    font-family:inherit;font-weight:700;font-size:clamp(14px,2.3vmin,18px);color:var(--ink);
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;
+    padding:.7em 1em;transition:transform .09s,background .15s,border-color .15s}
+  .mbtn svg{width:21px;height:21px;flex:0 0 auto;stroke:var(--gold);fill:none;stroke-width:1.8}
+  .mbtn:hover{background:rgba(255,255,255,.12);border-color:var(--gold);transform:translateX(5px)}
+  .mbtn.primary{background:linear-gradient(180deg,#ffe7a3,var(--gold));color:#201a33;
+    border-color:transparent;box-shadow:0 8px 22px rgba(255,209,102,.32)}
+  .mbtn.primary svg{stroke:#201a33}
+  .mbtn.primary:hover{background:linear-gradient(180deg,#fff0c2,#ffd95e)}
+  .menuCrystalsLine{margin-top:16px;display:flex;align-items:center;gap:8px;font-weight:800;
+    color:var(--gold);font-size:14px}
+  .menuCrystalsLine svg{width:18px;height:18px;fill:var(--ice);stroke:none}
+  @media (max-width:560px){ #scMenu{justify-content:center;padding:0 14px} }
 </style>
 </head>
 <body>
@@ -211,16 +254,27 @@
 
     <!-- Menu principal -->
     <div class="screen on" id="scMenu">
-      <h1 class="logo">Re:Zero Defense<small>TOWER DEFENSE · PROJETO DE FÃ</small></h1>
-      <p class="sub">Posicione guardiãs ao longo do caminho, evolua suas habilidades e impeça que as
-        criaturas rompam o ciclo. Estratégia, upgrades e evoluções visuais a cada melhoria.</p>
-      <div class="row">
-        <button class="btn" id="btnPlay">Jogar</button>
-        <button class="btn ghost" id="btnColl">Guardiãs</button>
-        <button class="btn ghost" id="btnSet">Opções</button>
-        <button class="btn ghost" id="btnCred">Créditos</button>
+      <div class="fog f1"></div><div class="fog f2"></div>
+      <div id="petals"></div>
+      <div class="menuPanel">
+        <h1 class="logo">Re:Zero<br>Defense<small>TOWER DEFENSE · PROJETO DE FÃ</small></h1>
+        <p class="sub">Posicione guardiãs ao longo do caminho, evolua suas habilidades e impeça que as
+          criaturas rompam o ciclo.</p>
+        <nav class="menuNav">
+          <button class="mbtn primary" id="btnPlay">
+            <svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg> Jogar</button>
+          <button class="mbtn" id="btnColl">
+            <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/></svg> Guardiãs</button>
+          <button class="mbtn" id="btnSet">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg> Opções</button>
+          <button class="mbtn" id="btnCred">
+            <svg viewBox="0 0 24 24"><path d="M6 3h11l3 3v15H6z"/><path d="M9 8h7M9 12h7M9 16h4"/></svg> Créditos</button>
+        </nav>
+        <div class="menuCrystalsLine">
+          <svg viewBox="0 0 24 24"><path d="M6 3h12l3 6-9 12L3 9z"/></svg>
+          <b id="menuCrystals">0</b> cristais
+        </div>
       </div>
-      <div class="stat" style="margin-top:1.2em">💎 <b id="menuCrystals">0</b> cristais</div>
     </div>
 
     <!-- Seleção de mapa -->
@@ -1977,11 +2031,11 @@ function drawMenuScene(dt){
   for(const m of menuMotes){ m.y-=m.sp*dt; if(m.y<-6){m.y=H+6;m.x=Math.random()*W;}
     ctx.globalAlpha=0.25+Math.sin(Game.time*2+m.ph)*0.22; ctx.beginPath(); ctx.arc(m.x,m.y,m.s,0,7); ctx.fill(); }
   ctx.globalAlpha=1;
-  // guardiãs posando nos cantos
-  drawGuardian(ctx,130,H-70,3.6,'nevoa',{topTier:5,totalTier:10,dom:0},Game.time);
-  drawGuardian(ctx,W-130,H-70,3.6,'brasa',{topTier:5,totalTier:10,dom:0},Game.time,0,-1);
-  drawGuardian(ctx,300,H-50,2.8,'aurora',{topTier:4,totalTier:7,dom:0},Game.time);
-  drawGuardian(ctx,W-300,H-50,2.8,'sombra',{topTier:4,totalTier:7,dom:0},Game.time,0,-1);
+  // guardiãs posando (lado direito, longe do painel)
+  drawGuardian(ctx,W-140,H-80,4.0,'nevoa',{topTier:5,totalTier:12,dom:0},Game.time,0,-1);
+  drawGuardian(ctx,W-360,H-66,3.3,'aurora',{topTier:5,totalTier:10,dom:0},Game.time);
+  drawGuardian(ctx,W-560,H-54,2.7,'brasa',{topTier:4,totalTier:8,dom:0},Game.time,0,-1);
+  drawGuardian(ctx,W-250,H-40,2.4,'sombra',{topTier:4,totalTier:7,dom:0},Game.time);
 }
 function loop(ts){
   const dt=Math.min(0.05,(ts-Game.last)/1000)||0; Game.last=ts;
@@ -1996,6 +2050,18 @@ function loop(ts){
 }
 
 /* ----------------------------- init ----------------------------- */
+// pétalas caindo no menu
+(function(){ const p=$('#petals'); if(!p) return;
+  for(let i=0;i<16;i++){ const el=document.createElement('i'); el.className='petal';
+    el.style.left=(Math.random()*100)+'%';
+    el.style.setProperty('--sway',(10+Math.random()*34)+'px');
+    const fall=(7+Math.random()*8).toFixed(1), sway=(2+Math.random()*2.2).toFixed(1);
+    el.style.animationDuration=fall+'s, '+sway+'s';
+    el.style.animationDelay=(-Math.random()*12).toFixed(1)+'s, '+(-Math.random()*3).toFixed(1)+'s';
+    const sc=(0.5+Math.random()*0.9).toFixed(2); el.style.width=(11*sc)+'px'; el.style.height=(11*sc)+'px';
+    if(Math.random()<0.3) el.style.background='radial-gradient(circle at 30% 30%,#fff3d0,#e0b84a)';
+    p.appendChild(el); } })();
+
 resize();
 goMenu();
 $('#menuCrystals').textContent=save.data.crystals;
