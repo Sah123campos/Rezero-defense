@@ -1,4 +1,4 @@
-# Guardiões do Ciclo
+# Re:Zero Defense
 
 Jogo **Tower Defense** para navegador (desktop e celular), feito em HTML5 + Canvas, arquivo único.
 

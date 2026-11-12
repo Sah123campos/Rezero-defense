@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0b0a1f">
-<title>Guardiões do Ciclo</title>
+<title>Re:Zero Defense</title>
 <style>
   :root{
     --bg:#0b0a1f; --panel:#16132e; --panel2:#201a42; --ink:#eae6ff; --muted:#a9a2d6;
@@ -79,8 +79,12 @@
   .hbtn:active{transform:translateY(2px)}
 
   /* loja de personagens */
-  #shop{position:absolute;left:0;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;
-    gap:1vmin;padding:1vmin;pointer-events:auto}
+  #shop{position:absolute;left:0;top:50%;transform:translateY(-50%);display:grid;
+    grid-template-columns:repeat(2,1fr);gap:.55vmin;padding:1vmin;pointer-events:auto;
+    max-height:88%;overflow-y:auto;background:linear-gradient(90deg,rgba(12,10,32,.92),rgba(12,10,32,0));
+    border-radius:0 16px 16px 0}
+  .airbadge{position:absolute;bottom:2px;left:2px;font-size:8px;background:rgba(0,0,0,.6);
+    color:#ffb3c1;border-radius:5px;padding:0 3px;line-height:1.5;font-weight:800}
   .tower{width:clamp(56px,9vmin,84px);background:linear-gradient(180deg,var(--panel2),var(--panel));
     border:1px solid var(--line);border-radius:14px;padding:.4em;cursor:pointer;text-align:center;
     position:relative;transition:transform .08s,border-color .08s}
@@ -169,7 +173,7 @@
 
     <!-- Menu principal -->
     <div class="screen on" id="scMenu">
-      <h1 class="logo">Guardiões do Ciclo<small>TOWER DEFENSE</small></h1>
+      <h1 class="logo">Re:Zero Defense<small>TOWER DEFENSE · PROJETO DE FÃ</small></h1>
       <p class="sub">Posicione guardiãs ao longo do caminho, evolua suas habilidades e impeça que as
         criaturas rompam o ciclo. Estratégia, upgrades e evoluções visuais a cada melhoria.</p>
       <div class="row">
@@ -217,7 +221,7 @@
       <div class="topbar"><button class="btn ghost sm back">‹ Voltar</button><div></div></div>
       <h2 class="logo" style="font-size:clamp(22px,4.5vmin,40px)">Créditos</h2>
       <div class="credits">
-        <p><b>Guardiões do Ciclo</b> — jogo desenvolvido por <b>Samuel Campos</b>.<br>
+        <p><b>Re:Zero Defense</b> — jogo desenvolvido por <b>Samuel Campos</b>.<br>
         Programação e arte procedural: Samuel Campos, com Claude (Claude Code).</p>
         <p style="margin-top:1em"><b>Projeto de fã — não oficial.</b><br>
         A ambientação e os nomes de lugares são inspirados em <b>Re:Zero − Começando a Vida em Outro Mundo</b>,
@@ -507,8 +511,89 @@ const CHARS = {
         {n:'Avatar da Luz',d:'Abençoa todo o campo com poder.',c:3400,fx:{buffDmg:0.4,buffRate:0.2,buffRange:0.2,regen:1}},
       ]},
     ]},
+  trovao:{ key:'trovao', name:'Trovão', cls:'Maga do Trovão', accent:'#ffe066', cost:260, unlock:10,
+    desc:'Raios que saltam entre vários inimigos. Acerta no ar e no chão.',
+    base:{ dmg:7, range:175, rate:0.85, speed:900, air:true, chain:2, slow:0, splash:0, pierce:1 },
+    projectile:'bolt',
+    paths:[
+      { name:'Tempestade', ups:[
+        {n:'Carga Estática',d:'+dano e +alcance.',c:120,fx:{dmg:5,range:20}},
+        {n:'Mais Saltos',d:'O raio salta em +2 inimigos.',c:220,fx:{chain:2,dmg:3}},
+        {n:'Descarga Rápida',d:'Conjura bem mais rápido.',c:460,fx:{rate:-0.35,dmg:4}},
+        {n:'Relâmpago Maior',d:'Dano forte e saltos longos.',c:1000,fx:{dmg:22,chain:2}},
+        {n:'Deusa da Tempestade',d:'Raios devastadores pelo campo.',c:2900,fx:{dmg:60,chain:4,rate:-0.15}},
+      ]},
+      { name:'Sobrecarga', ups:[
+        {n:'Choque',d:'Inimigos ficam lentos ao levar raio.',c:140,fx:{slow:0.4,slowDur:0.6}},
+        {n:'Faísca em Área',d:'Causa dano em área.',c:260,fx:{splash:45,dmg:3}},
+        {n:'Paralisia',d:'Pode paralisar brevemente.',c:560,fx:{freeze:0.5,slow:0.1}},
+        {n:'Campo Elétrico',d:'Área maior e paralisia melhor.',c:1200,fx:{splash:45,freeze:0.3}},
+        {n:'Tempestade Elétrica',d:'Paralisa grupos inteiros.',c:3000,fx:{splash:50,freeze:0.4,chain:2}},
+      ]},
+      { name:'Especialista', ups:[
+        {n:'Condutor',d:'+velocidade de conjuração.',c:150,fx:{rate:-0.2}},
+        {n:'Raio Duplo',d:'Dispara 2 raios.',c:320,fx:{multishot:2}},
+        {n:'Trovão Divino',d:'Dano brutal em chefes.',c:700,fx:{bossDmg:3,dmg:8}},
+        {n:'Ira Celeste',d:'Raios rápidos e certeiros.',c:1500,fx:{speed:300,dmg:16,rate:-0.1}},
+        {n:'Avatar do Trovão',d:'Forma suprema elétrica.',c:3300,fx:{dmg:50,chain:3,bossDmg:2,multishot:1}},
+      ]},
+    ]},
+  sombra:{ key:'sombra', name:'Sombra', cls:'Assassina', accent:'#b07bff', cost:230, unlock:14,
+    desc:'Golpes rápidos e dano altíssimo em um alvo. Só atinge inimigos no chão.',
+    base:{ dmg:22, range:140, rate:0.5, speed:1100, air:false, slow:0, splash:0, pierce:1 },
+    projectile:'dagger',
+    paths:[
+      { name:'Lâmina Mortal', ups:[
+        {n:'Fio Afiado',d:'+dano por golpe.',c:120,fx:{dmg:14}},
+        {n:'Golpe Certeiro',d:'Fura armadura.',c:230,fx:{armorPierce:5,dmg:6}},
+        {n:'Ataque Veloz',d:'Ataca muito mais rápido.',c:440,fx:{rate:-0.2,dmg:6}},
+        {n:'Execução',d:'Dano brutal; devasta chefes.',c:1000,fx:{dmg:50,bossDmg:2}},
+        {n:'Ceifadora',d:'Golpes letais imparáveis.',c:3000,fx:{dmg:130,bossDmg:2,armorPierce:6}},
+      ]},
+      { name:'Lâminas Múltiplas', ups:[
+        {n:'Adaga Dupla',d:'Arremessa 2 adagas.',c:160,fx:{multishot:2}},
+        {n:'Alcance Sombrio',d:'+alcance.',c:240,fx:{range:40}},
+        {n:'Chuva de Adagas',d:'3 adagas por vez.',c:560,fx:{multishot:1,dmg:4}},
+        {n:'Dança Mortal',d:'Mais adagas e velocidade.',c:1300,fx:{multishot:1,rate:-0.15,dmg:6}},
+        {n:'Tempestade de Aço',d:'Rajada de lâminas.',c:3100,fx:{multishot:2,rate:-0.2,dmg:12}},
+      ]},
+      { name:'Veneno', ups:[
+        {n:'Toxina',d:'Envenena (dano por tempo).',c:160,fx:{burn:8,burnDur:2}},
+        {n:'Lentidão Tóxica',d:'Veneno deixa lento.',c:260,fx:{slow:0.35,slowDur:0.8}},
+        {n:'Veneno Mortal',d:'Veneno muito mais forte.',c:600,fx:{burn:18,burnDur:2}},
+        {n:'Névoa Tóxica',d:'Veneno em pequena área.',c:1300,fx:{splash:40,burn:12}},
+        {n:'Rainha das Sombras',d:'Veneno absoluto em área.',c:3200,fx:{burn:45,burnDur:3,splash:45}},
+      ]},
+    ]},
+  aurora:{ key:'aurora', name:'Aurora', cls:'Sacerdotisa da Luz', accent:'#ffe9a6', cost:320, unlock:16,
+    desc:'Golpes sagrados em área; fere fortemente chefes. Também inspira aliadas.',
+    base:{ dmg:12, range:165, rate:1.1, speed:520, air:true, slow:0, splash:55, pierce:1 },
+    projectile:'holy',
+    paths:[
+      { name:'Luz Radiante', ups:[
+        {n:'Brilho',d:'+dano em área.',c:150,fx:{dmg:9}},
+        {n:'Aura Ampla',d:'+raio da explosão de luz.',c:260,fx:{splash:30,dmg:5}},
+        {n:'Luz Veloz',d:'Conjura mais rápido.',c:520,fx:{rate:-0.3,dmg:5}},
+        {n:'Raio Solar',d:'Dano enorme em área grande.',c:1200,fx:{dmg:40,splash:35}},
+        {n:'Alvorada',d:'Explosões de luz devastadoras.',c:3100,fx:{dmg:95,splash:45,rate:-0.15}},
+      ]},
+      { name:'Purificação', ups:[
+        {n:'Juízo',d:'Dano extra contra chefes.',c:170,fx:{bossDmg:2,dmg:4}},
+        {n:'Alcance Sagrado',d:'+alcance.',c:240,fx:{range:45}},
+        {n:'Chama Sagrada',d:'Queima inimigos com luz.',c:560,fx:{burn:12,burnDur:2}},
+        {n:'Condenação',d:'Dano colossal em chefes.',c:1300,fx:{bossDmg:3,dmg:10}},
+        {n:'Juízo Final',d:'Luz que pune tudo.',c:3000,fx:{bossDmg:2,burn:25,splash:40}},
+      ]},
+      { name:'Graça', ups:[
+        {n:'Bênção Leve',d:'+15% dano às aliadas próximas.',c:180,fx:{buffDmg:0.15}},
+        {n:'Luz Guia',d:'+alcance e buff de alcance aliado.',c:280,fx:{range:30,buffRange:0.1}},
+        {n:'Inspirar',d:'+velocidade de ataque aliado.',c:620,fx:{buffRate:0.2}},
+        {n:'Santuário de Luz',d:'Grande aura de poder.',c:1400,fx:{buffDmg:0.2,range:40}},
+        {n:'Avatar da Aurora',d:'Luz suprema que fortalece o campo.',c:3300,fx:{dmg:40,splash:40,buffDmg:0.3,buffRate:0.15}},
+      ]},
+    ]},
 };
-const CHAR_ORDER=['nevoa','lanca','flecha','brasa','bencao'];
+const CHAR_ORDER=['nevoa','lanca','flecha','brasa','trovao','sombra','aurora','bencao'];
 
 /* ====================================================================
    DADOS: inimigos
@@ -518,6 +603,8 @@ const ENEMIES = {
   runner: {name:'Espírito Veloz',    hp:22,  speed:108,reward:6, armor:0, r:12, color:'#9be8ff', shape:'spirit'},
   brute:  {name:'Besta Mágica',      hp:140, speed:38, reward:12,armor:2, r:22, color:'#c98bff', shape:'brute'},
   flyer:  {name:'Alado Sombrio',     hp:48,  speed:78, reward:9, armor:0, r:14, color:'#ff9ecb', shape:'flyer', flying:true},
+  wisp:   {name:'Fogo-Fátuo',        hp:26,  speed:140,reward:7, armor:0, r:11, color:'#ffe066', shape:'wisp',  flying:true},
+  gargoyle:{name:'Gárgula de Pedra', hp:260, speed:46, reward:18,armor:4, r:20, color:'#9aa6c7', shape:'gargoyle',flying:true},
   soldier:{name:'Soldado Caído',     hp:90,  speed:50, reward:10,armor:5, r:17, color:'#b7b7c9', shape:'soldier'},
   swarm:  {name:'Larva Corrompida',  hp:16,  speed:66, reward:3, armor:0, r:9,  color:'#d7ff8a', shape:'swarm'},
   boss:   {name:'Pecado Encarnado',  hp:2600,speed:34, reward:220,armor:8, r:38, color:'#ff5d73', shape:'boss', boss:true},
@@ -546,29 +633,28 @@ const MAPS = [
     path:[[-40,360],[220,360],[220,140],[520,140],[520,560],[820,560],[820,140],[1120,140],[1120,400],[1320,400]] },
 ];
 
-/* ---- geração de ondas por mapa ---- */
-function buildWaves(mapIndex){
-  const waves=[]; const diff=1+mapIndex*0.6;
-  const N=20;
-  for(let i=0;i<N;i++){
-    const w=i+1; const g=[]; const hpMul=(1+i*0.18)*diff; const spdMul=1+mapIndex*0.05;
-    const add=(type,count,spacing)=>g.push({type,count,spacing,hpMul,spdMul});
-    if(w%10===0){ // chefe grande
-      add(mapIndex>=3?'boss':'miniboss',1,0);
-      add('brute',2+mapIndex,0.9);
-    } else if(w%5===0){ // mini chefe
-      add('miniboss',1,0); add('soldier',4,0.7);
-    } else {
-      add('grunt', 5+w, 0.6);
-      if(w>=3) add('runner', 3+Math.floor(w/2), 0.4);
-      if(w>=5) add('flyer', 2+Math.floor(w/3), 0.6);
-      if(w>=6) add('soldier', 1+Math.floor(w/4), 0.8);
-      if(w>=8) add('brute', Math.floor(w/5), 1.0);
-      if(w>=4 && w%3===0) add('swarm', 10+w, 0.18);
-    }
-    waves.push(g);
+/* ---- geração infinita de ondas (dificuldade sempre crescente) ---- */
+const UNLOCK_WAVE=10;   // onda necessária p/ liberar o próximo mundo
+function getWave(i){
+  const w=i+1; const g=[]; const mi=Game.mapIndex;
+  const hpMul=Math.pow(1.13,i)*(1+mi*0.5);
+  const spdMul=Math.min(2.4, 1+mi*0.05+i*0.004);
+  const rewardMul=1+Math.sqrt(i)*0.12;
+  const add=(type,count,spacing)=>g.push({type,count:Math.max(1,Math.round(count)),spacing,hpMul,spdMul,rewardMul});
+  if(w%10===0){ add(mi>=2?'boss':'miniboss', 1+Math.floor(i/40), 0);
+    add('gargoyle',1+Math.floor(w/20),1.0); add('brute',2+mi,0.8); }
+  else if(w%5===0){ add('miniboss',1,0); add('soldier',4+w*0.25,0.6); add('flyer',3+w/6,0.5); }
+  else {
+    add('grunt', 5+w*0.8, 0.55);
+    if(w>=3) add('runner', 3+w*0.4, 0.35);
+    if(w>=5) add('flyer', 2+w*0.3, 0.5);
+    if(w>=7) add('wisp', 2+w*0.3, 0.3);
+    if(w>=6) add('soldier', 1+w*0.2, 0.7);
+    if(w>=8) add('brute', w*0.15, 0.9);
+    if(w>=12) add('gargoyle', w/12, 1.1);
+    if(w>=4 && w%3===0) add('swarm', 10+w, 0.16);
   }
-  return waves;
+  return g;
 }
 
 /* ====================================================================
@@ -626,100 +712,147 @@ function canBuyUpgrade(tw,path){
 /* ====================================================================
    RENDER — arte procedural das guardiãs (evolui com upgrades)
    ==================================================================== */
+const OUTLINE='#1b142e';
+const STYLE={
+  nevoa: {skin:'#ffe0cf',hair:'#bfe3ff',hair2:'#eaf7ff',robe:'#5aa9e6',trim:'#dff1ff',head:'witch',hatC:'#2f6fb0',weap:'staff',orb:'#9fe0ff'},
+  lanca: {skin:'#ffdcc2',hair:'#ffb24d',hair2:'#ffd591',robe:'#d7b24a',trim:'#fff1c2',head:'circlet',weap:'sword',orb:'#ffe08a'},
+  flecha:{skin:'#ffe0d4',hair:'#caa6ff',hair2:'#ecdcff',robe:'#8a6fd1',trim:'#e8ddff',head:'hood',hoodC:'#5b4a9e',weap:'bow',orb:'#c7a6ff'},
+  brasa: {skin:'#ffdcc2',hair:'#ff6b6b',hair2:'#ffaaaa',robe:'#e0613c',trim:'#ffd0a3',head:'witch',hatC:'#a83a24',weap:'staff',orb:'#ff8d5a'},
+  trovao:{skin:'#ffe0cf',hair:'#ffd93b',hair2:'#fff0a3',robe:'#b48be0',trim:'#ffe066',head:'witch',hatC:'#6b3fa0',weap:'staff',orb:'#ffe066'},
+  sombra:{skin:'#f0dcd0',hair:'#7a55a0',hair2:'#a784cf',robe:'#352548',trim:'#b07bff',head:'hood',hoodC:'#241733',weap:'dagger',orb:'#b07bff'},
+  aurora:{skin:'#ffe6d4',hair:'#ffe39a',hair2:'#fff7d6',robe:'#e9d58a',trim:'#fffbe6',head:'halo',weap:'staff',orb:'#fff0a6'},
+  bencao:{skin:'#ffe3d0',hair:'#9ff0bd',hair2:'#e6fff0',robe:'#5ec98a',trim:'#d9ffe8',head:'veil',weap:'staff',orb:'#8ef0a6'},
+};
 function drawGuardian(g,x,y,scale,key,stats,t){
   g.save(); g.translate(x,y); g.scale(scale,scale);
-  const c=CHARS[key], acc=c.accent, tier=stats?stats.topTier:0, tot=stats?stats.totalTier:0, dom=stats?stats.dom:0;
-  const pulse=1+Math.sin(t*3)*0.03;
+  const st=STYLE[key]||STYLE.nevoa, acc=(CHARS[key]&&CHARS[key].accent)||st.orb;
+  const tier=stats?stats.topTier:0, tot=stats?stats.totalTier:0, dom=stats?stats.dom:0;
+  const pulse=1+Math.sin(t*3+(x||0))*0.04;
+  const domColor=[acc,shade(acc,30),'#ffffff'][dom]||acc;
+  g.lineJoin='round'; g.lineCap='round';
+  const OL=w=>{g.strokeStyle=OUTLINE;g.lineWidth=w||1.2;g.stroke();};
 
-  // aura por tier
-  if(tier>=3){
-    const aura=g.createRadialGradient(0,0,4,0,0,26*pulse);
-    aura.addColorStop(0,acc+'88'); aura.addColorStop(1,acc+'00');
-    g.fillStyle=aura; g.beginPath(); g.arc(0,0,26*pulse,0,7); g.fill();
-  }
-  // base/sombra
-  g.fillStyle='rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(0,15,14,5,0,0,7); g.fill();
+  // aura
+  if(tot>=4){ const a=g.createRadialGradient(0,-6,3,0,-6,30*pulse);
+    a.addColorStop(0,acc+'66'); a.addColorStop(1,acc+'00');
+    g.fillStyle=a; g.beginPath(); g.arc(0,-6,30*pulse,0,7); g.fill(); }
+  // sombra no chão
+  g.fillStyle='rgba(0,0,0,.30)'; g.beginPath(); g.ellipse(0,19,13,4,0,0,7); g.fill();
+  // cabelo de trás
+  g.fillStyle=shade(st.hair,-18);
+  g.beginPath(); g.moveTo(-9,-15); g.quadraticCurveTo(-15,3,-9,16); g.quadraticCurveTo(0,20,9,16);
+  g.quadraticCurveTo(15,3,9,-15); g.quadraticCurveTo(0,-22,-9,-15); g.closePath(); g.fill();
 
-  const robe = shade(acc,-18), robe2 = shade(acc,10);
-  // corpo (manto) — silhueta varia por classe
-  g.beginPath();
-  if(key==='lanca'){ // armadura mais reta
-    g.moveTo(-10,16); g.lineTo(-8,-6); g.lineTo(8,-6); g.lineTo(10,16); g.closePath();
-  } else {
-    g.moveTo(-12,16); g.quadraticCurveTo(-7,-4,-5,-8); g.lineTo(5,-8); g.quadraticCurveTo(7,-4,12,16); g.closePath();
-  }
-  const gr=g.createLinearGradient(0,-8,0,16); gr.addColorStop(0,robe2); gr.addColorStop(1,robe);
-  g.fillStyle=gr; g.fill();
-  g.strokeStyle='rgba(0,0,0,.25)'; g.lineWidth=1; g.stroke();
+  // vestido
+  g.beginPath(); g.moveTo(-6,-6); g.quadraticCurveTo(-15,10,-13,19);
+  g.quadraticCurveTo(0,23,13,19); g.quadraticCurveTo(15,10,6,-6); g.closePath();
+  const gr=g.createLinearGradient(0,-6,0,20); gr.addColorStop(0,shade(st.robe,22)); gr.addColorStop(1,shade(st.robe,-14));
+  g.fillStyle=gr; g.fill(); OL(1.2);
+  g.beginPath(); g.moveTo(-13,19); g.quadraticCurveTo(0,23,13,19); g.quadraticCurveTo(0,20.5,-13,19); g.closePath();
+  g.fillStyle=st.trim; g.fill();
+  g.strokeStyle=shade(st.robe,-26); g.lineWidth=0.8; g.beginPath(); g.moveTo(-4,0); g.lineTo(-6,18); g.moveTo(4,0); g.lineTo(6,18); g.stroke();
+  if(tot>=1){ g.strokeStyle=domColor; g.lineWidth=1.3; g.beginPath(); g.moveTo(0,-4); g.lineTo(0,17); g.stroke();
+    g.fillStyle=domColor; g.beginPath(); g.arc(0,-2,1.7,0,7); g.fill(); }
 
-  // detalhes de manto por tier (caminho dominante tinge)
-  const domColor=[acc,shade(acc,25),'#ffffff'][dom]||acc;
-  if(tot>=2){ g.strokeStyle=domColor; g.lineWidth=1.4; g.beginPath(); g.moveTo(0,-6); g.lineTo(0,15); g.stroke(); }
-  if(tot>=4){ g.fillStyle=domColor; g.beginPath(); g.arc(0,2,2.4,0,7); g.fill(); }
+  // braços
+  g.fillStyle=shade(st.robe,6);
+  g.beginPath(); g.ellipse(-10,2,3.1,5,0.3,0,7); g.fill(); OL(1);
+  g.beginPath(); g.ellipse(10,2,3.1,5,-0.3,0,7); g.fill(); OL(1);
+  // ombreiras
+  if(tier>=3){ g.fillStyle=domColor;
+    g.beginPath(); g.ellipse(-8,-5,4,2.6,0.2,0,7); g.fill(); OL(1);
+    g.beginPath(); g.ellipse(8,-5,4,2.6,-0.2,0,7); g.fill(); OL(1); }
 
-  // ombreiras no tier alto
-  if(tier>=2){ g.fillStyle=shade(acc,30);
-    g.beginPath(); g.ellipse(-8,-5,3.5,2.4,0,0,7); g.ellipse(8,-5,3.5,2.4,0,0,7); g.fill(); }
+  // cabeça
+  const hr=g.createRadialGradient(-2,-15,1,0,-13,9); hr.addColorStop(0,shade(st.skin,10)); hr.addColorStop(1,st.skin);
+  g.fillStyle=hr; g.beginPath(); g.arc(0,-13,8,0,7); g.fill(); OL(1.2);
+  // franja
+  g.fillStyle=st.hair;
+  g.beginPath(); g.moveTo(-8,-13); g.quadraticCurveTo(-9,-23,0,-23); g.quadraticCurveTo(9,-23,8,-13);
+  g.quadraticCurveTo(5,-18,2,-14); g.quadraticCurveTo(0,-19,-2,-14); g.quadraticCurveTo(-5,-18,-8,-13); g.closePath(); g.fill(); OL(1);
+  g.beginPath(); g.moveTo(-8,-15); g.quadraticCurveTo(-10,-5,-7,-1); g.lineTo(-5,-3); g.quadraticCurveTo(-7,-12,-5,-15); g.fill();
+  g.beginPath(); g.moveTo(8,-15); g.quadraticCurveTo(10,-5,7,-1); g.lineTo(5,-3); g.quadraticCurveTo(7,-12,5,-15); g.fill();
+  g.strokeStyle=st.hair2; g.lineWidth=1; g.beginPath(); g.moveTo(-3,-21); g.quadraticCurveTo(-5,-17,-4,-14); g.stroke();
+  // rosto
+  g.fillStyle='#fff'; g.beginPath(); g.ellipse(-3,-12.5,1.9,2.4,0,0,7); g.ellipse(3,-12.5,1.9,2.4,0,0,7); g.fill();
+  g.fillStyle=shade(acc,-25); g.beginPath(); g.arc(-3,-12,1.3,0,7); g.arc(3,-12,1.3,0,7); g.fill();
+  g.fillStyle='#fff'; g.beginPath(); g.arc(-2.4,-12.7,0.5,0,7); g.arc(3.6,-12.7,0.5,0,7); g.fill();
+  g.fillStyle='rgba(255,140,150,.45)'; g.beginPath(); g.ellipse(-5,-10,1.4,0.9,0,0,7); g.ellipse(5,-10,1.4,0.9,0,0,7); g.fill();
+  g.strokeStyle='#c76b6b'; g.lineWidth=0.7; g.beginPath(); g.arc(0,-9.6,1,0.25,Math.PI-0.25); g.stroke();
 
-  // cabeça + cabelo
-  g.fillStyle='#ffe3cf'; g.beginPath(); g.arc(0,-13,6,0,7); g.fill();
-  g.fillStyle=hairColor(key);
-  g.beginPath(); g.arc(0,-15,7,Math.PI,0); // franja
-  g.lineTo(7,-9); g.quadraticCurveTo(0,-7,-7,-9); g.closePath(); g.fill();
-  // cabelos longos laterais
-  g.beginPath(); g.moveTo(-6,-16); g.quadraticCurveTo(-10,-6,-7,2); g.lineTo(-4,0); g.quadraticCurveTo(-5,-8,-3,-16); g.fill();
-  g.beginPath(); g.moveTo(6,-16); g.quadraticCurveTo(10,-6,7,2); g.lineTo(4,0); g.quadraticCurveTo(5,-8,3,-16); g.fill();
-  // olhos
-  g.fillStyle=acc; g.beginPath(); g.arc(-2.3,-13,1,0,7); g.arc(2.3,-13,1,0,7); g.fill();
+  drawHeadgear(g,st,tier,domColor);
+  drawWeapon(g,st,tier,domColor,pulse,t);
 
-  // acessório de cabeça por tier
-  if(tier>=4){ g.fillStyle='#ffd166';
-    g.beginPath(); g.moveTo(-5,-19); g.lineTo(-3,-23); g.lineTo(-1,-19); g.lineTo(1,-23);
-    g.lineTo(3,-19); g.lineTo(5,-22); g.lineTo(5,-18); g.lineTo(-5,-18); g.closePath(); g.fill(); }
-  else if(tier>=2){ g.fillStyle=domColor; g.beginPath(); g.arc(0,-20,1.8,0,7); g.fill(); }
-
-  // arma / foco por classe (evolui)
-  g.lineCap='round';
-  if(key==='nevoa'||key==='brasa'||key==='bencao'){
-    // cajado
-    g.strokeStyle=shade('#6b4a2a',0); g.lineWidth=1.8;
-    g.beginPath(); g.moveTo(10,16); g.lineTo(13,-12); g.stroke();
-    // orbe
-    const orbC = key==='brasa'?'#ff8257':key==='bencao'?'#8ef0a6':acc;
-    const orbR = 2.4+Math.min(tier,5)*0.6;
-    const og=g.createRadialGradient(13,-14,0.5,13,-14,orbR); og.addColorStop(0,'#fff'); og.addColorStop(.5,orbC); og.addColorStop(1,orbC+'00');
-    g.fillStyle=og; g.beginPath(); g.arc(13,-14,orbR*pulse,0,7); g.fill();
-    if(tier>=3){ g.strokeStyle=orbC; g.lineWidth=0.8; g.beginPath(); g.arc(13,-14,orbR+2,0,7); g.stroke(); }
-  } else if(key==='lanca'){
-    // lança/espada
-    g.strokeStyle='#d7d7e6'; g.lineWidth=2.2;
-    g.beginPath(); g.moveTo(9,18); g.lineTo(15,-14); g.stroke();
-    g.fillStyle=tier>=3?domColor:'#e9e9f5';
-    g.beginPath(); g.moveTo(15,-20); g.lineTo(12,-13); g.lineTo(18,-13); g.closePath(); g.fill();
-    if(tier>=4){ g.fillStyle=domColor+'cc'; g.beginPath(); g.arc(15,-16,3,0,7); g.fill(); }
-  } else if(key==='flecha'){
-    // arco
-    g.strokeStyle=shade(acc,20); g.lineWidth=1.8;
-    g.beginPath(); g.arc(12,0,12,-1.1,1.1); g.stroke();
-    g.strokeStyle='#eee'; g.lineWidth=0.6;
-    g.beginPath(); g.moveTo(12+12*Math.cos(-1.1),12*Math.sin(-1.1)); g.lineTo(12+12*Math.cos(1.1),12*Math.sin(1.1)); g.stroke();
-  }
-
-  // asas/cristais flutuantes no tier máximo
+  // tier máximo: asas + cristais
   if(tier>=5){
-    g.fillStyle=acc+'cc';
-    for(let s=-1;s<=1;s+=2){
-      g.save(); g.translate(s*10,-4); g.rotate(s*0.3+Math.sin(t*2)*0.1);
-      g.beginPath(); g.moveTo(0,0); g.quadraticCurveTo(s*10,-10,s*4,-18); g.quadraticCurveTo(s*3,-8,0,0); g.fill();
-      g.restore();
-    }
-    // cristais orbitando
+    g.fillStyle=acc+'bb';
+    for(let s=-1;s<=1;s+=2){ g.save(); g.translate(s*11,-4); g.rotate(s*(0.35+Math.sin(t*3)*0.12));
+      g.beginPath(); g.moveTo(0,0); g.quadraticCurveTo(s*14,-6,s*10,-20); g.quadraticCurveTo(s*4,-10,0,2); g.closePath(); g.fill(); g.restore(); }
     for(let k=0;k<3;k++){ const a=t*2+k*2.1; g.fillStyle=domColor;
-      g.beginPath(); g.arc(Math.cos(a)*16,-6+Math.sin(a)*6,1.8,0,7); g.fill(); }
+      g.save(); g.translate(Math.cos(a)*17,-8+Math.sin(a)*6); g.rotate(a); g.fillRect(-1.5,-1.5,3,3); g.restore(); }
   }
   g.restore();
 }
-function hairColor(key){ return {nevoa:'#cfe8ff',lanca:'#ffb347',flecha:'#d8b4ff',brasa:'#ff6b6b',bencao:'#bfffd0'}[key]||'#ddd'; }
+function drawHeadgear(g,st,tier,domColor){
+  const OL=w=>{g.strokeStyle=OUTLINE;g.lineWidth=w||1;g.stroke();};
+  if(st.head==='witch'){
+    g.fillStyle=st.hatC; g.beginPath(); g.moveTo(-11,-19); g.lineTo(1,-19); g.quadraticCurveTo(7,-35,-3,-41);
+    g.quadraticCurveTo(-4,-30,-13,-19); g.closePath(); g.fill(); OL(1.2);
+    g.fillStyle=shade(st.hatC,-14); g.beginPath(); g.ellipse(-5,-19,12,3.4,0,0,7); g.fill(); OL(1.2);
+    g.fillStyle=domColor; g.beginPath(); g.moveTo(-11,-20); g.lineTo(-1,-20); g.lineTo(-2,-24); g.lineTo(-10,-24); g.closePath(); g.fill();
+    if(tier>=4){ g.fillStyle='#fff'; g.beginPath(); g.arc(-6,-22,1.3,0,7); g.fill(); }
+  } else if(st.head==='hood'){
+    g.fillStyle=st.hoodC; g.beginPath(); g.moveTo(-9,-11); g.quadraticCurveTo(-11,-25,0,-26);
+    g.quadraticCurveTo(11,-25,9,-11); g.quadraticCurveTo(0,-16,-9,-11); g.closePath(); g.fill(); OL(1.1);
+    if(tier>=3){ g.fillStyle=domColor; g.beginPath(); g.arc(0,-25,1.5,0,7); g.fill(); }
+  } else if(st.head==='circlet'){
+    g.strokeStyle='#ffd166'; g.lineWidth=1.5; g.beginPath(); g.arc(0,-15,8,-2.55,-0.59); g.stroke();
+    g.fillStyle=tier>=3?domColor:'#ffe08a'; g.beginPath(); g.arc(0,-20.5,1.8,0,7); g.fill(); OL(0.7);
+    if(tier>=4){ g.fillStyle='#ffd166'; for(let s=-1;s<=1;s+=2){g.beginPath();g.arc(s*5,-19.6,1.1,0,7);g.fill();} }
+  } else if(st.head==='halo'){
+    g.strokeStyle='#fff3b0'; g.lineWidth=1.6; g.globalAlpha=0.9; g.beginPath(); g.ellipse(0,-23,7,2.3,0,0,7); g.stroke(); g.globalAlpha=1;
+    const hg=g.createRadialGradient(0,-23,1,0,-23,8); hg.addColorStop(0,'#fff8d0aa'); hg.addColorStop(1,'#fff8d000');
+    g.fillStyle=hg; g.beginPath(); g.ellipse(0,-23,8,3,0,0,7); g.fill();
+  } else if(st.head==='veil'){
+    g.fillStyle='#ffffffd0'; g.beginPath(); g.moveTo(-8,-15); g.quadraticCurveTo(0,-26,8,-15);
+    g.quadraticCurveTo(10,-6,8,2); g.lineTo(6,0); g.quadraticCurveTo(7,-10,5,-15);
+    g.quadraticCurveTo(0,-21,-5,-15); g.quadraticCurveTo(-7,-10,-6,0); g.lineTo(-8,2); g.quadraticCurveTo(-10,-6,-8,-15); g.closePath(); g.fill(); OL(0.9);
+    g.fillStyle=domColor; g.beginPath(); g.arc(0,-20,1.5,0,7); g.fill();
+  }
+}
+function drawWeapon(g,st,tier,domColor,pulse,t){
+  g.lineCap='round';
+  if(st.weap==='staff'){
+    g.beginPath(); g.moveTo(11,20); g.lineTo(14,-14);
+    g.strokeStyle=OUTLINE; g.lineWidth=3; g.stroke();
+    g.strokeStyle='#7a5630'; g.lineWidth=1.8; g.stroke();
+    const r=3+Math.min(tier,5)*0.9;
+    const og=g.createRadialGradient(14,-16,0.5,14,-16,r); og.addColorStop(0,'#fff'); og.addColorStop(.5,st.orb); og.addColorStop(1,st.orb+'00');
+    g.fillStyle=og; g.beginPath(); g.arc(14,-16,r*pulse,0,7); g.fill();
+    if(tier>=2){ g.strokeStyle=st.orb; g.lineWidth=0.8; g.beginPath(); g.arc(14,-16,r+1.4,0,7); g.stroke(); }
+    if(tier>=4){ for(let k=0;k<4;k++){const a=t*3+k*1.57; g.fillStyle='#fff'; g.beginPath(); g.arc(14+Math.cos(a)*(r+3),-16+Math.sin(a)*(r+3),0.9,0,7); g.fill();} }
+  } else if(st.weap==='sword'){
+    g.beginPath(); g.moveTo(9,20); g.lineTo(16,-16);
+    g.strokeStyle=OUTLINE; g.lineWidth=3.6; g.stroke();
+    g.strokeStyle='#cfd2e6'; g.lineWidth=2.4; g.stroke();
+    g.strokeStyle='#fff'; g.lineWidth=0.9; g.beginPath(); g.moveTo(10,18); g.lineTo(16,-14); g.stroke();
+    g.fillStyle='#7a5a2a'; g.fillRect(7,17,6,2.2);
+    if(tier>=3){ g.fillStyle=domColor; g.beginPath(); g.arc(16,-17,2.3,0,7); g.fill(); }
+  } else if(st.weap==='bow'){
+    g.beginPath(); g.arc(13,0,13,-1.15,1.15);
+    g.strokeStyle=OUTLINE; g.lineWidth=3.4; g.stroke();
+    g.strokeStyle=shade(st.orb,-10); g.lineWidth=2; g.stroke();
+    g.strokeStyle='#eee'; g.lineWidth=0.6; g.beginPath();
+    g.moveTo(13+13*Math.cos(-1.15),13*Math.sin(-1.15)); g.lineTo(13+13*Math.cos(1.15),13*Math.sin(1.15)); g.stroke();
+    if(tier>=3){ g.strokeStyle=domColor; g.lineWidth=1; g.beginPath(); g.moveTo(3,0); g.lineTo(15,0); g.stroke(); }
+  } else if(st.weap==='dagger'){
+    g.beginPath(); g.moveTo(10,15); g.lineTo(17,1);
+    g.strokeStyle=OUTLINE; g.lineWidth=3.2; g.stroke();
+    g.strokeStyle='#d7d2e6'; g.lineWidth=2; g.stroke();
+    g.fillStyle='#4a3a5e'; g.fillRect(8,13,4,2.4);
+    if(tier>=3){ g.fillStyle=domColor; g.beginPath(); g.arc(17,1,2,0,7); g.fill(); }
+  }
+}
 function shade(hex,amt){
   const n=parseInt(hex.slice(1),16); let r=(n>>16)+amt,gg=((n>>8)&255)+amt,b=(n&255)+amt;
   r=clamp(r,0,255);gg=clamp(gg,0,255);b=clamp(b,0,255);
@@ -742,6 +875,16 @@ function drawEnemy(g,e){
       g.save(); g.scale(1+Math.sin(Game.time*12+e.seed)*.15,1);
       g.beginPath(); g.ellipse(-r,0,r*0.9,r*0.4,0.4,0,7); g.ellipse(r,0,r*0.9,r*0.4,-0.4,0,7); g.fill(); g.restore();
       g.fillStyle=body; g.beginPath(); g.arc(0,0,r*0.7,0,7); g.fill(); break;
+    case 'wisp': { const wg=g.createRadialGradient(0,0,1,0,0,r*1.3); wg.addColorStop(0,'#fff'); wg.addColorStop(.5,col); wg.addColorStop(1,col+'00');
+      g.fillStyle=wg; g.beginPath(); g.arc(0,0,r*1.3,0,7); g.fill();
+      g.fillStyle='#fff8d0'; g.beginPath(); g.arc(0,0,r*0.5,0,7); g.fill(); break; }
+    case 'gargoyle':
+      g.fillStyle=shade(col,-14); g.save(); g.scale(1+Math.sin(Game.time*8+e.seed)*.12,1);
+      g.beginPath(); g.moveTo(-r*1.5,-r*0.2); g.lineTo(-r*0.4,-r*0.6); g.lineTo(-r*0.5,r*0.3); g.closePath();
+      g.moveTo(r*1.5,-r*0.2); g.lineTo(r*0.4,-r*0.6); g.lineTo(r*0.5,r*0.3); g.closePath(); g.fill(); g.restore();
+      g.fillStyle=body; g.beginPath(); for(let i=0;i<8;i++){const a=i/8*7;g.lineTo(Math.cos(a)*r*(i%2?1:.78),Math.sin(a)*r*(i%2?1:.78));} g.closePath(); g.fill();
+      g.strokeStyle=OUTLINE; g.lineWidth=1.4; g.stroke();
+      g.fillStyle='#ff5a3c'; g.beginPath(); g.arc(-r*.3,-r*.1,r*.15,0,7); g.arc(r*.3,-r*.1,r*.15,0,7); g.fill(); break;
     case 'brute': g.beginPath(); g.moveTo(0,-r); for(let i=1;i<=8;i++){const a=i/8*7;g.lineTo(Math.cos(a)*r*(i%2?1:.7),Math.sin(a)*r*(i%2?1:.7));} g.fill();
       g.fillStyle='#ff3b3b'; g.beginPath(); g.arc(-r*.3,-r*.1,r*.15,0,7); g.arc(r*.3,-r*.1,r*.15,0,7); g.fill(); break;
     case 'soldier': g.fillStyle=shade(col,-5); g.fillRect(-r*.8,-r*.8,r*1.6,r*1.6);
@@ -777,12 +920,12 @@ function drawEnemy(g,e){
    LOOP / MUNDO
    ==================================================================== */
 function startMap(idx){
-  Game.mapIndex=idx; Game.map=MAPS[idx]; Game.waves=buildWaves(idx);
-  Game.waveIdx=0; Game.waveActive=false; Game.lives=20; Game.gold= idx===0?400:520;
+  Game.mapIndex=idx; Game.map=MAPS[idx];
+  Game.waveIdx=0; Game.waveActive=false; Game.lives=20; Game.gold= idx===0?450:600;
   Game.speed=1; Game.paused=false; Game.towers=[]; Game.enemies=[]; Game.shots=[]; Game.fx=[];
   Game.spawnQueue=[]; Game.selectedType=null; Game.selectedTower=null; Game.state='play';
   precomputePath();
-  $('#hudWaveMax').textContent=Game.waves.length;
+  $('#hudWaveMax').textContent='∞';
   showScreen(null); $('#ui').classList.add('on');
   buildShop(); updateHUD(); updateGoButton(); hideInspect();
   Audio_.resume(); Audio_.startMusic(Game.map.musicKey);
@@ -811,10 +954,10 @@ function distToPath(x,y){
 
 function spawnWave(){
   if(Game.waveActive) return;
-  const wave=Game.waves[Game.waveIdx]; if(!wave) return;
+  const wave=getWave(Game.waveIdx); if(!wave) return;
   Game.waveActive=true; Game.spawnQueue=[]; let t=0;
   for(const grp of wave){ for(let i=0;i<grp.count;i++){
-    Game.spawnQueue.push({type:grp.type,at:t,hpMul:grp.hpMul,spdMul:grp.spdMul}); t+=grp.spacing; } }
+    Game.spawnQueue.push({type:grp.type,at:t,hpMul:grp.hpMul,spdMul:grp.spdMul,rewardMul:grp.rewardMul}); t+=grp.spacing; } }
   Game.spawnQueue.sort((a,b)=>a.at-b.at); Game.spawnTimer=0;
   updateGoButton();
   if(wave.some(g=>ENEMIES[g.type].boss)) Audio_.S.boss();
@@ -823,7 +966,7 @@ function spawnEnemy(def){
   const d=ENEMIES[def.type];
   Game.enemies.push({ type:def.type, x:Game.map.path[0][0], y:Game.map.path[0][1],
     d:0, hp:d.hp*def.hpMul, maxHp:d.hp*def.hpMul, speed:d.speed*def.spdMul, baseSpeed:d.speed*def.spdMul,
-    armor:d.armor, reward:d.reward, r:d.r, flying:!!d.flying, boss:!!d.boss,
+    armor:d.armor, reward:Math.round(d.reward*(def.rewardMul||1)), r:d.r, flying:!!d.flying, boss:!!d.boss,
     slowT:0, slowAmt:0, frozen:0, burn:0, burnT:0, seed:rand(0,99) });
 }
 
@@ -912,10 +1055,25 @@ function update(dt){
     Game.gold+=Math.round(60+Game.waveIdx*18); // bônus de onda
     if(Game.pendingRegen){ Game.lives+=Game.pendingRegen; }
     Game.waveIdx++;
-    if(Game.waveIdx>=Game.waves.length){ return gameOver(true); }
+    onWaveCleared();
     updateGoButton();
   }
   updateHUD();
+}
+
+function onWaveCleared(){
+  const id=Game.map.id; const best=save.data.maps[id]||0;
+  if(Game.waveIdx>best){
+    const newCry=Math.floor(Game.waveIdx/5)-Math.floor(best/5);
+    save.data.maps[id]=Game.waveIdx;
+    if(newCry>0){ save.data.crystals+=newCry*2; toast('+'+(newCry*2)+' 💎 cristais'); }
+    // desbloqueia o próximo mundo ao atingir a onda-alvo
+    if(Game.waveIdx>=UNLOCK_WAVE && Game.mapIndex+1<MAPS.length){
+      const nid=MAPS[Game.mapIndex+1].id;
+      if(save.data.maps[nid]===undefined){ save.data.maps[nid]=0; toast('🔓 Novo mundo desbloqueado!'); }
+    }
+    save.save();
+  }
 }
 
 function applySupport(dt){
@@ -923,7 +1081,9 @@ function applySupport(dt){
   // reset buffs
   for(const tw of Game.towers){ tw.buffDmg=0; tw.buffRange=0; tw.buffRate=0; tw.buffPierce=0; }
   for(const sup of Game.towers){
-    const s=sup.stats; if(!s.support) continue;
+    const s=sup.stats;
+    const isAura=s.support||s.buffDmg||s.buffRate||s.buffRange||s.income||s.bounty||s.regen;
+    if(!isAura) continue;
     // renda
     if(s.income){ sup.incomeAcc=(sup.incomeAcc||0)+s.income*dt;
       if(sup.incomeAcc>=1){ const add=Math.floor(sup.incomeAcc); Game.gold+=add; sup.incomeAcc-=add; if(Math.random()<0.1)Audio_.S.coin(); } }
@@ -1070,6 +1230,11 @@ function draw(){
   // fx
   for(const f of Game.fx) drawFx(f);
 
+  // vinhete (acabamento)
+  const vg=ctx.createRadialGradient(W/2,H/2,H*0.42,W/2,H/2,H*0.95);
+  vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.32)');
+  ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+
   // fantasma de posicionamento
   if(Game.placing && Game.selectedType){
     ctx.globalAlpha=0.75; drawGuardian(ctx,Game.ghost.x,Game.ghost.y,1.5,Game.selectedType,{topTier:0,totalTier:0,dom:0},Game.time);
@@ -1102,6 +1267,14 @@ function drawShot(sh){
   else if(sh.proj==='arrow'){ ctx.translate(sh.x,sh.y); ctx.rotate(Math.atan2(sh.vy,sh.vx));
     ctx.strokeStyle=col; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(-6,0); ctx.lineTo(6,0); ctx.stroke();
     ctx.fillStyle=col; ctx.beginPath(); ctx.moveTo(6,0); ctx.lineTo(2,2); ctx.lineTo(2,-2); ctx.fill(); }
+  else if(sh.proj==='bolt'){ ctx.strokeStyle=col; ctx.lineWidth=2.2; ctx.shadowColor=col; ctx.shadowBlur=7;
+    ctx.beginPath(); ctx.moveTo(sh.x-7,sh.y-3); ctx.lineTo(sh.x-1,sh.y+1); ctx.lineTo(sh.x-3,sh.y-1); ctx.lineTo(sh.x+7,sh.y+4); ctx.stroke(); ctx.shadowBlur=0; }
+  else if(sh.proj==='holy'){ const g2=ctx.createRadialGradient(sh.x,sh.y,1,sh.x,sh.y,8);
+    g2.addColorStop(0,'#fff'); g2.addColorStop(.55,col); g2.addColorStop(1,col+'00');
+    ctx.fillStyle=g2; ctx.beginPath(); ctx.arc(sh.x,sh.y,8,0,7); ctx.fill(); }
+  else if(sh.proj==='dagger'){ ctx.translate(sh.x,sh.y); ctx.rotate(Math.atan2(sh.vy,sh.vx));
+    ctx.fillStyle='#d7d2e6'; ctx.beginPath(); ctx.moveTo(8,0); ctx.lineTo(-3,2.5); ctx.lineTo(-3,-2.5); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#4a3a5e'; ctx.fillRect(-5,-1.3,3,2.6); }
   else { ctx.fillStyle=col; ctx.beginPath(); ctx.arc(sh.x,sh.y,4,0,7); ctx.fill(); }
   ctx.restore();
 }
@@ -1165,6 +1338,7 @@ function buildShop(){
     el.appendChild(cv);
     const nm=document.createElement('div'); nm.className='nm'; nm.textContent=c.name; el.appendChild(nm);
     const cost=document.createElement('div'); cost.className='cost'; cost.textContent='🪙'+c.cost; el.appendChild(cost);
+    if(!c.base.air){ const b=document.createElement('div'); b.className='airbadge'; b.textContent='só chão'; el.appendChild(b); }
     el.onclick=()=>selectTowerType(k);
     sh.appendChild(el);
   }
@@ -1257,30 +1431,23 @@ function buyUpgrade(tw,p){
 /* ====================================================================
    FIM DE JOGO
    ==================================================================== */
-function gameOver(win){
-  Game.state='over'; Game.waveActive=false;
+function gameOver(){
+  Game.state='over'; Game.waveActive=false; Audio_.S.lose();
   const m=$('#modalBox'); const mp=Game.map;
-  let reward=0;
-  if(win){ Audio_.S.win();
-    const best=save.data.maps[mp.id]||0; save.data.maps[mp.id]=Game.waves.length;
-    reward= 10+Game.mapIndex*5;
-    if(!(best>=Game.waves.length)){ save.data.crystals+=reward; } else reward=0;
-    // desbloquear próximo mapa
-    if(Game.mapIndex+1<MAPS.length) save.data.maps[MAPS[Game.mapIndex+1].id]=save.data.maps[MAPS[Game.mapIndex+1].id]||0.0001;
-    save.save();
-  } else { Audio_.S.lose(); }
-  m.innerHTML=`<h2 style="color:${win?'var(--ok)':'var(--danger)'}">${win?'Vitória!':'Derrota'}</h2>
-    <p class="sub" style="margin:.2em 0">${win?('Você defendeu '+mp.name+'!'):('As criaturas romperam o ciclo na onda '+(Game.waveIdx+1)+'.')}</p>
-    ${win&&reward?`<div class="reward">+${reward} 💎 cristais</div>`:(win?`<div class="reward">Mundo já concluído</div>`:'')}
+  const reached=Game.waveIdx+1; const best=save.data.maps[mp.id]||0;
+  const record = reached>best ? ' • Novo recorde!' : '';
+  m.innerHTML=`<h2 style="color:var(--danger)">Derrota</h2>
+    <p class="sub" style="margin:.2em 0">As criaturas romperam o ciclo em <b>${mp.name}</b> na onda <b>${reached}</b>.${record}</p>
+    <div class="reward">Recorde neste mundo: onda ${Math.max(best,0)} &nbsp;·&nbsp; 💎 ${save.data.crystals}</div>
     <div class="row">
       <button class="btn" id="mAgain">Jogar de novo</button>
-      ${win&&Game.mapIndex+1<MAPS.length?`<button class="btn" id="mNext">Próximo mundo ›</button>`:''}
+      <button class="btn ghost" id="mMaps">Outros mundos</button>
       <button class="btn ghost" id="mMenu">Menu</button>
     </div>`;
   $('#modal').classList.add('on');
   $('#mAgain').onclick=()=>{ $('#modal').classList.remove('on'); startMap(Game.mapIndex); };
+  $('#mMaps').onclick=()=>{ $('#modal').classList.remove('on'); $('#ui').classList.remove('on'); buildMapSelect(); showScreen('#scMaps'); };
   $('#mMenu').onclick=()=>{ $('#modal').classList.remove('on'); $('#ui').classList.remove('on'); goMenu(); };
-  const nx=$('#mNext'); if(nx) nx.onclick=()=>{ $('#modal').classList.remove('on'); startMap(Game.mapIndex+1); };
 }
 
 /* ====================================================================
@@ -1292,13 +1459,13 @@ function goMenu(){ Game.state='menu'; showScreen('#scMenu'); $('#menuCrystals').
 function buildMapSelect(){
   const g=$('#mapGrid'); g.innerHTML='';
   MAPS.forEach((m,i)=>{
-    const unlocked= i===0 || (save.data.maps[m.id]!==undefined) || (i>0 && save.data.maps[MAPS[i-1].id]>=1);
+    const unlocked= i===0 || (save.data.maps[m.id]!==undefined) || (save.data.maps[MAPS[i-1].id]||0)>=UNLOCK_WAVE;
     const card=document.createElement('div'); card.className='card';
     const best=Math.floor(save.data.maps[m.id]||0);
     card.innerHTML=`<div class="thumb" id="thumb${i}"></div>
       <div class="meta"><h3>${m.name}</h3><p>${m.desc}</p>
-      <span class="pill">${best>=20?'✓ Concluído':best>0?('Recorde: onda '+best):'Novo'}</span></div>
-      ${unlocked?'':'<div class="lock">🔒<span style="font-size:12px">Vença o mundo anterior</span></div>'}`;
+      <span class="pill">${best>0?('🏆 Recorde: onda '+best):'Novo · modo infinito'}</span></div>
+      ${unlocked?'':`<div class="lock">🔒<span style="font-size:12px">Chegue à onda ${UNLOCK_WAVE} no mundo anterior</span></div>`}`;
     if(unlocked) card.onclick=()=>{ showScreen(null); startMap(i); };
     g.appendChild(card);
     // thumb desenhado
