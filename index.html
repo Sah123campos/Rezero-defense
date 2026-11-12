@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0b0a1f">
 <title>Re:Zero Defense</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23c79bff'/%3E%3Cstop offset='1' stop-color='%238fd4ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%230b0a1f'/%3E%3Cpath d='M32 7 L53 16 V34 C53 46 43 55 32 59 C21 55 11 46 11 34 V16 Z' fill='url(%23g)'/%3E%3Cpath d='M32 19 l3.2 8.4 h8.8 l-6.6 6 2.2 9.2 -7.6-5.4 -7.6 5.4 2.2-9.2 -6.6-6 h8.8 z' fill='%230b0a1f'/%3E%3C/svg%3E">
 <style>
   :root{
     --bg:#0b0a1f; --panel:#16132e; --panel2:#201a42; --ink:#eae6ff; --muted:#a9a2d6;
@@ -80,22 +81,28 @@
 
   /* loja de personagens */
   #shop{position:absolute;left:0;top:50%;transform:translateY(-50%);display:grid;
-    grid-template-columns:repeat(2,1fr);gap:.55vmin;padding:1vmin;pointer-events:auto;
-    max-height:88%;overflow-y:auto;background:linear-gradient(90deg,rgba(12,10,32,.92),rgba(12,10,32,0));
-    border-radius:0 16px 16px 0}
-  .airbadge{position:absolute;bottom:2px;left:2px;font-size:8px;background:rgba(0,0,0,.6);
-    color:#ffb3c1;border-radius:5px;padding:0 3px;line-height:1.5;font-weight:800}
-  .tower{width:clamp(56px,9vmin,84px);background:linear-gradient(180deg,var(--panel2),var(--panel));
-    border:1px solid var(--line);border-radius:14px;padding:.4em;cursor:pointer;text-align:center;
-    position:relative;transition:transform .08s,border-color .08s}
+    grid-template-columns:repeat(2,1fr);gap:6px;padding:8px;pointer-events:auto;
+    width:clamp(148px,21vw,206px);max-height:94%;overflow-y:auto;
+    background:linear-gradient(180deg,rgba(22,18,48,.96),rgba(13,10,30,.96));
+    border:1px solid var(--line);border-left:0;border-radius:0 18px 18px 0;
+    box-shadow:5px 0 26px rgba(0,0,0,.45)}
+  #shop::-webkit-scrollbar{width:5px}
+  #shop::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:4px}
+  .airbadge{position:absolute;bottom:3px;left:3px;font-size:8px;background:rgba(0,0,0,.65);
+    color:#ffb3c1;border-radius:5px;padding:0 3px;line-height:1.6;font-weight:800}
+  .tower{background:linear-gradient(180deg,#2c2658,#1a1636);border:1.5px solid rgba(255,255,255,.14);
+    border-radius:13px;padding:5px 4px 6px;cursor:pointer;text-align:center;position:relative;
+    display:flex;flex-direction:column;align-items:center;transition:transform .08s,border-color .08s,box-shadow .08s}
+  .tower:hover{border-color:rgba(255,255,255,.35)}
   .tower:active{transform:scale(.95)}
-  .tower.sel{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold),0 0 16px rgba(255,209,102,.5)}
-  .tower.cant{opacity:.45;filter:grayscale(.5)}
-  .tower canvas{width:100%;height:auto;border-radius:9px;background:rgba(0,0,0,.2)}
-  .tower .cost{font-size:clamp(10px,1.7vmin,13px);color:var(--gold);font-weight:800;margin-top:.15em}
-  .tower .nm{font-size:clamp(9px,1.5vmin,11px);color:var(--muted);line-height:1.05;margin-top:.1em}
-  .tower.locked{opacity:.5}
-  .tower.locked::after{content:"🔒";position:absolute;top:2px;right:4px;font-size:12px}
+  .tower.sel{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold),0 0 18px rgba(255,209,102,.5)}
+  .tower.cant{opacity:.5;filter:grayscale(.4)}
+  .tower canvas{width:78%;max-width:58px;height:auto;border-radius:11px;
+    background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.1),rgba(0,0,0,.28))}
+  .tower .nm{font-size:11px;color:#eae6ff;font-weight:700;line-height:1.08;margin-top:3px}
+  .tower .cost{font-size:11px;color:var(--gold);font-weight:800;margin-top:1px}
+  .tower.locked{opacity:.55}
+  .tower.locked::after{content:"🔒";position:absolute;top:3px;right:5px;font-size:12px}
 
   /* painel de inspeção/upgrade */
   #inspect{position:absolute;right:0;top:0;bottom:0;width:min(330px,82vw);
@@ -616,19 +623,19 @@ const ENEMIES = {
    ==================================================================== */
 const MAPS = [
   { id:'floresta', name:'Floresta de Lugunica', musicKey:'forest',
-    theme:{sky:'#1d3a24',ground:'#24532f',path:'#6b5236',accent:'#8ef0a6',deco:'tree'},
+    theme:{sky:'#1d3a24',ground:'#2f6b3b',path:'#9c7a4a',accent:'#8ef0a6',deco:'tree'},
     desc:'O começo da jornada por entre árvores antigas.',
     path:[[-40,210],[260,210],[260,470],[620,470],[620,170],[980,170],[980,520],[1320,520]] },
   { id:'nevada', name:'Montanhas Nevadas', musicKey:'snow',
-    theme:{sky:'#24344d',ground:'#4a5e78',path:'#cfe0ef',accent:'#8fd4ff',deco:'snow'},
+    theme:{sky:'#24344d',ground:'#5a6e86',path:'#d7e6f2',accent:'#8fd4ff',deco:'snow'},
     desc:'Trilhas geladas onde o frio é um aliado — e uma ameaça.',
     path:[[-40,120],[400,120],[400,380],[120,380],[120,620],[720,620],[720,300],[1040,300],[1040,600],[1320,600]] },
   { id:'mansao', name:'Mansão Roswaal', musicKey:'manor',
-    theme:{sky:'#241a33',ground:'#38294f',path:'#7a5ea0',accent:'#c79bff',deco:'manor'},
+    theme:{sky:'#241a33',ground:'#3a2b52',path:'#8a6cae',accent:'#c79bff',deco:'manor'},
     desc:'Salões ornamentados guardam segredos e perigos.',
     path:[[640,-40],[640,200],[220,200],[220,440],[1060,440],[1060,200],[860,200],[860,660],[1320,660]] },
   { id:'corrompida', name:'Dimensão Corrompida', musicKey:'corrupt',
-    theme:{sky:'#2a1222',ground:'#3d1430',path:'#8a2d55',accent:'#ff5d73',deco:'corrupt'},
+    theme:{sky:'#2a1222',ground:'#3a1530',path:'#8a2d55',accent:'#ff5d73',deco:'corrupt'},
     desc:'O ciclo se rompe. Enfrente o Pecado Encarnado.',
     path:[[-40,360],[220,360],[220,140],[520,140],[520,560],[820,560],[820,140],[1120,140],[1120,400],[1320,400]] },
 ];
@@ -925,6 +932,7 @@ function startMap(idx){
   Game.speed=1; Game.paused=false; Game.towers=[]; Game.enemies=[]; Game.shots=[]; Game.fx=[];
   Game.spawnQueue=[]; Game.selectedType=null; Game.selectedTower=null; Game.state='play';
   precomputePath();
+  Game.bg=renderBackground(Game.map);
   $('#hudWaveMax').textContent='∞';
   showScreen(null); $('#ui').classList.add('on');
   buildShop(); updateHUD(); updateGoButton(); hideInspect();
@@ -1187,19 +1195,75 @@ function addFxLine(x1,y1,x2,y2,color){ Game.fx.push({line:true,x1,y1,x2,y2,color
 /* ====================================================================
    DESENHO DO MUNDO
    ==================================================================== */
+/* ---- fundo pré-renderizado (grama + estrada + decoração) ---- */
+function mulberry(seedStr){ let h=1779033703;
+  for(const ch of seedStr){ h=Math.imul(h^ch.charCodeAt(0),3432918353); h=h<<13|h>>>19; }
+  let a=h>>>0; return function(){ a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a);
+    t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function distToPolyline(path,x,y){ let best=1e9;
+  for(let i=0;i<path.length-1;i++){ const a=path[i],b=path[i+1]; const dx=b[0]-a[0],dy=b[1]-a[1];
+    const l2=dx*dx+dy*dy||1; let t=((x-a[0])*dx+(y-a[1])*dy)/l2; t=clamp(t,0,1);
+    best=Math.min(best,dist(x,y,a[0]+dx*t,a[1]+dy*t)); } return best; }
+function drawRoad(g,map,th){
+  const pts=map.path; g.lineCap='round'; g.lineJoin='round';
+  const trace=()=>{ g.beginPath(); g.moveTo(pts[0][0],pts[0][1]); for(let i=1;i<pts.length;i++) g.lineTo(pts[i][0],pts[i][1]); };
+  g.strokeStyle='rgba(0,0,0,.30)'; g.lineWidth=62; trace(); g.stroke();                 // sombra
+  g.strokeStyle=shade(th.path,-30); g.lineWidth=54; trace(); g.stroke();                 // borda escura
+  g.strokeStyle=th.path; g.lineWidth=46; trace(); g.stroke();                            // estrada
+  g.strokeStyle=shade(th.path,16); g.lineWidth=28; trace(); g.stroke();                  // centro claro
+  g.strokeStyle=shade(th.path,-16); g.lineWidth=46; g.setLineDash([4,24]); trace(); g.stroke(); g.setLineDash([]); // pedras
+  g.strokeStyle='rgba(255,255,255,.10)'; g.lineWidth=3; g.setLineDash([16,24]); trace(); g.stroke(); g.setLineDash([]);
+}
+function placeDecor(g,th,x,y,R){
+  const t=th.deco; const s=0.85+R()*0.7; g.save(); g.translate(x,y);
+  g.fillStyle='rgba(0,0,0,.18)'; g.beginPath(); g.ellipse(0,7,11,4,0,0,7); g.fill();
+  if(t==='tree'){
+    g.fillStyle='#5b3a22'; g.fillRect(-2*s,-2,4*s,11*s);
+    for(let k=0;k<3;k++){ g.fillStyle=shade('#2f8a50',(k-1)*12);
+      g.beginPath(); g.arc((R()-.5)*7,-9*s-k*6*s,11*s-k*2.5,0,7); g.fill(); }
+    g.fillStyle='rgba(255,255,255,.14)'; g.beginPath(); g.arc(-4*s,-16*s,4*s,0,7); g.fill();
+    if(R()<.4){ g.fillStyle=['#ff9ecb','#ffd166','#fff'][Math.floor(R()*3)];
+      g.beginPath(); g.arc(14+R()*8,6,2,0,7); g.fill(); }
+  } else if(t==='snow'){
+    g.fillStyle='#6b5a42'; g.fillRect(-2,-1,4,9);
+    for(let k=0;k<3;k++){ g.fillStyle=shade('#2e6b48',(k-1)*8);
+      g.beginPath(); g.moveTo(-10*s+k*2.5,-k*7*s+2); g.lineTo(0,-k*7*s-10*s); g.lineTo(10*s-k*2.5,-k*7*s+2); g.closePath(); g.fill(); }
+    g.fillStyle='#eef6ff'; g.beginPath(); g.ellipse(0,5,11*s,3.5,0,0,7); g.fill();
+    g.fillStyle='#ffffff'; g.beginPath(); g.arc(-3*s,-6*s,2,0,7); g.arc(4*s,-12*s,1.6,0,7); g.fill();
+  } else if(t==='manor'){
+    g.fillStyle='rgba(199,155,255,.14)'; g.fillRect(-13,-13,26,26);
+    g.strokeStyle='rgba(255,255,255,.12)'; g.lineWidth=1; g.strokeRect(-13,-13,26,26);
+    g.strokeStyle='rgba(255,209,102,.25)'; g.beginPath(); g.moveTo(-13,0); g.lineTo(13,0); g.moveTo(0,-13); g.lineTo(0,13); g.stroke();
+    if(R()<.5){ g.fillStyle='#ffd166'; g.beginPath(); g.arc(0,-2,2.2,0,7); g.fill();
+      g.fillStyle='rgba(255,209,102,.3)'; g.beginPath(); g.arc(0,-2,6,0,7); g.fill(); }
+  } else { // corrompida: cristais
+    for(let k=0;k<3;k++){ const a=k*2.1; g.fillStyle='rgba(255,93,115,.35)';
+      g.beginPath(); g.moveTo(Math.cos(a)*4,Math.sin(a)*4); g.lineTo(Math.cos(a)*2,-10-R()*7*s); g.lineTo(Math.cos(a)*-2,0); g.closePath(); g.fill(); }
+    const cg=g.createRadialGradient(0,-6,0,0,-6,8); cg.addColorStop(0,'rgba(255,140,160,.6)'); cg.addColorStop(1,'rgba(255,140,160,0)');
+    g.fillStyle=cg; g.beginPath(); g.arc(0,-6,8,0,7); g.fill();
+  }
+  g.restore();
+}
+function renderBackground(map){
+  const th=map.theme; const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const g=cv.getContext('2d'); const R=mulberry(map.id);
+  const base=g.createLinearGradient(0,0,0,H); base.addColorStop(0,shade(th.ground,20)); base.addColorStop(1,shade(th.ground,-14));
+  g.fillStyle=base; g.fillRect(0,0,W,H);
+  for(let i=0;i<170;i++){ const x=R()*W,y=R()*H,rr=40+R()*130; g.globalAlpha=0.05+R()*0.06;
+    g.fillStyle=R()<.5?shade(th.ground,22):shade(th.ground,-16); g.beginPath(); g.ellipse(x,y,rr,rr*0.7,0,0,7); g.fill(); }
+  g.globalAlpha=0.22; g.lineWidth=1;
+  for(let i=0;i<950;i++){ const x=R()*W,y=R()*H; g.strokeStyle=shade(th.ground,R()<.5?28:-18);
+    g.beginPath(); g.moveTo(x,y); g.lineTo(x+(R()-.5)*3,y-3-R()*3); g.stroke(); }
+  g.globalAlpha=1;
+  drawRoad(g,map,th);
+  for(let i=0;i<80;i++){ const x=R()*W,y=R()*H; if(distToPolyline(map.path,x,y)<58) continue; placeDecor(g,th,x,y,R); }
+  return cv;
+}
+
 function draw(){
   const th=Game.map.theme;
-  // fundo
-  const sky=ctx.createLinearGradient(0,0,0,H); sky.addColorStop(0,shade(th.sky,10)); sky.addColorStop(1,th.ground);
-  ctx.fillStyle=sky; ctx.fillRect(0,0,W,H);
-  drawDecor(th);
-  // caminho
-  ctx.lineCap='round'; ctx.lineJoin='round';
-  ctx.strokeStyle='rgba(0,0,0,.25)'; ctx.lineWidth=52;
-  tracePath(); ctx.stroke();
-  ctx.strokeStyle=th.path; ctx.lineWidth=44; tracePath(); ctx.stroke();
-  ctx.strokeStyle=shade(th.path,18); ctx.lineWidth=8; ctx.setLineDash([16,20]); tracePath(); ctx.stroke(); ctx.setLineDash([]);
-  // portão início/fim
+  // fundo pré-renderizado (grama texturizada + estrada + decoração)
+  if(Game.bg) ctx.drawImage(Game.bg,0,0,W,H);
   drawGate(Game.map.path[0],true,th); drawGate(Game.map.path[Game.map.path.length-1],false,th);
 
   // alcance da torre selecionada / fantasma
@@ -1216,9 +1280,15 @@ function draw(){
   for(const tw of Game.towers){ if(tw.stats.support){ drawRange(tw.x,tw.y,tw.stats.range,CHARS[tw.key].accent+'22'); } }
 
   for(const tw of sorted){
-    // base
-    ctx.fillStyle='rgba(10,8,28,.55)'; ctx.beginPath(); ctx.ellipse(tw.x,tw.y+14,20,8,0,0,7); ctx.fill();
-    const sc=1.5+ (tw.fireAnim>0?0.08:0);
+    // pedestal de pedra
+    ctx.save();
+    ctx.fillStyle='rgba(8,6,22,.45)'; ctx.beginPath(); ctx.ellipse(tw.x,tw.y+22,26,10,0,0,7); ctx.fill();
+    const pg=ctx.createRadialGradient(tw.x-4,tw.y+18,2,tw.x,tw.y+22,24);
+    pg.addColorStop(0,'#5a5473'); pg.addColorStop(1,'#2b2740');
+    ctx.fillStyle=pg; ctx.beginPath(); ctx.ellipse(tw.x,tw.y+22,22,8,0,0,7); ctx.fill();
+    ctx.strokeStyle=CHARS[tw.key].accent+'88'; ctx.lineWidth=2; ctx.beginPath(); ctx.ellipse(tw.x,tw.y+22,22,8,0,0,7); ctx.stroke();
+    ctx.restore();
+    const sc=1.95+ (tw.fireAnim>0?0.1:0);
     drawGuardian(ctx,tw.x,tw.y,sc,tw.key,tw.stats,Game.time+tw.seed);
   }
 
