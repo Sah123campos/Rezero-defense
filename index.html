@@ -82,7 +82,7 @@
   /* loja de personagens */
   #shop{position:absolute;left:0;top:50%;transform:translateY(-50%);display:grid;
     grid-template-columns:repeat(2,1fr);gap:6px;padding:8px;pointer-events:auto;
-    width:clamp(148px,21vw,206px);max-height:94%;overflow-y:auto;
+    width:clamp(164px,23vw,216px);max-height:94%;overflow-y:auto;
     background:linear-gradient(180deg,rgba(22,18,48,.96),rgba(13,10,30,.96));
     border:1px solid var(--line);border-left:0;border-radius:0 18px 18px 0;
     box-shadow:5px 0 26px rgba(0,0,0,.45)}
@@ -99,7 +99,8 @@
   .tower.cant{opacity:.5;filter:grayscale(.4)}
   .tower canvas{width:78%;max-width:58px;height:auto;border-radius:11px;
     background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.1),rgba(0,0,0,.28))}
-  .tower .nm{font-size:11px;color:#eae6ff;font-weight:700;line-height:1.08;margin-top:3px}
+  .tower .nm{font-size:10.5px;color:#eae6ff;font-weight:700;line-height:1.08;margin-top:3px;
+    width:100%;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tower .cost{font-size:11px;color:var(--gold);font-weight:800;margin-top:1px}
   .tower.locked{opacity:.55}
   .tower.locked::after{content:"🔒";position:absolute;top:3px;right:5px;font-size:12px}
@@ -156,6 +157,36 @@
     display:none;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
   .toast.on{display:block;animation:fade .2s}
   a{color:var(--ice)}
+
+  /* painel de upgrade estilo BTD6 (3 colunas) */
+  #inspect{width:min(448px,95vw)!important}
+  .ipHead{display:flex;align-items:center;gap:.6em}
+  #ipCanvas{background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.1),rgba(0,0,0,.3));border-radius:14px;flex:0 0 auto}
+  .ipInfo{min-width:0}
+  .ipInfo h3{margin:0;font-size:clamp(16px,2.8vmin,21px)}
+  .ipInfo .cls{color:var(--muted);font-size:12px}
+  .ipStats{font-size:12px;color:var(--ink);margin-top:3px;font-weight:700}
+  .uptree{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:4px}
+  .pcol{display:flex;flex-direction:column;gap:4px}
+  .phead{font-size:10px;font-weight:800;text-align:center;padding:4px 2px;border-radius:8px;
+    background:rgba(255,255,255,.07);text-transform:uppercase;letter-spacing:.5px}
+  .ptile{position:relative;border-radius:9px;padding:5px 2px 4px;text-align:center;border:1px solid var(--line);
+    background:rgba(255,255,255,.04);display:flex;flex-direction:column;align-items:center;gap:1px}
+  .ptile .ic{font-size:17px;line-height:1.1;filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))}
+  .ptile .pname{font-size:8px;color:var(--muted);line-height:1.05;height:2.1em;overflow:hidden;width:100%}
+  .ptile .pc{font-size:10px;color:var(--gold);font-weight:800}
+  .ptile.owned{background:linear-gradient(180deg,#356248,#20472c);border-color:#4ea86a}
+  .ptile.owned .ic{filter:none}
+  .ptile.owned .pc{color:#bfffd0}
+  .ptile.next{border-color:var(--gold);cursor:pointer;box-shadow:0 0 0 1px var(--gold);animation:pulseT 1.3s infinite}
+  .ptile.next:active{transform:scale(.95)}
+  .ptile.next.cant{animation:none;opacity:.7}
+  .ptile.lock{opacity:.4}
+  @keyframes pulseT{0%,100%{box-shadow:0 0 0 1px var(--gold)}50%{box-shadow:0 0 0 2px var(--gold),0 0 12px rgba(255,209,102,.55)}}
+  .ppips{display:flex;gap:3px;justify-content:center;margin-top:2px}
+  #scMenu{background:transparent}
+  #scMenu .logo{filter:drop-shadow(0 4px 22px rgba(0,0,0,.8))}
+  #scMenu .sub{text-shadow:0 2px 8px rgba(0,0,0,.9)}
 </style>
 </head>
 <body>
@@ -599,8 +630,170 @@ const CHARS = {
         {n:'Avatar da Aurora',d:'Luz suprema que fortalece o campo.',c:3300,fx:{dmg:40,splash:40,buffDmg:0.3,buffRate:0.15}},
       ]},
     ]},
+  pedra:{ key:'pedra', name:'Pedra', cls:'Guardiã da Terra', accent:'#d9b36a', cost:280, unlock:12,
+    desc:'Esmaga inimigos terrestres com golpes pesados em área e atordoamento. Só chão.',
+    base:{ dmg:38, range:120, rate:1.7, speed:320, air:false, splash:68, pierce:1 },
+    projectile:'rock',
+    paths:[
+      { name:'Força Telúrica', ups:[
+        {n:'Martelo Pesado',d:'+dano do golpe.',c:150,fx:{dmg:22}},
+        {n:'Impacto Amplo',d:'+área do impacto.',c:260,fx:{splash:35,dmg:8}},
+        {n:'Ímpeto',d:'Golpeia mais rápido.',c:520,fx:{rate:-0.4,dmg:10}},
+        {n:'Esmaga-Rochas',d:'Dano enorme em área.',c:1200,fx:{dmg:70,splash:30}},
+        {n:'Colosso',d:'Golpes que arrasam tudo.',c:3200,fx:{dmg:180,splash:40,rate:-0.2}},
+      ]},
+      { name:'Terremoto', ups:[
+        {n:'Tremor',d:'Atordoa brevemente ao acertar.',c:160,fx:{freeze:0.4}},
+        {n:'Falha Sísmica',d:'+área e +atordoamento.',c:280,fx:{splash:30,freeze:0.3}},
+        {n:'Abalo',d:'Deixa lentos os sobreviventes.',c:560,fx:{slow:0.4,slowDur:1}},
+        {n:'Terremoto',d:'Atordoa grupos inteiros.',c:1300,fx:{freeze:0.5,splash:35}},
+        {n:'Cataclismo',d:'Trava hordas e causa dano massivo.',c:3000,fx:{freeze:0.6,splash:45,dmg:50}},
+      ]},
+      { name:'Montanha', ups:[
+        {n:'Alcance Rochoso',d:'+alcance.',c:150,fx:{range:35}},
+        {n:'Rompe-Armadura',d:'Ignora boa parte da armadura.',c:300,fx:{armorPierce:6,dmg:8}},
+        {n:'Peso Descomunal',d:'Dano extra em chefes.',c:700,fx:{bossDmg:3,dmg:12}},
+        {n:'Avalanche',d:'Golpe duplo esmagador.',c:1500,fx:{multishot:2,dmg:14}},
+        {n:'Guardiã Eterna',d:'Forma suprema da terra.',c:3400,fx:{dmg:90,bossDmg:2,range:30,armorPierce:6}},
+      ]},
+    ]},
+  artilheira:{ key:'artilheira', name:'Artilheira', cls:'Bombardeira', accent:'#ffd166', cost:340, unlock:16,
+    desc:'Canhão de longo alcance com explosões enormes. Acerta ar e chão.',
+    base:{ dmg:30, range:200, rate:1.8, speed:440, air:true, splash:70, pierce:1 },
+    projectile:'bomb',
+    paths:[
+      { name:'Artilharia', ups:[
+        {n:'Pólvora Densa',d:'+dano da explosão.',c:160,fx:{dmg:18}},
+        {n:'Barril Maior',d:'+área.',c:280,fx:{splash:35,dmg:8}},
+        {n:'Recarga Rápida',d:'Dispara mais rápido.',c:560,fx:{rate:-0.4,dmg:8}},
+        {n:'Obus',d:'Explosão devastadora.',c:1300,fx:{dmg:60,splash:35}},
+        {n:'Canhão de Cerco',d:'Bombardeio arrasador.',c:3300,fx:{dmg:150,splash:45,rate:-0.2}},
+      ]},
+      { name:'Fragmentação', ups:[
+        {n:'Estilhaços',d:'Atinge mais alvos.',c:170,fx:{multishot:2}},
+        {n:'Bomba Incendiária',d:'Incendeia a área.',c:300,fx:{burn:10,burnDur:2}},
+        {n:'Cluster',d:'Dispara 3 projéteis.',c:620,fx:{multishot:1,dmg:6}},
+        {n:'Napalm',d:'Fogo intenso e duradouro.',c:1400,fx:{burn:24,burnDur:3,splash:25}},
+        {n:'Tempestade de Aço',d:'Chuva de bombas em área.',c:3100,fx:{multishot:2,splash:40,burn:20}},
+      ]},
+      { name:'Precisão', ups:[
+        {n:'Mira Longa',d:'+alcance considerável.',c:180,fx:{range:60}},
+        {n:'Perfuração',d:'Fura armadura.',c:300,fx:{armorPierce:6,dmg:8}},
+        {n:'Tiro Certeiro',d:'Dano brutal em chefes.',c:720,fx:{bossDmg:3,dmg:12}},
+        {n:'Projétil Veloz',d:'Projéteis rápidos.',c:1500,fx:{speed:260,dmg:24,rate:-0.15}},
+        {n:'Dama de Ferro',d:'Canhão supremo de precisão.',c:3400,fx:{dmg:110,range:50,bossDmg:2}},
+      ]},
+    ]},
+  acido:{ key:'acido', name:'Ácido', cls:'Alquimista', accent:'#b6ff5a', cost:270, unlock:14,
+    desc:'Poções corrosivas que envenenam e derretem a armadura. Acerta ar e chão.',
+    base:{ dmg:9, range:160, rate:1.1, speed:420, air:true, splash:45, burn:8, burnDur:2, pierce:1 },
+    projectile:'flask',
+    paths:[
+      { name:'Corrosão', ups:[
+        {n:'Ácido Forte',d:'+veneno.',c:140,fx:{burn:8,burnDur:1}},
+        {n:'Frasco Maior',d:'+área.',c:240,fx:{splash:30,dmg:4}},
+        {n:'Reação Rápida',d:'Arremessa mais rápido.',c:480,fx:{rate:-0.3,dmg:4}},
+        {n:'Veneno Mortal',d:'Veneno devastador.',c:1100,fx:{burn:30,burnDur:2}},
+        {n:'Praga',d:'Corrosão que dizima hordas.',c:3000,fx:{burn:70,burnDur:3,splash:35}},
+      ]},
+      { name:'Dissolvente', ups:[
+        {n:'Corrói Armadura',d:'Ignora armadura.',c:170,fx:{armorPierce:6}},
+        {n:'Alcance Tóxico',d:'+alcance.',c:260,fx:{range:40}},
+        {n:'Solvente',d:'Dano extra e mais perfuração.',c:560,fx:{armorPierce:6,dmg:8}},
+        {n:'Juízo Ácido',d:'Dano brutal em chefes.',c:1300,fx:{bossDmg:3,dmg:8}},
+        {n:'Dissolução Total',d:'Derrete qualquer defesa.',c:3100,fx:{armorPierce:12,dmg:30,bossDmg:2}},
+      ]},
+      { name:'Química', ups:[
+        {n:'Frasco Duplo',d:'Arremessa 2 frascos.',c:180,fx:{multishot:2}},
+        {n:'Névoa Lenta',d:'O ácido deixa lento.',c:300,fx:{slow:0.4,slowDur:1}},
+        {n:'Reação em Cadeia',d:'Mais frascos e dano.',c:640,fx:{multishot:1,dmg:6}},
+        {n:'Poça Ácida',d:'Área maior e veneno forte.',c:1400,fx:{splash:40,burn:20}},
+        {n:'Mestra Alquimista',d:'Química suprema.',c:3300,fx:{multishot:1,burn:40,splash:40,armorPierce:6}},
+      ]},
+    ]},
+  rodamoinho:{ key:'rodamoinho', name:'Lâmina', cls:'Rodamoinho', accent:'#6ff0d8', cost:250, unlock:12,
+    desc:'Lâminas giratórias que atravessam muitos inimigos. Acerta ar e chão.',
+    base:{ dmg:12, range:180, rate:0.7, speed:520, air:true, pierce:3, splash:0 },
+    projectile:'glaive',
+    paths:[
+      { name:'Lâmina Afiada', ups:[
+        {n:'Fio Cortante',d:'+dano.',c:130,fx:{dmg:8}},
+        {n:'Gume Perfurante',d:'Atravessa +3 inimigos.',c:240,fx:{pierce:3,dmg:4}},
+        {n:'Giro Rápido',d:'Arremessa mais rápido.',c:480,fx:{rate:-0.2,dmg:4}},
+        {n:'Lâmina Pesada',d:'Dano forte e muita perfuração.',c:1100,fx:{dmg:30,pierce:3}},
+        {n:'Ceifa Infinita',d:'Corta tudo pela frente.',c:3000,fx:{dmg:70,pierce:6,rate:-0.1}},
+      ]},
+      { name:'Vendaval', ups:[
+        {n:'Lâmina Dupla',d:'Arremessa 2 lâminas.',c:170,fx:{multishot:2}},
+        {n:'Alcance Amplo',d:'+alcance.',c:260,fx:{range:50}},
+        {n:'Ciclone',d:'3 lâminas por vez.',c:600,fx:{multishot:1,dmg:4}},
+        {n:'Furacão',d:'Mais lâminas e velocidade.',c:1300,fx:{multishot:1,rate:-0.15,dmg:6}},
+        {n:'Tormenta de Aço',d:'Rajada giratória imparável.',c:3100,fx:{multishot:2,pierce:4,dmg:12}},
+      ]},
+      { name:'Elemental', ups:[
+        {n:'Corte Gélido',d:'As lâminas deixam lentos.',c:160,fx:{slow:0.35,slowDur:0.8}},
+        {n:'Lâmina Flamejante',d:'Causa dano em área.',c:300,fx:{splash:35,dmg:4}},
+        {n:'Perfura-Chefes',d:'Dano extra em chefes.',c:640,fx:{bossDmg:3,dmg:8}},
+        {n:'Vínculo do Vento',d:'Lâminas maiores e fortes.',c:1400,fx:{splash:30,dmg:14,pierce:2}},
+        {n:'Dançarina das Lâminas',d:'Forma suprema giratória.',c:3300,fx:{dmg:40,pierce:4,splash:35,multishot:1}},
+      ]},
+    ]},
+  solar:{ key:'solar', name:'Solar', cls:'Maga Solar', accent:'#ffe066', cost:360, unlock:18,
+    desc:'Raio solar perfurante e contínuo de longuíssimo alcance. Acerta ar e chão.',
+    base:{ dmg:10, range:230, rate:0.4, speed:0, air:true, pierce:3, splash:0 },
+    projectile:'beam',
+    paths:[
+      { name:'Raio Solar', ups:[
+        {n:'Luz Intensa',d:'+dano do raio.',c:160,fx:{dmg:7}},
+        {n:'Feixe Largo',d:'Atinge +2 inimigos na linha.',c:280,fx:{pierce:2,dmg:4}},
+        {n:'Raio Contínuo',d:'Dispara mais rápido.',c:560,fx:{rate:-0.12,dmg:3}},
+        {n:'Lança de Luz',d:'Dano forte e muita perfuração.',c:1300,fx:{dmg:22,pierce:3}},
+        {n:'Supernova',d:'Raio devastador que perfura tudo.',c:3300,fx:{dmg:55,pierce:6,rate:-0.08}},
+      ]},
+      { name:'Prisma', ups:[
+        {n:'Alcance Solar',d:'+alcance enorme.',c:180,fx:{range:60}},
+        {n:'Raio Duplo',d:'Dispara 2 raios.',c:320,fx:{multishot:2}},
+        {n:'Calor Escaldante',d:'Queima os atingidos.',c:620,fx:{burn:14,burnDur:2}},
+        {n:'Tri-Raio',d:'3 raios simultâneos.',c:1400,fx:{multishot:1,dmg:6}},
+        {n:'Coroa Solar',d:'Prisma de raios devastador.',c:3200,fx:{multishot:2,dmg:20,burn:20}},
+      ]},
+      { name:'Estrela', ups:[
+        {n:'Foco Ardente',d:'+velocidade do raio.',c:170,fx:{rate:-0.1}},
+        {n:'Fúria Solar',d:'Dano extra em chefes.',c:300,fx:{bossDmg:2,dmg:6}},
+        {n:'Explosão de Luz',d:'O raio causa dano em área.',c:680,fx:{splash:35,dmg:6}},
+        {n:'Juízo Estelar',d:'Dano colossal em chefes.',c:1500,fx:{bossDmg:3,dmg:14}},
+        {n:'Avatar do Sol',d:'A fúria de uma estrela.',c:3500,fx:{dmg:50,splash:40,bossDmg:2,pierce:3}},
+      ]},
+    ]},
+  cronomante:{ key:'cronomante', name:'Cronos', cls:'Maga do Tempo', accent:'#c79bff', cost:300, unlock:20,
+    desc:'Não ataca: distorce o tempo e deixa TODOS os inimigos na área mais lentos.',
+    base:{ dmg:0, range:150, rate:1, speed:0, air:true, support:true, enemySlow:0.25, bounty:0 },
+    projectile:'none',
+    paths:[
+      { name:'Lentidão', ups:[
+        {n:'Campo Temporal',d:'Inimigos ainda mais lentos.',c:180,fx:{enemySlow:0.12}},
+        {n:'Área Ampla',d:'+área do campo.',c:260,fx:{range:40}},
+        {n:'Tempo Pesado',d:'Lentidão forte.',c:560,fx:{enemySlow:0.15}},
+        {n:'Distorção',d:'Área enorme de lentidão.',c:1200,fx:{range:50,enemySlow:0.08}},
+        {n:'Parada Temporal',d:'Quase paralisa os inimigos.',c:3000,fx:{enemySlow:0.25,range:30}},
+      ]},
+      { name:'Ampulheta', ups:[
+        {n:'Dádiva do Tempo',d:'Gera ouro ao longo do tempo.',c:160,fx:{income:6}},
+        {n:'Sorte Temporal',d:'Inimigos dão mais ouro.',c:280,fx:{bounty:0.3}},
+        {n:'Tesouro Eterno',d:'Muito mais ouro.',c:600,fx:{income:14}},
+        {n:'Fortuna',d:'Grande bônus de ouro.',c:1300,fx:{bounty:0.5,income:8}},
+        {n:'Banco do Tempo',d:'Renda passiva imensa.',c:2900,fx:{income:34,bounty:0.5}},
+      ]},
+      { name:'Cronomante', ups:[
+        {n:'Eco Veloz',d:'Acelera as aliadas próximas.',c:180,fx:{buffRate:0.15}},
+        {n:'Precisão Temporal',d:'+dano das aliadas.',c:300,fx:{buffDmg:0.15}},
+        {n:'Aceleração',d:'Muito mais velocidade aliada.',c:640,fx:{buffRate:0.2}},
+        {n:'Campo de Poder',d:'Grande aura de dano e velocidade.',c:1400,fx:{buffDmg:0.2,buffRate:0.15,range:30}},
+        {n:'Senhora do Tempo',d:'Domina o tempo do campo.',c:3400,fx:{enemySlow:0.15,buffRate:0.2,buffDmg:0.2}},
+      ]},
+    ]},
 };
-const CHAR_ORDER=['nevoa','lanca','flecha','brasa','trovao','sombra','aurora','bencao'];
+const CHAR_ORDER=['nevoa','brasa','trovao','solar','acido','flecha','rodamoinho','lanca','pedra','sombra','artilheira','aurora','cronomante','bencao'];
 
 /* ====================================================================
    DADOS: inimigos
@@ -682,12 +875,13 @@ function computeStats(tw){
   s.multishot=1; s.armorPierce=0; s.bossDmg=1; s.burn=0; s.burnDur=0; s.chain=0;
   s.freeze=0; s.income=s.income||0; s.bounty=0; s.regen=0; s.ground=0;
   s.buffDmg=s.buffDmg||0; s.buffRate=s.buffRate||0; s.buffRange=s.buffRange||0; s.buffPierce=0;
+  s.enemySlow=s.enemySlow||0;
   for(let p=0;p<3;p++){
     for(let i=0;i<tw.tiers[p];i++){
       const fx=c.paths[p].ups[i].fx;
       for(const k in fx){
         if(k==='rate') s.rate=Math.max(0.12,s.rate+fx.rate);
-        else if(['multishot','armorPierce','pierce','chain','burn','income','regen','ground','buffPierce'].includes(k)) s[k]=(s[k]||0)+fx[k];
+        else if(['multishot','armorPierce','pierce','chain','burn','income','regen','ground','buffPierce','enemySlow'].includes(k)) s[k]=(s[k]||0)+fx[k];
         else if(['slow'].includes(k)) s.slow=Math.min(0.92,(s.slow||0)+fx[k]);
         else if(['freeze'].includes(k)) s.freeze=Math.max(s.freeze,fx[k]);
         else if(['bossDmg'].includes(k)) s.bossDmg=(s.bossDmg||1)*fx[k];
@@ -729,6 +923,12 @@ const STYLE={
   sombra:{skin:'#f0dcd0',hair:'#7a55a0',hair2:'#a784cf',robe:'#352548',trim:'#b07bff',head:'hood',hoodC:'#241733',weap:'dagger',orb:'#b07bff'},
   aurora:{skin:'#ffe6d4',hair:'#ffe39a',hair2:'#fff7d6',robe:'#e9d58a',trim:'#fffbe6',head:'halo',weap:'staff',orb:'#fff0a6'},
   bencao:{skin:'#ffe3d0',hair:'#9ff0bd',hair2:'#e6fff0',robe:'#5ec98a',trim:'#d9ffe8',head:'veil',weap:'staff',orb:'#8ef0a6'},
+  pedra:{skin:'#ffdcc2',hair:'#c9a06a',hair2:'#e6c99a',robe:'#8a6b3f',trim:'#d9c08a',head:'circlet',weap:'hammer',orb:'#d9b36a'},
+  artilheira:{skin:'#ffe0cf',hair:'#c0c7d6',hair2:'#e8edf6',robe:'#4a5570',trim:'#aab4c8',head:'hood',hoodC:'#2f3750',weap:'cannon',orb:'#ffd166'},
+  acido:{skin:'#ffe6d0',hair:'#9ef06a',hair2:'#d4ffb0',robe:'#4a7a2e',trim:'#c6ff9a',head:'witch',hatC:'#2f5a1c',weap:'staff',orb:'#b6ff5a'},
+  rodamoinho:{skin:'#ffe0d4',hair:'#7fd6c0',hair2:'#c0fff0',robe:'#2f8a7a',trim:'#aef5e6',head:'hood',hoodC:'#1c5349',weap:'glaive',orb:'#6ff0d8'},
+  solar:{skin:'#ffe6d4',hair:'#ffcf4d',hair2:'#fff0a3',robe:'#e0a83c',trim:'#fff1c2',head:'witch',hatC:'#b07a1c',weap:'staff',orb:'#ffe066'},
+  cronomante:{skin:'#ffe0e6',hair:'#c79bff',hair2:'#e9d9ff',robe:'#5b3fa0',trim:'#d9c6ff',head:'witch',hatC:'#3a2470',weap:'staff',orb:'#c79bff'},
 };
 function drawGuardian(g,x,y,scale,key,stats,t,prog,face){
   const prg=prog||0;
@@ -869,6 +1069,33 @@ function drawWeapon(g,st,tier,domColor,pulse,t,prog){
     g.strokeStyle='#d7d2e6'; g.lineWidth=2; g.stroke();
     g.fillStyle='#4a3a5e'; g.fillRect(8,13,4,2.4);
     if(tier>=3){ g.fillStyle=domColor; g.beginPath(); g.arc(17,1,2,0,7); g.fill(); }
+    g.restore();
+  } else if(st.weap==='hammer'){
+    g.beginPath(); g.moveTo(10,20); g.lineTo(14,-10);
+    g.strokeStyle=OUTLINE; g.lineWidth=3.4; g.stroke(); g.strokeStyle='#6b4a2a'; g.lineWidth=2; g.stroke();
+    g.save(); g.translate(14,-12); g.rotate(-0.2+cast*0.7);
+    g.fillStyle='#9097a6'; g.strokeStyle=OUTLINE; g.lineWidth=1.5;
+    g.beginPath(); g.rect(-8,-6,16,12); g.fill(); g.stroke();
+    g.fillStyle=shade('#9097a6',16); g.fillRect(-8,-6,16,3);
+    if(tier>=3){ g.fillStyle=domColor; g.fillRect(-8,2,16,2); }
+    g.restore();
+  } else if(st.weap==='cannon'){
+    g.save(); g.translate(7,2); g.rotate(-0.5);
+    g.fillStyle='#3a4258'; g.strokeStyle=OUTLINE; g.lineWidth=1.6;
+    g.beginPath(); g.rect(-2,-5,17,10); g.fill(); g.stroke();
+    g.fillStyle='#2a3144'; g.beginPath(); g.arc(-3,0,4,0,7); g.fill(); g.stroke();
+    if(tier>=3){ g.fillStyle=domColor; g.fillRect(-2,-5,3,10); }
+    if(cast>0.15){ const fg=g.createRadialGradient(16,0,0,16,0,11*cast);
+      fg.addColorStop(0,'#fff'); fg.addColorStop(.5,'#ffd166'); fg.addColorStop(1,'#ffd16600');
+      g.fillStyle=fg; g.beginPath(); g.arc(16,0,11*cast,0,7); g.fill(); }
+    g.restore();
+  } else if(st.weap==='glaive'){
+    g.beginPath(); g.moveTo(10,20); g.lineTo(14,-18);
+    g.strokeStyle=OUTLINE; g.lineWidth=3.2; g.stroke(); g.strokeStyle='#6b4a2a'; g.lineWidth=1.8; g.stroke();
+    g.save(); g.translate(14,-18); g.rotate(cast*0.6);
+    g.fillStyle=shade(st.orb,-5); g.strokeStyle=OUTLINE; g.lineWidth=1.3;
+    g.beginPath(); g.moveTo(0,5); g.quadraticCurveTo(13,-1,6,-13); g.quadraticCurveTo(2,-4,0,5); g.closePath(); g.fill(); g.stroke();
+    if(tier>=3){ g.fillStyle=domColor; g.beginPath(); g.arc(4,-4,1.8,0,7); g.fill(); }
     g.restore();
   }
 }
@@ -1105,7 +1332,7 @@ function applySupport(dt){
   for(const tw of Game.towers){ tw.buffDmg=0; tw.buffRange=0; tw.buffRate=0; tw.buffPierce=0; }
   for(const sup of Game.towers){
     const s=sup.stats;
-    const isAura=s.support||s.buffDmg||s.buffRate||s.buffRange||s.income||s.bounty||s.regen;
+    const isAura=s.support||s.buffDmg||s.buffRate||s.buffRange||s.income||s.bounty||s.regen||s.enemySlow;
     if(!isAura) continue;
     // renda
     if(s.income){ sup.incomeAcc=(sup.incomeAcc||0)+s.income*dt;
@@ -1121,6 +1348,9 @@ function applySupport(dt){
         tw.buffPierce=Math.max(tw.buffPierce,s.buffPierce||0);
       }
     }
+    // distorção temporal: atrasa todos os inimigos na área
+    if(s.enemySlow){ for(const e of Game.enemies){ if(e.dead)continue;
+      if(dist(sup.x,sup.y,e.x,e.y)<=s.range){ e.slowT=Math.max(e.slowT,0.2); e.slowAmt=Math.max(e.slowAmt,s.enemySlow); } } }
   }
 }
 
@@ -1154,12 +1384,28 @@ function fire(tw,s,targets){
       for(const e of ordered){ if(hits<=0)break; if(e.dead)continue; if(!s.air&&e.flying)continue;
         if(dist(tw.x,tw.y,e.x,e.y)<=s.range*(1+(tw.buffRange||0))+e.r){ dealDamage(e,dmg,s,tw); hits--; } }
       Audio_.S.hit();
+    } else if(proj==='beam'){ // raio laser perfurante (instantâneo)
+      const ang=Math.atan2(tgt.y-tw.y,tgt.x-tw.x);
+      const range=s.range*(1+(tw.buffRange||0)); const acc=CHARS[tw.key].accent;
+      let hits=s.pierce||1;
+      const cand=[];
+      for(const e of Game.enemies){ if(e.dead)continue; if(!s.air&&e.flying)continue;
+        const dx=e.x-tw.x,dy=e.y-tw.y; const along=dx*Math.cos(ang)+dy*Math.sin(ang);
+        const perp=Math.abs(-dx*Math.sin(ang)+dy*Math.cos(ang));
+        if(along>0 && along<=range && perp<=12+e.r) cand.push({e,along}); }
+      cand.sort((a,b)=>a.along-b.along);
+      for(const o of cand){ if(hits<=0)break; dealDamage(o.e,dmg,s,tw); hits--;
+        if(s.splash){ for(const x of Game.enemies){ if(x===o.e||x.dead)continue; if(!s.air&&x.flying)continue;
+          if(dist(o.e.x,o.e.y,x.x,x.y)<=s.splash) dealDamage(x,Math.round(dmg*0.6),s,tw); } } }
+      Game.fx.push({beam:true,x1:tw.x,y1:tw.y,x2:tw.x+Math.cos(ang)*range,y2:tw.y+Math.sin(ang)*range,color:acc,t:0.14,life:0.14});
+      Audio_.S.ice();
     } else {
       const ang=Math.atan2(tgt.y-tw.y,tgt.x-tw.x);
       Game.shots.push({ x:tw.x,y:tw.y, vx:Math.cos(ang)*s.speed, vy:Math.sin(ang)*s.speed,
         life:1.4, target:tgt, dmg, s, tw, air:s.air, color:CHARS[tw.key].accent, proj,
         pierce:s.pierce||1, hitSet:new Set() });
-      if(proj==='ice')Audio_.S.ice(); else if(proj==='arrow')Audio_.S.arrow(); else if(proj==='fire')Audio_.S.fire(); else Audio_.S.shoot();
+      if(proj==='ice')Audio_.S.ice(); else if(proj==='arrow')Audio_.S.arrow();
+      else if(proj==='fire'||proj==='bomb')Audio_.S.fire(); else Audio_.S.shoot();
     }
   }
 }
@@ -1383,6 +1629,15 @@ function drawShot(sh){
   else if(sh.proj==='dagger'){ ctx.translate(sh.x,sh.y); ctx.rotate(Math.atan2(sh.vy,sh.vx));
     ctx.fillStyle='#d7d2e6'; ctx.beginPath(); ctx.moveTo(8,0); ctx.lineTo(-3,2.5); ctx.lineTo(-3,-2.5); ctx.closePath(); ctx.fill();
     ctx.fillStyle='#4a3a5e'; ctx.fillRect(-5,-1.3,3,2.6); }
+  else if(sh.proj==='rock'){ ctx.fillStyle='#8a6b3f'; ctx.strokeStyle='#5b4327'; ctx.lineWidth=1.5;
+    ctx.beginPath(); for(let i=0;i<7;i++){const a=i/7*7;const rr=6+((i%2)?-1.5:1.5);ctx.lineTo(sh.x+Math.cos(a)*rr,sh.y+Math.sin(a)*rr);} ctx.closePath(); ctx.fill(); ctx.stroke(); }
+  else if(sh.proj==='bomb'){ ctx.fillStyle='#2a2b36'; ctx.beginPath(); ctx.arc(sh.x,sh.y,6,0,7); ctx.fill();
+    ctx.fillStyle='#ff9d57'; ctx.beginPath(); ctx.arc(sh.x+4,sh.y-5,1.6,0,7); ctx.fill(); }
+  else if(sh.proj==='flask'){ ctx.fillStyle=col; ctx.beginPath(); ctx.arc(sh.x,sh.y,5,0,7); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.globalAlpha=0.5; ctx.beginPath(); ctx.arc(sh.x-1.5,sh.y-1.5,1.6,0,7); ctx.fill(); }
+  else if(sh.proj==='glaive'){ ctx.translate(sh.x,sh.y); ctx.rotate(Game.time*22);
+    ctx.fillStyle=col; ctx.strokeStyle=shade(col,-25); ctx.lineWidth=1.3;
+    for(let b=0;b<3;b++){ ctx.rotate(2.094); ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(9,-2,7,-8); ctx.quadraticCurveTo(3,-3,0,0); ctx.fill(); ctx.stroke(); } }
   else { ctx.fillStyle=col; ctx.beginPath(); ctx.arc(sh.x,sh.y,4,0,7); ctx.fill(); }
   ctx.restore();
 }
@@ -1394,6 +1649,10 @@ function drawFx(f){
     ctx.beginPath(); ctx.moveTo(f.x1,f.y1);
     const mx=(f.x1+f.x2)/2+rand(-12,12), my=(f.y1+f.y2)/2+rand(-12,12);
     ctx.quadraticCurveTo(mx,my,f.x2,f.y2); ctx.stroke(); ctx.restore(); return; }
+  if(f.beam){ ctx.shadowColor=f.color; ctx.shadowBlur=12; ctx.lineCap='round';
+    ctx.strokeStyle=f.color; ctx.lineWidth=7*k+1; ctx.beginPath(); ctx.moveTo(f.x1,f.y1); ctx.lineTo(f.x2,f.y2); ctx.stroke();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2.5*k+0.5; ctx.beginPath(); ctx.moveTo(f.x1,f.y1); ctx.lineTo(f.x2,f.y2); ctx.stroke();
+    ctx.restore(); return; }
   if(f.flash){ const g=ctx.createRadialGradient(f.x,f.y,1,f.x,f.y,Math.max(2,f.r));
     g.addColorStop(0,'#fff'); g.addColorStop(1,'#ffffff00'); ctx.fillStyle=g;
     ctx.beginPath(); ctx.arc(f.x,f.y,Math.max(2,f.r),0,7); ctx.fill(); ctx.restore(); return; }
@@ -1483,49 +1742,53 @@ function canPlaceAt(x,y){
 function selectTower(tw){ Game.selectedTower=tw; cancelPlace(); showInspect(tw); }
 function hideInspect(){ $('#inspect').classList.remove('on'); }
 
+function upIcon(fx){
+  if(fx.freeze) return '🧊'; if(fx.chain) return '⚡'; if(fx.burn) return '🔥';
+  if(fx.multishot) return '🎯'; if(fx.splash) return '💥'; if(fx.bossDmg) return '👑';
+  if(fx.armorPierce) return '🗡️'; if(fx.slow) return '❄️'; if(fx.enemySlow) return '⏳';
+  if(fx.buffDmg||fx.buffRate||fx.buffRange||fx.buffPierce) return '✨';
+  if(fx.income||fx.bounty) return '🪙'; if(fx.regen) return '💚';
+  if(fx.rate) return '💨'; if(fx.range) return '🔭'; if(fx.dmg) return '⚔️';
+  return '⭐';
+}
 function showInspect(tw){
   const c=CHARS[tw.key], s=tw.stats; const el=$('#inspect'); el.classList.add('on');
-  const buffTxt=(tw.buffDmg||tw.buffRate||tw.buffRange)?' <span style="color:var(--ok)">(abençoada)</span>':'';
-  let html=`<div style="display:flex;align-items:center;gap:.6em">
-      <canvas id="ipCanvas" width="80" height="80" style="background:rgba(0,0,0,.25);border-radius:12px"></canvas>
-      <div><h3>${c.name}${buffTxt}</h3><div class="cls">${c.cls}</div></div></div>`;
-  if(!s.support){
-    html+=`<div class="statline"><span>Dano</span><b>${Math.round(s.dmg*(1+(tw.buffDmg||0)))}</b></div>
-      <div class="statline"><span>Alcance</span><b>${Math.round(s.range*(1+(tw.buffRange||0)))}</b></div>
-      <div class="statline"><span>Velocidade</span><b>${(1/s.rate).toFixed(2)}/s</b></div>`;
-    if(s.multishot>1)html+=`<div class="statline"><span>Alvos</span><b>${s.multishot}</b></div>`;
-  } else {
-    html+=`<div class="statline"><span>Buff de dano</span><b>+${Math.round((s.buffDmg||0)*100)}%</b></div>
-      <div class="statline"><span>Área</span><b>${Math.round(s.range)}</b></div>
-      ${s.income?`<div class="statline"><span>Renda</span><b>+${s.income}/s</b></div>`:''}`;
-  }
-  // alvo
+  const buffed=(tw.buffDmg||tw.buffRate||tw.buffRange);
+  const stats = s.support
+    ? `✨ +${Math.round((s.buffDmg||0)*100)}% &nbsp; 📡 ${Math.round(s.range)}${s.income?` &nbsp; 🪙 +${s.income}/s`:''}${s.enemySlow?` &nbsp; ⏳ -${Math.round(s.enemySlow*100)}%`:''}`
+    : `⚔️ ${Math.round(s.dmg*(1+(tw.buffDmg||0)))} &nbsp; 🔭 ${Math.round(s.range*(1+(tw.buffRange||0)))} &nbsp; 💨 ${(1/s.rate).toFixed(2)}/s${s.multishot>1?` &nbsp; 🎯 ${s.multishot}`:''}`;
+  let html=`<div class="ipHead">
+      <canvas id="ipCanvas" width="86" height="86"></canvas>
+      <div class="ipInfo"><h3>${c.name}${buffed?' <span style="color:var(--ok);font-size:.65em">★</span>':''}</h3>
+      <div class="cls">${c.cls}${!s.air?' · só chão':''}</div>
+      <div class="ipStats">${stats}</div></div></div>`;
   if(!s.support){
     html+=`<div class="targeting" id="tgt">
       ${['first','last','strong','close'].map(m=>`<div class="t ${tw.target===m?'on':''}" data-m="${m}">${
         {first:'1º',last:'Último',strong:'Forte',close:'Perto'}[m]}</div>`).join('')}</div>`;
   }
-  // caminhos
+  const pcol=['var(--ice)','var(--fire)','var(--spirit)'];
+  html+=`<div class="uptree">`;
   for(let p=0;p<3;p++){
-    const path=c.paths[p]; const tier=tw.tiers[p];
-    html+=`<div class="path"><div class="ttl"><span>${path.name}</span>
-      <span class="dots">${[0,1,2,3,4].map(i=>`<span class="dot ${i<tier?'f':''}"></span>`).join('')}</span></div>`;
-    if(tier<5){
-      const next=path.ups[tier]; const chk=canBuyUpgrade(tw,p);
-      const cls=chk.ok?(Game.gold>=next.c?'':'block'):'block';
-      html+=`<div class="up ${cls}" data-p="${p}"><div class="un">${next.n}</div>
-        <div class="ud">${next.d}</div><div class="uc">🪙 ${next.c}${chk.reason==='block'?' • bloqueado':''}</div></div>`;
-    } else { html+=`<div class="up max"><div class="un">✦ Caminho completo</div></div>`; }
-    html+=`</div>`;
+    const path=c.paths[p], tier=tw.tiers[p];
+    html+=`<div class="pcol"><div class="phead" style="color:${pcol[p]}">${path.name}</div>`;
+    for(let i=0;i<5;i++){
+      const up=path.ups[i], ic=upIcon(up.fx);
+      let state='lock', clickable=false, costTxt='🪙'+up.c;
+      if(i<tier){ state='owned'; costTxt='✓'; }
+      else if(i===tier){ const chk=canBuyUpgrade(tw,p);
+        if(chk.ok){ state='next'; clickable=true; if(Game.gold<up.c) state='next cant'; } }
+      html+=`<div class="ptile ${state}" ${clickable?`data-p="${p}"`:''} title="${up.n} — ${up.d}">
+        <div class="ic">${ic}</div><div class="pname">${up.n}</div><div class="pc">${costTxt}</div></div>`;
+    }
+    html+=`<div class="ppips">${[0,1,2,3,4].map(i=>`<span class="dot ${i<tier?'f':''}"></span>`).join('')}</div></div>`;
   }
-  html+=`<div class="sellrow">
+  html+=`</div><div class="sellrow">
     <button class="btn ghost sm" id="btnSell" style="flex:1">Vender 🪙${sellValue(tw)}</button>
     <button class="btn ghost sm" id="btnClose">Fechar</button></div>`;
   el.innerHTML=html;
-
-  const g=$('#ipCanvas').getContext('2d'); drawGuardian(g,40,48,1.9,tw.key,s,Game.time);
-  // bind
-  $$('#inspect .up[data-p]').forEach(up=>up.onclick=()=>buyUpgrade(tw,+up.dataset.p));
+  const g=$('#ipCanvas').getContext('2d'); drawGuardian(g,43,52,2.0,tw.key,s,Game.time);
+  $$('#inspect .ptile[data-p]').forEach(up=>up.onclick=()=>buyUpgrade(tw,+up.dataset.p));
   const tgt=$('#tgt'); if(tgt) $$('#tgt .t').forEach(t=>t.onclick=()=>{tw.target=t.dataset.m; showInspect(tw);});
   $('#btnSell').onclick=()=>{ sellTower(tw); };
   $('#btnClose').onclick=()=>{ Game.selectedTower=null; hideInspect(); };
@@ -1703,12 +1966,31 @@ window.addEventListener('orientationchange',()=>setTimeout(resize,200));
 /* ====================================================================
    GAME LOOP
    ==================================================================== */
+let menuMotes=null;
+function drawMenuScene(dt){
+  if(!Game.menuBg) Game.menuBg=renderBackground(MAPS[0]);
+  ctx.drawImage(Game.menuBg,0,0,W,H);
+  const sc=ctx.createLinearGradient(0,0,0,H); sc.addColorStop(0,'rgba(7,6,22,.45)'); sc.addColorStop(.6,'rgba(7,6,22,.60)'); sc.addColorStop(1,'rgba(7,6,22,.82)');
+  ctx.fillStyle=sc; ctx.fillRect(0,0,W,H);
+  if(!menuMotes){ menuMotes=[]; for(let i=0;i<44;i++) menuMotes.push({x:Math.random()*W,y:Math.random()*H,s:rand(1,3),sp:rand(6,26),ph:Math.random()*7}); }
+  ctx.fillStyle='rgba(255,240,200,.6)';
+  for(const m of menuMotes){ m.y-=m.sp*dt; if(m.y<-6){m.y=H+6;m.x=Math.random()*W;}
+    ctx.globalAlpha=0.25+Math.sin(Game.time*2+m.ph)*0.22; ctx.beginPath(); ctx.arc(m.x,m.y,m.s,0,7); ctx.fill(); }
+  ctx.globalAlpha=1;
+  // guardiãs posando nos cantos
+  drawGuardian(ctx,130,H-70,3.6,'nevoa',{topTier:5,totalTier:10,dom:0},Game.time);
+  drawGuardian(ctx,W-130,H-70,3.6,'brasa',{topTier:5,totalTier:10,dom:0},Game.time,0,-1);
+  drawGuardian(ctx,300,H-50,2.8,'aurora',{topTier:4,totalTier:7,dom:0},Game.time);
+  drawGuardian(ctx,W-300,H-50,2.8,'sombra',{topTier:4,totalTier:7,dom:0},Game.time,0,-1);
+}
 function loop(ts){
   const dt=Math.min(0.05,(ts-Game.last)/1000)||0; Game.last=ts;
   if(Game.state==='play' || Game.state==='over'){
     const steps=Game.paused?0:Game.speed;
     for(let i=0;i<steps;i++) update(dt);
     if(Game.map) draw();
+  } else if(Game.state==='menu'){
+    Game.time+=dt; drawMenuScene(dt);
   }
   requestAnimationFrame(loop);
 }
