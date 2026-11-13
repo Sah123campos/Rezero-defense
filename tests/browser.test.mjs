@@ -30,7 +30,8 @@ test(
     skip: !playwright
       ? "Playwright is not installed; pure rules tests still run."
       : false,
-    timeout: 240000,
+    // Software WebGL in CI also compiles four independent character viewers.
+    timeout: 360000,
   },
   async (t) => {
     await mkdir(output, { recursive: true });
@@ -146,6 +147,95 @@ test(
       );
 
       await t.test(
+        "live character viewers rotate, animate and release their canvas",
+        async () => {
+          await page.evaluate(() => window.__ASTRAL_TEST__.home());
+          for (const key of ["emilia", "rem", "beatrice", "subaru"]) {
+            await page.locator(`[data-guardian="${key}"]`).click();
+            assert.equal(
+              await page.locator("#characterPreview canvas").count(),
+              1,
+            );
+            await page.locator("#previewRight").click();
+            await page.locator("#previewAttack").click();
+            if (key === "rem") await shot("rem-viewer");
+            await page.locator("#modalClose").click();
+            assert.equal(
+              await page.locator("#characterPreview canvas").count(),
+              0,
+            );
+          }
+          await page.evaluate(() => window.__ASTRAL_TEST__.startMap(0));
+        },
+      );
+
+      await t.test(
+        "placement ghost validates terrain; dragging never debits gold",
+        async () => {
+          const point = await page.evaluate(() => {
+            const a = window.__ASTRAL_TEST__;
+            for (let x = -9; x < 9; x += 1.5)
+              for (let z = -4; z < 4; z += 1.5) {
+                if (!a.placementValid(x, z)) continue;
+                const p = a.project(x, z);
+                if (document.elementFromPoint(p.x, p.y)?.tagName === "CANVAS")
+                  return p;
+              }
+            throw Error("No free terrain");
+          });
+          await page.locator('[data-hero="emilia"]').click();
+          await page.mouse.move(point.x, point.y);
+          const ghost = await page.evaluate(() => {
+            const v = window.__ASTRAL_TEST__.view;
+            return {
+              key: v.ghostKey,
+              visible: !!v.ghost,
+              opacity: v.ghostMaterials[0]?.opacity,
+            };
+          });
+          assert.deepEqual(ghost, {
+            key: "emilia",
+            visible: true,
+            opacity: 0.46,
+          });
+          await shot("placement-preview");
+          await page.mouse.down();
+          await page.mouse.move(point.x + 30, point.y + 5, { steps: 3 });
+          await page.mouse.up();
+          assert.equal(
+            (await page.evaluate(() => window.__ASTRAL_TEST__.snapshot())).gold,
+            500,
+          );
+          assert.equal(
+            (await page.evaluate(() => window.__ASTRAL_TEST__.snapshot()))
+              .towers.length,
+            0,
+          );
+          const road = await page.evaluate(() =>
+            window.__ASTRAL_TEST__.project(-5.9, 0.4),
+          );
+          await page.mouse.move(road.x, road.y);
+          assert.equal(
+            await page.evaluate(() =>
+              window.__ASTRAL_TEST__.view.range.children[0].material.color.getHex(),
+            ),
+            0xef8f83,
+          );
+          await page.keyboard.press("Escape");
+          assert.equal(
+            await page.evaluate(() => window.__ASTRAL_TEST__.view.ghost),
+            null,
+          );
+          assert.equal(
+            await page.evaluate(
+              () => window.__ASTRAL_TEST__.view.range.visible,
+            ),
+            false,
+          );
+        },
+      );
+
+      await t.test(
         "pointer placement, invalid terrain, purchase price and 5–2–0 upgrades",
         async () => {
           const invalid = await page.evaluate(() => {
@@ -216,6 +306,78 @@ test(
           assert.equal(up.before, up.after);
           assert.ok(up.snapshot.towers[0].stats.damage > 80);
           await shot("upgrades");
+        },
+      );
+
+      await t.test(
+        "models can be selected through the head in the isometric view",
+        async () => {
+          const point = await page.evaluate(async () => {
+            const a = window.__ASTRAL_TEST__,
+              THREE = await import("./vendor/three.module.js");
+            const t = a.towers[0],
+              r = a.view.container.getBoundingClientRect();
+            const p = new THREE.Vector3(t.x, 1.65, t.z).project(a.view.camera);
+            a.select(null);
+            return {
+              x: r.left + ((p.x + 1) * r.width) / 2,
+              y: r.top + ((1 - p.y) * r.height) / 2,
+              id: t.id,
+            };
+          });
+          await page.mouse.click(point.x, point.y);
+          assert.equal(
+            await page.evaluate(
+              () => window.__ASTRAL_TEST__.state.selected?.id,
+            ),
+            point.id,
+          );
+        },
+      );
+
+      await t.test(
+        "quality switches rebuild foliage and release obsolete worlds",
+        async () => {
+          const result = await page.evaluate(() => {
+            const a = window.__ASTRAL_TEST__,
+              v = a.view;
+            const count = () => {
+              let n = 0;
+              v.world.traverse((o) => {
+                if (o.name === "folded-leaves") n += o.count;
+              });
+              return n;
+            };
+            const original = v.world,
+              beforeTowers = a.towers.length;
+            v.setQuality("high");
+            const high = count();
+            v.render();
+            const highWorld = v.world,
+              memory = [];
+            for (let i = 0; i < 3; i++) {
+              v.setQuality("low");
+              v.render();
+              memory.push(v.renderer.info.memory.geometries);
+            }
+            return {
+              high,
+              low: count(),
+              oldEmpty: original.children.length === 0,
+              highEmpty: highWorld.children.length === 0,
+              beforeTowers,
+              afterTowers: a.towers.length,
+              memory,
+            };
+          });
+          assert.ok(result.high > result.low && result.low > 0);
+          assert.equal(result.oldEmpty, true);
+          assert.equal(result.highEmpty, true);
+          assert.equal(result.afterTowers, result.beforeTowers);
+          assert.ok(
+            result.memory[2] <= result.memory[0] + 2,
+            JSON.stringify(result),
+          );
         },
       );
 

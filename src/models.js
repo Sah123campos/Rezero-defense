@@ -9,7 +9,7 @@ const PI = Math.PI;
 const palette = {
   emilia: {
     hair: 0xe8e9f4,
-    shadow: 0xada7ce,
+    shadow: 0xc7c2df,
     dress: 0xf9f3ff,
     accent: 0x916ac2,
     magic: 0x9deeff,
@@ -17,7 +17,7 @@ const palette = {
   },
   rem: {
     hair: 0x73bcec,
-    shadow: 0x3f83bd,
+    shadow: 0x5aabdc,
     dress: 0x28293c,
     accent: 0x99d6f4,
     magic: 0x68caff,
@@ -25,7 +25,7 @@ const palette = {
   },
   beatrice: {
     hair: 0xf3ce75,
-    shadow: 0xc28a45,
+    shadow: 0xdfb762,
     dress: 0xe397ad,
     accent: 0xa63e69,
     magic: 0xe6adff,
@@ -169,37 +169,180 @@ function ribbon(parent, y, radius, color, width = 0.035) {
   add(parent, r, 0, y, 0);
   return r;
 }
+// Continuous swept volumes: soft locks with a rounded root and a tapered tip.
+// Unlike extruded flat shapes these catch light across the whole strand.
 function hairLock(width, length, color, bend = 0, depth = 0.1) {
-  const s = new THREE.Shape();
-  s.moveTo(-width / 2, 0);
-  s.bezierCurveTo(
-    -width * 0.72,
-    -length * 0.32,
-    -width * 0.22 + bend,
-    -length * 0.78,
-    bend,
-    -length,
-  );
-  s.bezierCurveTo(
-    width * 0.48 + bend,
-    -length * 0.82,
-    width * 0.55,
-    -length * 0.22,
-    width / 2,
-    0,
-  );
-  s.quadraticCurveTo(0, width * 0.22, -width / 2, 0);
-  const geo = new THREE.ExtrudeGeometry(s, {
-    depth,
-    bevelEnabled: true,
-    bevelSegments: 2,
-    bevelSize: 0.028,
-    bevelThickness: 0.025,
-    steps: 1,
-    curveSegments: 10,
-  });
-  geo.translate(0, 0, -depth / 2);
+  const rows = 16,
+    sides = 12,
+    positions = [],
+    indices = [];
+  for (let j = 0; j <= rows; j++) {
+    const t = j / rows;
+    const taper = Math.max(0.012, Math.pow(1 - t, 0.52));
+    const swell = 0.84 + Math.sin(t * PI) * 0.27;
+    for (let i = 0; i <= sides; i++) {
+      const a = (i / sides) * PI * 2;
+      positions.push(
+        bend * t * t + Math.cos(a) * width * 0.52 * taper * swell,
+        -length * t + Math.cos(a) * width * 0.09 * Math.sin(t * PI),
+        Math.sin(a) * depth * 0.8 * taper + Math.sin(t * PI) * depth * 0.3,
+      );
+      if (j < rows && i < sides) {
+        const n = j * (sides + 1) + i;
+        indices.push(
+          n,
+          n + 1,
+          n + sides + 1,
+          n + 1,
+          n + sides + 2,
+          n + sides + 1,
+        );
+      }
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
   return mesh(geo, color);
+}
+
+function tailoredBodice(color) {
+  const profile = [
+    [0.22, -0.23],
+    [0.205, -0.16],
+    [0.22, -0.03],
+    [0.27, 0.12],
+    [0.25, 0.2],
+    [0.13, 0.24],
+  ];
+  const g = new THREE.LatheGeometry(
+    profile.map(([x, y]) => new THREE.Vector2(x, y)),
+    32,
+  );
+  g.scale(1, 1, 0.82);
+  return mesh(g, color);
+}
+
+function costumeDetails(root, key) {
+  const p = palette[key],
+    body = root.getObjectByName("body"),
+    head = root.getObjectByName("head");
+  if (key !== "subaru") {
+    // Embroidered panels follow the flare of the skirt, with individually cut lace.
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * PI * 2;
+      const seam = tube(
+        [
+          [Math.sin(a) * 0.245, 0.87, Math.cos(a) * 0.245],
+          [Math.sin(a) * 0.34, 0.64, Math.cos(a) * 0.34],
+          [Math.sin(a) * 0.435, 0.415, Math.cos(a) * 0.435],
+        ],
+        0.007,
+        key === "rem" ? 0xabb9ce : key === "emilia" ? 0xb09ad3 : 0xf8d4b6,
+        10,
+      );
+      add(body, seam);
+      const lace = shape(
+        [
+          [-0.035, 0.025],
+          [0.035, 0.025],
+          [0.026, -0.025],
+          [0, -0.04],
+          [-0.026, -0.025],
+        ],
+        0.008,
+        0xfff5e9,
+        0.004,
+      );
+      lace.rotation.y = a;
+      add(body, lace, Math.sin(a) * 0.445, 0.36, Math.cos(a) * 0.445);
+    }
+    if (key === "emilia") {
+      // Amethyst clasp and silver braid on her long hair.
+      add(
+        body,
+        mesh(new THREE.OctahedronGeometry(0.057), 0x9a63c4, {
+          metalness: 0.35,
+          roughness: 0.25,
+        }),
+        0,
+        1.2,
+        0.32,
+      );
+      const braid = group(head, "braid", 0.32, 0.1, 0.03);
+      for (let i = 0; i < 10; i++)
+        add(
+          braid,
+          ellipsoid(0.045, 0.065, 0.035, 0xf4effc, 12),
+          Math.sin(i * PI) * 0.025,
+          -i * 0.065,
+          0,
+        );
+      bow(head, 0.34, -0.58, 0.08, 0.09, p.accent);
+    }
+    if (key === "rem") {
+      // Crossed hair clips and a scalloped apron hem.
+      for (const a of [-0.65, 0.65]) {
+        const clip = box(0.15, 0.022, 0.025, 0xf6c3d3, 0.008);
+        clip.rotation.z = a;
+        add(head, clip, -0.31, 0.1, 0.32);
+      }
+      for (let i = -4; i <= 4; i++)
+        add(
+          body,
+          ellipsoid(0.037, 0.045, 0.018, 0xfff8ec, 10),
+          i * 0.057,
+          0.535,
+          0.306 + 0.04 * (1 - Math.abs(i) / 4),
+        );
+    }
+    if (key === "beatrice") {
+      for (let i = 0; i < 5; i++)
+        add(
+          body,
+          ellipsoid(0.022, 0.022, 0.016, 0xf5d693, 10),
+          0,
+          0.89 + i * 0.062,
+          0.282,
+        );
+      // The distinctive crossed pupils sit inside the painted irises.
+    }
+  } else {
+    for (const side of [-1, 1]) {
+      const pocket = box(0.13, 0.12, 0.023, 0x424854, 0.018);
+      pocket.rotation.z = -side * 0.22;
+      add(body, pocket, side * 0.16, 0.79, 0.191);
+      add(
+        body,
+        box(0.08, 0.015, 0.018, 0xd3d6d4, 0.004),
+        side * 0.16,
+        0.83,
+        0.207,
+      );
+      for (let i = 0; i < 3; i++)
+        add(
+          body,
+          box(0.09, 0.012, 0.015, 0xdddcd3, 0.002),
+          side * 0.145,
+          0.215 + i * 0.026,
+          0.234,
+        );
+    }
+    const badge = shape(
+      [
+        [-0.04, 0.035],
+        [0.04, 0.035],
+        [0.04, -0.015],
+        [0, -0.05],
+        [-0.04, -0.015],
+      ],
+      0.015,
+      p.accent,
+      0.005,
+    );
+    add(body, badge, -0.13, 1.08, 0.217);
+  }
 }
 
 function faceMaterial(key) {
@@ -242,6 +385,16 @@ function faceMaterial(key) {
     ctx.beginPath();
     ctx.ellipse(0, -8, 14, 27, 0, 0, PI * 2);
     ctx.fill();
+    if (key === "beatrice") {
+      ctx.strokeStyle = "#d4f2ff";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(-12, -8);
+      ctx.lineTo(12, 16);
+      ctx.moveTo(12, -8);
+      ctx.lineTo(-12, 16);
+      ctx.stroke();
+    }
     ctx.fillStyle = "#fff";
     ctx.beginPath();
     ctx.ellipse(-14, -21, 12, 15, -0.3, 0, PI * 2);
@@ -332,6 +485,18 @@ function createHead(parent, key) {
     new THREE.SphereGeometry(0.46, 28, 16, 0, PI * 2, 0, PI * 0.43),
     p.hair,
   );
+  // Shallow swept ridges suggest combed hair without raised slabs at the crown.
+  const cap = scalp.geometry.attributes.position;
+  for (let i = 0; i < cap.count; i++) {
+    const x = cap.getX(i),
+      z = cap.getZ(i),
+      y = cap.getY(i);
+    const a = Math.atan2(z, x);
+    const ridge =
+      Math.sin(a * 18 + y * 7) * 0.009 * Math.min(1, Math.hypot(x, z) * 4);
+    cap.setXYZ(i, x * (1 + ridge), y + ridge * 0.2, z * (1 + ridge));
+  }
+  scalp.geometry.computeVertexNormals();
   scalp.scale.set(1, 0.92, 0.92);
   add(head, scalp, 0, 0.035, -0.015);
   // Sculpted, overlapping fringe pieces form the silhouette and frame the face.
@@ -348,7 +513,7 @@ function createHead(parent, key) {
     const lock = hairLock(
       key === "subaru" ? 0.17 : 0.2,
       length,
-      i % 3 === 0 ? p.shadow : p.hair,
+      p.hair,
       key === "rem" ? -0.05 : u * -0.018,
     );
     lock.rotation.z = key === "subaru" ? -u * 0.23 : -u * 0.08;
@@ -357,7 +522,7 @@ function createHead(parent, key) {
       lock,
       u * (key === "subaru" ? 0.1 : 0.145),
       -0.025 * Math.abs(u),
-      0.065 - Math.abs(u) * 0.025,
+      0.065 - Math.abs(u) * 0.025 + (key === "rem" && u > 0 ? 0.08 : 0),
     );
   }
   if (key === "emilia") {
@@ -509,8 +674,9 @@ function createHead(parent, key) {
         -i * 0.035,
         0.15,
       );
-      lock.rotation.z = PI + i * 0.29;
-      add(spikes, lock, i * 0.105, 0, -0.07);
+      lock.rotation.z = PI + i * 0.22 + 0.28;
+      lock.rotation.x = 0.35;
+      add(spikes, lock, i * 0.095, -Math.abs(i) * 0.018, -0.07);
     }
     for (const s of [-1, 1])
       add(head, hairLock(0.16, 0.2, p.hair, s * 0.03), s * 0.4, 0.05, -0.04);
@@ -580,13 +746,7 @@ function createBody(parent, key) {
       0,
     );
     ribbon(body, 0.435, key === "beatrice" ? 0.475 : 0.427, p.accent, 0.018);
-    add(
-      body,
-      mesh(new THREE.CylinderGeometry(0.27, 0.22, 0.44, 20), p.dress),
-      0,
-      1.01,
-      0,
-    );
+    add(body, tailoredBodice(p.dress), 0, 1.01, 0);
     if (key === "rem") {
       const apron = shape(
         [
@@ -807,7 +967,19 @@ function heroEquipment(root, key, levels) {
       [0.38, -0.36, 0.05],
       [0.48, -0.42, 0.06],
     ];
-    add(weapon, tube(points, 0.015, 0xb9c7cf, 24));
+    const chain = new THREE.CatmullRomCurve3(
+      points.map((p) => new THREE.Vector3(...p)),
+    );
+    for (let i = 0; i < 11; i++) {
+      const link = mesh(
+        new THREE.TorusGeometry(0.029, 0.008, 5, 10),
+        0xb9c7cf,
+        { metalness: 0.75, roughness: 0.28 },
+      );
+      const position = chain.getPoint(i / 10);
+      link.rotation.y = ((i % 2) * PI) / 2;
+      add(weapon, link, position.x, position.y, position.z);
+    }
     const ball = group(weapon, "mace", 0.5, -0.43, 0.06);
     add(
       ball,
@@ -1009,6 +1181,7 @@ export function createHero(key, levels = [0, 0, 0]) {
     root.userData.hero = key;
     createBody(root, key);
     createHead(root, key);
+    costumeDetails(root, key);
     heroEquipment(root, key, levels);
     batchRigidParts(root);
     templates.set(cacheKey, root);
@@ -1022,10 +1195,23 @@ export function animateHero(root, time, attack = 0) {
   const phase = time * 2.3 + (root.userData.hero === "subaru" ? 1.5 : 0);
   rig.head.rotation.z = Math.sin(phase) * 0.025;
   rig.head.rotation.y = Math.sin(time * 0.7) * 0.04;
-  rig.body.rotation.x = Math.sin(phase) * 0.012 - attack * 0.07;
-  rig.left.rotation.z = 0.12 + Math.sin(phase + 0.7) * 0.025 - attack * 0.13;
-  rig.right.rotation.x = Math.sin(phase) * 0.04 - attack * 1.05;
-  rig.right.rotation.z = -0.12 - attack * 0.35;
+  const key = root.userData.hero;
+  rig.body.position.y = Math.sin(phase) * 0.012;
+  rig.body.rotation.x =
+    Math.sin(phase) * 0.012 - attack * (key === "rem" ? 0.13 : 0.055);
+  rig.left.rotation.z =
+    0.12 +
+    Math.sin(phase + 0.7) * 0.025 -
+    attack * (key === "beatrice" ? 0.5 : 0.13);
+  rig.left.rotation.x =
+    key === "beatrice" ? -0.2 - attack * 0.45 : attack * 0.12;
+  rig.right.rotation.x =
+    Math.sin(phase) * 0.04 -
+    attack * (key === "subaru" ? 1.5 : key === "emilia" ? 0.8 : 1.05);
+  rig.right.rotation.z = -0.12 - attack * (key === "rem" ? 1.1 : 0.35);
+  if (rig.weapon && key === "rem") rig.weapon.rotation.y = attack * 2.4;
+  if (rig.weapon && key === "beatrice")
+    rig.weapon.rotation.z = Math.sin(phase) * 0.06 - attack * 0.15;
   for (let i = 0; i < rig.hair.length; i++)
     rig.hair[i].rotation.z = Math.sin(phase + i * 0.8) * 0.022;
   if (rig.weapon && root.userData.hero === "emilia")

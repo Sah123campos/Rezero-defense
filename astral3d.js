@@ -13,6 +13,7 @@ import {
   distanceToRoute,
 } from "./src/rules.js";
 import { AudioManager } from "./src/audio.js";
+import { CharacterPreview } from "./src/character-preview.js";
 
 const $ = (id) => document.getElementById(id),
   icon = (name) => `<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
@@ -59,6 +60,7 @@ let state = {
 };
 let modalOpen = false,
   modalDismiss = null,
+  modalCleanup = null,
   returnFocus = null,
   lastHUD = "",
   nextId = 1,
@@ -79,6 +81,8 @@ function syncAudio() {
 function closeModal() {
   if (!modalOpen) return;
   modalOpen = false;
+  modalCleanup?.();
+  modalCleanup = null;
   $("modal").classList.add("hidden");
   modalDismiss = null;
   syncAudio();
@@ -93,6 +97,8 @@ function openModal({
   actions = [],
   dismiss = closeModal,
 }) {
+  modalCleanup?.();
+  modalCleanup = null;
   returnFocus = modalOpen ? returnFocus : document.activeElement;
   modalOpen = true;
   modalDismiss = dismiss;
@@ -258,9 +264,11 @@ function chooseHero(key) {
     ? `Convoque ${HEROES[key].name} em um terreno livre.`
     : "";
   $("placementHint").classList.toggle("hidden", !state.placing);
+  view.renderer.domElement.style.cursor = state.placing ? "crosshair" : "grab";
 }
 function cancelPlacement() {
   state.placing = null;
+  view.renderer.domElement.style.cursor = "grab";
   view.selection(state.selected);
   $("placementHint").classList.add("hidden");
   renderHUD(true);
@@ -311,6 +319,7 @@ function select(t) {
   state.placing = null;
   view.selection(t);
   $("placementHint").classList.add("hidden");
+  view.renderer.domElement.style.cursor = "grab";
   renderDetails();
   renderHUD(true);
 }
@@ -791,9 +800,20 @@ function guardian(key) {
     title: h.name,
     eyebrow: h.role,
     sigil: "",
-    content: `<img class="detail-modal-portrait" src="${images[key]}" alt="Modelo 3D de ${h.name}"><p>${h.description}</p><div class="hero-traits">${h.paths.map((p) => `<span>${p.name}</span>`).join("")}</div><p>Convocação: ${h.cost} moedas · Três caminhos de evolução</p>`,
+    content: `<div id="characterPreview" class="character-preview"></div><div class="preview-controls"><button id="previewLeft" aria-label="Girar para a esquerda">↶</button><span>Arraste para girar</span><button id="previewRight" aria-label="Girar para a direita">↷</button><button id="previewAttack">Ver ataque</button></div><p>${h.description}</p><div class="hero-traits">${h.paths.map((p) => `<span>${p.name}</span>`).join("")}</div><p>Convocação: ${h.cost} moedas · Três caminhos de evolução</p>`,
     actions: [{ label: "Levar este laço à jornada", run: campaign }],
   });
+  try {
+    const preview = new CharacterPreview($("characterPreview"), key, view.low);
+    modalCleanup = () => preview.dispose();
+    $("previewLeft").onclick = () => preview.rotate(-Math.PI / 6);
+    $("previewRight").onclick = () => preview.rotate(Math.PI / 6);
+    $("previewAttack").onclick = () => preview.strike();
+  } catch {
+    $("characterPreview").innerHTML =
+      `<img class="detail-modal-portrait" src="${images[key]}" alt="${h.name}">`;
+    document.querySelector(".preview-controls").classList.add("hidden");
+  }
 }
 function pauseMenu() {
   if (state.screen !== "battle" || state.ended) return;
@@ -859,10 +879,21 @@ function bindUI() {
       moved: false,
     };
     canvas.setPointerCapture(event.pointerId);
+    if (state.placing) {
+      const p = view.point(event);
+      if (p)
+        view.placement(
+          p.x,
+          p.z,
+          HEROES[state.placing].range,
+          placementValid(p.x, p.z),
+          state.placing,
+        );
+    }
   });
   canvas.addEventListener("pointermove", (event) => {
     if (paused() || state.screen !== "battle") return;
-    if (pointer && pointer.id === event.pointerId && !state.placing) {
+    if (pointer && pointer.id === event.pointerId) {
       const dx = event.clientX - pointer.x,
         dy = event.clientY - pointer.y;
       if (
@@ -872,7 +903,7 @@ function bindUI() {
         ) > 7
       )
         pointer.moved = true;
-      if (pointer.moved) view.pan(dx, dy);
+      if (pointer.moved && !state.placing) view.pan(dx, dy);
       pointer.x = event.clientX;
       pointer.y = event.clientY;
     }
@@ -884,6 +915,7 @@ function bindUI() {
           p.z,
           HEROES[state.placing].range,
           placementValid(p.x, p.z),
+          state.placing,
         );
     }
   });
@@ -898,13 +930,11 @@ function bindUI() {
       place(state.placing, p.x, p.z);
       return;
     }
-    let found = null;
-    for (const t of towers)
-      if (Math.hypot(p.x - t.x, p.z - t.z) < 0.9) found = t;
-    select(found);
+    select(view.pickTower(event, towers));
   });
   canvas.addEventListener("pointercancel", () => {
     pointer = null;
+    if (state.placing) view.selection(null);
   });
   canvas.addEventListener("pointerleave", () => {
     if (state.placing && !pointer) view.selection(null);
@@ -993,7 +1023,9 @@ function frame(now) {
       }
       view.update(dt, towers, enemies, preview);
     }
-    view.render();
+    // A modal leaves the last composed scene in place. Its character viewer
+    // owns the active renderer, so the obscured world need not consume GPU time.
+    if (!modalOpen) view.render();
     hudClock += dt;
     if (hudClock > 0.12 && state.screen === "battle") {
       renderHUD();

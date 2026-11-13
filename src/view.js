@@ -24,8 +24,8 @@ export class GameView {
     );
     container.prepend(this.renderer.domElement);
     this.scene = new THREE.Scene();
-    this.scene.add(new THREE.HemisphereLight(0xe3f5ff, 0x677046, 1.7));
-    this.sun = new THREE.DirectionalLight(0xffeed0, 2.7);
+    this.scene.add(new THREE.HemisphereLight(0xdcefff, 0x576c40, 1.05));
+    this.sun = new THREE.DirectionalLight(0xffe3ad, 3.1);
     this.sun.position.set(-10, 22, 13);
     this.sun.castShadow = true;
     Object.assign(this.sun.shadow.camera, {
@@ -39,7 +39,7 @@ export class GameView {
     this.sun.shadow.normalBias = 0.035;
     this.sun.shadow.bias = -0.00015;
     this.scene.add(this.sun);
-    const fill = new THREE.DirectionalLight(0xc4dfff, 0.8);
+    const fill = new THREE.DirectionalLight(0xc4dfff, 0.55);
     fill.position.set(12, 10, -9);
     this.scene.add(fill);
     this.camera = new THREE.OrthographicCamera(-18, 18, 12, -12, 0.1, 150);
@@ -108,7 +108,14 @@ export class GameView {
       Math.min(devicePixelRatio || 1, this.low ? 1.15 : 1.75),
     );
     this.renderer.shadowMap.enabled = !this.low;
-    this.sun.shadow.mapSize.set(this.low ? 512 : 2048, this.low ? 512 : 2048);
+    const shadowSize = this.low ? 512 : 2048;
+    if (this.sun.shadow.mapSize.x !== shadowSize && this.sun.shadow.map) {
+      this.sun.shadow.map.dispose();
+      this.sun.shadow.map = null;
+    }
+    this.sun.shadow.mapSize.set(shadowSize, shadowSize);
+    // Rebuild scenery too: leaf and grass density are part of the quality preset.
+    if (this.world) this.setWorld(this.mapIndex);
     this.resize();
   }
   setWorld(index) {
@@ -125,7 +132,35 @@ export class GameView {
     if (width < 2 || height < 2) return;
     this.renderer.setSize(width, height, false);
     const ratio = width / height;
-    const h = Math.max(9.3, 15 / ratio);
+    const portrait = this.screen === "battle" && ratio < 0.9;
+    const changed = this.portrait !== portrait;
+    this.portrait = portrait;
+    this.cameraHome = new THREE.Vector3(
+      ...(portrait ? [30, 30, 0] : [12, 22, 27]),
+    );
+    if (changed) {
+      this.panX = 0;
+      this.panZ = 0;
+    }
+    this.camera.position
+      .copy(this.cameraHome)
+      .add(new THREE.Vector3(this.panX || 0, 0, this.panZ || 0));
+    this.camera.lookAt(this.panX || 0, 0, this.panZ || 0);
+    this.camera.updateMatrixWorld();
+    // Fit the entire playable envelope. In portrait its long axis runs up the
+    // screen, making units larger without cropping gates or tower positions.
+    const inverse = this.camera.matrixWorldInverse;
+    const corner = new THREE.Vector3();
+    let maxX = 0,
+      maxY = 0;
+    for (const x of [-12.8, 12.8])
+      for (const y of [-2.2, 3.8])
+        for (const z of [-7.6, 7.6]) {
+          corner.set(x, y, z).applyMatrix4(inverse);
+          maxX = Math.max(maxX, Math.abs(corner.x));
+          maxY = Math.max(maxY, Math.abs(corner.y));
+        }
+    const h = Math.max(9.3, maxY * 1.04, (maxX * 1.04) / ratio);
     this.camera.left = -h * ratio;
     this.camera.right = h * ratio;
     this.camera.top = h;
@@ -138,13 +173,15 @@ export class GameView {
     this.resize();
   }
   resetCamera() {
-    this.camera.position.set(12, 22, 27);
+    this.camera.position.copy(this.cameraHome || new THREE.Vector3(12, 22, 27));
     this.camera.lookAt(0, 0, 0);
     this.camera.zoom = 1;
     this.panX = 0;
     this.panZ = 0;
     this.camera.updateProjectionMatrix();
+    this.camera.updateMatrixWorld();
   }
+
   zoom(delta) {
     this.camera.zoom = THREE.MathUtils.clamp(this.camera.zoom + delta, 1, 1.8);
     if (this.camera.zoom === 1) this.resetCamera();
@@ -160,7 +197,11 @@ export class GameView {
       this.camera.matrixWorld,
       0,
     );
-    const back = new THREE.Vector3(12, 0, 27).normalize();
+    const back = new THREE.Vector3(
+      this.cameraHome.x,
+      0,
+      this.cameraHome.z,
+    ).normalize();
     const nx = THREE.MathUtils.clamp(
         (this.panX || 0) - right.x * dx * factor + (back.x * dy * factor) / 0.7,
         -5,
@@ -171,8 +212,8 @@ export class GameView {
         -4,
         4,
       );
-    this.camera.position.x = 12 + nx;
-    this.camera.position.z = 27 + nz;
+    this.camera.position.x = this.cameraHome.x + nx;
+    this.camera.position.z = this.cameraHome.z + nz;
     this.panX = nx;
     this.panZ = nz;
     this.camera.updateMatrixWorld();
@@ -197,7 +238,35 @@ export class GameView {
       y: r.top + ((1 - v.y) / 2) * r.height,
     };
   }
+  clearPlacementGhost() {
+    if (!this.ghost) return;
+    this.scene.remove(this.ghost);
+    for (const mat of this.ghostMaterials) mat.dispose();
+    this.ghost = null;
+    this.ghostMaterials = [];
+    this.ghostKey = null;
+  }
+  pickTower(event, towers) {
+    // A model's head and weapon are selectable, even when its feet are far below
+    // the pointer in the isometric projection. Fall back to ground hit for touch.
+    this.point(event);
+    const hits = this.raycaster.intersectObjects(
+      towers.map((t) => t.group),
+      true,
+    );
+    for (const hit of hits) {
+      let node = hit.object;
+      while (node && node.parent !== this.actors) node = node.parent;
+      const tower = towers.find((t) => t.group === node);
+      if (tower) return tower;
+    }
+    const p = this.point(event);
+    return p
+      ? towers.find((t) => Math.hypot(p.x - t.x, p.z - t.z) < 0.9)
+      : null;
+  }
   selection(tower) {
+    this.clearPlacementGhost();
     this.range.visible = !!tower;
     this.marker.visible = !!tower;
     if (tower) {
@@ -207,7 +276,30 @@ export class GameView {
       this.marker.position.set(tower.x, 0.12, tower.z);
     }
   }
-  placement(x, z, radius, valid) {
+  placement(x, z, radius, valid, key) {
+    if (key && this.ghostKey !== key) {
+      this.clearPlacementGhost();
+      this.ghost = createHero(key);
+      this.ghostKey = key;
+      this.ghostMaterials = [];
+      const mats = new Map();
+      this.ghost.traverse((o) => {
+        if (!o.isMesh) return;
+        if (!mats.has(o.material)) {
+          const mat = o.material.clone();
+          mat.transparent = true;
+          mat.opacity = 0.46;
+          mat.depthWrite = false;
+          mats.set(o.material, mat);
+          this.ghostMaterials.push(mat);
+        }
+        o.material = mats.get(o.material);
+        o.castShadow = false;
+      });
+      this.ghost.rotation.y = 0.25;
+      this.scene.add(this.ghost);
+    }
+    if (this.ghost) this.ghost.position.set(x, 0.025, z);
     this.range.visible = true;
     this.range.position.set(x, 0.08, z);
     this.range.scale.set(radius, 1, radius);
@@ -298,6 +390,7 @@ export class GameView {
   }
   update(dt, towers = [], enemies = [], preview = []) {
     this.time += dt;
+    if (this.ghost) animateHero(this.ghost, this.time);
     if (this.world) animateWorld(this.world, this.time);
     for (const t of [...towers, ...preview])
       animateHero(t.group, this.time, t.attack || 0);
