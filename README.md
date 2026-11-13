@@ -15,7 +15,7 @@ npm run dev
 Abra `http://127.0.0.1:5173`. O jogo usa módulos ES; sirva os arquivos por HTTP em vez de abrir `index.html` pelo protocolo `file:`.
 
 - Escolha um capítulo, selecione um guardião e clique/toque em um terreno livre.
-- Toque em um guardião posicionado para evoluir ou vender. **Ver todas as evoluções** abre os três caminhos com seus 15 níveis, preços, efeitos e comparação de sete atributos.
+- Toque em um guardião posicionado para evoluir ou vender. **Ver todas as evoluções** abre os três caminhos com seus 15 níveis, preços, efeitos e comparação de sete atributos. No celular, funciona em retrato e paisagem.
 - No menu, abra um guardião e escolha **Ver todas as evoluções** para explorar o catálogo sem gastar moedas.
 - A base tem **25 pontos de defesa**. Comuns retiram 1, blindados 2 e chefes 5; a partida acaba em zero. Toque no indicador **DEFESA 25/25** para consultar quantos de cada tipo ainda precisam atravessar.
 - O contador **atravessaram** mostra inimigos que chegaram ao portal; as barras sobre os inimigos mostram o HP atual, sem diminuir com o zoom.

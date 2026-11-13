@@ -39,6 +39,7 @@ Na batalha, selecione um guardião e use **Ver todas as evoluções**. No menu, 
 - Compra de um nível por vez, com atualização de moedas e atributos. O catálogo permite planejar sem comprar.
 - Regra 5–2–0 preservada: um caminho até 5, outro até 2, terceiro bloqueado.
 - Batalha e recarga pausam durante a consulta. Em celular, três abas e rolagem por toque permitem chegar ao quinto nível de cada caminho.
+- Na horizontal, a lista de níveis e o painel de efeitos/compra ficam lado a lado. A checagem de 844 × 390 detectou que o layout anterior reduzia a lista a altura zero; a regra de telas baixas agora mantém 268 px para a área principal e o botão de compra inteiro na tela. A regressão percorre os três caminhos e compra uma evolução nessa orientação.
 
 ## Design e distribuição
 
@@ -77,5 +78,7 @@ Uma simulação separada de 15 ondas com as 500 moedas iniciais e somente recomp
 ![Como funciona a defesa](screenshots/defense-guide.png)
 
 ![Evoluções em celular](screenshots/mobile-evolutions.png)
+
+![Evoluções em celular na horizontal](screenshots/landscape-evolutions.png)
 
 As imagens são capturas do navegador sem edição. Algumas usam uma preparação de QA para mostrar um chefe, o painel de compras ou um nível específico; os testes de economia normal são executados separadamente.

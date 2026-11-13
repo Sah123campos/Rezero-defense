@@ -349,8 +349,11 @@ test(
       );
 
       // Stop the animation clock for reproducible screenshots of short-lived effects.
-      await page.clock.install();
-      await page.clock.pauseAt(new Date(Date.now() + 100));
+      // An explicit epoch avoids racing the host/browser clocks on slower CI.
+      // The next fixture resets the scene immediately after this instant jump.
+      const visualEpoch = new Date("2030-01-01T00:00:00Z");
+      await page.clock.install({ time: visualEpoch });
+      await page.clock.pauseAt(new Date(visualEpoch.getTime() + 60_000));
       await t.test(
         "desktop health has strong color, numeric HP, damage fill and a fixed zoom-independent size",
         async () => {
@@ -658,6 +661,81 @@ test(
             true,
           );
           await shot("mobile-landscape", touch);
+          await touch.evaluate(() => {
+            const a = window.__ASTRAL_TEST__;
+            a.state.gold = 1000;
+            a.select(a.towers[0].id);
+          });
+          await touch.locator("#showEvolutions").tap();
+          const landscapeMain = await touch
+            .locator(".evolution-main")
+            .boundingBox();
+          assert.ok(
+            landscapeMain && landscapeMain.height > 150,
+            `Landscape upgrade paths must retain usable height: ${JSON.stringify(landscapeMain)}`,
+          );
+          assert.equal(
+            await touch.locator(".evolution-tab:visible").count(),
+            3,
+          );
+          assert.equal(await touch.locator(".evolution-stat").count(), 7);
+          for (let path = 0; path < 3; path++) {
+            await touch.locator(`.evolution-tab[data-branch="${path}"]`).tap();
+            const fifthTier = touch.locator(
+              `[data-action="tier"][data-branch="${path}"][data-tier="5"]`,
+            );
+            await fifthTier.scrollIntoViewIfNeeded();
+            await fifthTier.tap();
+            assert.equal(
+              await touch.locator(".evolution-selected-level").textContent(),
+              "5",
+            );
+            assert.equal(
+              await touch
+                .locator(".evolution-path.is-active .evolution-tier")
+                .count(),
+              5,
+            );
+            const purchase = await touch
+              .locator(".evolution-buy")
+              .boundingBox();
+            assert.ok(
+              purchase &&
+                purchase.y >= 0 &&
+                purchase.y + purchase.height <= 390,
+              `The purchase button must stay inside the landscape viewport: ${JSON.stringify(purchase)}`,
+            );
+          }
+          await touch.locator('.evolution-tab[data-branch="0"]').tap();
+          const nextTier = touch.locator(
+            '[data-action="tier"][data-branch="0"][data-tier="2"]',
+          );
+          await nextTier.scrollIntoViewIfNeeded();
+          await nextTier.tap();
+          assert.equal(await touch.locator(".evolution-buy").isEnabled(), true);
+          assert.match(
+            await touch.locator(".evolution-detail-price").textContent(),
+            /200/,
+          );
+          await touch.locator(".evolution-buy").tap();
+          const landscapePurchase = await touch.evaluate(() => ({
+            gold: window.__ASTRAL_TEST__.state.gold,
+            levels: [...window.__ASTRAL_TEST__.towers[0].levels],
+          }));
+          assert.equal(landscapePurchase.gold, 800);
+          assert.deepEqual(landscapePurchase.levels, [2, 0, 0]);
+          assert.equal(
+            await touch
+              .locator(".evolution-panel")
+              .evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+            true,
+          );
+          await shot("landscape-evolutions", touch);
+          await touch.keyboard.press("Escape");
+          assert.equal(
+            await touch.locator(".evolution-overlay").isVisible(),
+            false,
+          );
           await mobile.close();
         },
       );
