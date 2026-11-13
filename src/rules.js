@@ -20,7 +20,7 @@ export const HEROES = {
     damage: 19,
     range: 3.55,
     interval: 0.87,
-    color: "#a5e6f7",
+    color: "#36e6ff",
     element: "gelo",
     symbol: "❄",
     description:
@@ -62,7 +62,7 @@ export const HEROES = {
         "Espírito Protetor",
         "Conjuração veloz e apoio espiritual aos aliados.",
         [
-          ["Afinidade espiritual", "Conjura cristais 14% mais rápido."],
+          ["Afinidade espiritual", "Conjura cristais cerca de 16,3% mais rápido."],
           ["Dança dos espíritos", "Aumenta a frequência dos ataques."],
           ["Pacto de proteção", "A aura espiritual acelera aliados próximos."],
           ["Bênção de Puck", "Conjuração e apoio mais fortes."],
@@ -79,7 +79,7 @@ export const HEROES = {
     damage: 34,
     range: 2.8,
     interval: 1.15,
-    color: "#78bdf5",
+    color: "#55b9ff",
     element: "físico",
     symbol: "✦",
     description:
@@ -110,7 +110,7 @@ export const HEROES = {
         "Instinto Protetor",
         "Ataques rápidos e golpes críticos.",
         [
-          ["Reflexos atentos", "Ataca 17% mais rápido."],
+          ["Reflexos atentos", "Ataca cerca de 20,5% mais rápido."],
           ["Passos leves", "Mais velocidade e chance de golpe crítico."],
           ["Instinto oni", "A corrente gira em ritmo acelerado."],
           ["Voto de proteção", "Golpes rápidos e certeiros."],
@@ -127,7 +127,7 @@ export const HEROES = {
     damage: 13,
     range: 3.5,
     interval: 1.15,
-    color: "#e0adea",
+    color: "#eb77ff",
     element: "yin",
     symbol: "✧",
     description:
@@ -163,7 +163,7 @@ export const HEROES = {
         "Páginas do Tempo",
         "Conjuração rápida e uma aura secundária.",
         [
-          ["Leitura veloz", "Conjura 17% mais rápido."],
+          ["Leitura veloz", "Conjura cerca de 20,5% mais rápido."],
           ["Páginas vivas", "Mais velocidade e apoio aos aliados."],
           ["Ritual acelerado", "Acelera o fluxo de magia."],
           ["Dobra arcana", "Conjuração em ritmo intenso."],
@@ -180,7 +180,7 @@ export const HEROES = {
     damage: 13,
     range: 2.9,
     interval: 0.42,
-    color: "#f3ae72",
+    color: "#ffd047",
     element: "físico",
     symbol: "⚔",
     description:
@@ -216,7 +216,7 @@ export const HEROES = {
         "Retorno do Herói",
         "Reação, velocidade e contra-ataques críticos.",
         [
-          ["Esquiva", "Ataca 19% mais rápido."],
+          ["Esquiva", "Ataca cerca de 23,5% mais rápido."],
           ["Contra-ataque", "Mais velocidade e chance de crítico."],
           ["Determinação", "Não perde uma oportunidade de atacar."],
           ["Ritmo intenso", "Ataques em rápida sucessão."],

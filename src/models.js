@@ -1,4 +1,4 @@
-import * as THREE from "../vendor/three.module.js";
+import * as THREE from "../vendor/three.module.js?v=2.1.0";
 
 // Original, rigged character art. Static parts are batched by material; clones
 // share their immutable geometry, materials and hand-painted face textures.

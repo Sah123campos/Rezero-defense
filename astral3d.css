@@ -3316,3 +3316,131 @@ body[data-screen="battle"] .main-header {
     bottom: 80px;
   }
 }
+.defense-rules {
+  display: grid;
+  gap: 10px;
+  margin: 22px 0;
+  text-align: left;
+}
+.defense-rules > div {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 13px 16px;
+  border: 2px solid #568dd0;
+  border-radius: 13px;
+  background: #163b77;
+  box-shadow: inset 0 2px #ffffff14;
+}
+.defense-rules b {
+  min-width: 45px;
+  color: #ffda56;
+  font:
+    400 32px/1 "Lilita One",
+    sans-serif;
+  text-shadow: 0 3px #101f45;
+}
+.defense-rules span {
+  color: #f6faff;
+  font-weight: 900;
+  font-size: 13px;
+}
+.defense-rules small {
+  display: block;
+  color: #b9dfff;
+  font-weight: 700;
+  font-size: 11px;
+  margin-top: 5px;
+}
+.modal-card .defense-rules + p {
+  font-size: 11px;
+}
+.combat-hud .enemy-health-label,
+.combat-hud .combat-damage {
+  font-family: "Nunito", Arial, sans-serif !important;
+}
+@media (max-width: 760px) {
+  .defense-rules > div {
+    padding: 12px;
+    gap: 11px;
+  }
+  .defense-rules span {
+    font-size: 12px;
+  }
+  .defense-rules small {
+    font-size: 10px;
+  }
+  .defense-rules b {
+    font-size: 28px;
+    min-width: 37px;
+  }
+}
+/* The whole defense badge is the help target, including on touch screens. */
+.stat.health {
+  position: relative;
+}
+#defenseInfo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: transparent;
+  font-size: 0;
+  box-shadow: none;
+  z-index: 2;
+  cursor: help;
+}
+#defenseInfo::before {
+  display: none;
+}
+#defenseInfo::after {
+  content: "?";
+  position: absolute;
+  right: 7px;
+  bottom: 5px;
+  width: 14px;
+  height: 14px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #b2e4ff80;
+  border-radius: 50%;
+  font:
+    900 10px/1 "Nunito",
+    sans-serif;
+  color: #c6edff;
+  background: #193e74;
+}
+#defenseInfo:hover {
+  transform: none;
+  background: #ffffff08;
+}
+.evolution-open-button {
+  min-height: 44px;
+}
+@media (max-width: 760px) and (orientation: portrait) {
+  .shop.has-selection {
+    padding-top: 7px;
+    padding-bottom: 7px;
+  }
+  .shop.has-selection .upgrade-caption {
+    display: none;
+  }
+  .evolution-open-button {
+    height: 44px;
+    min-height: 44px;
+    margin: 2px 0;
+    font-size: 10px;
+  }
+}
+.stat.health .defense-label {
+  position: static;
+}
+#defenseInfo {
+  inset: -2px;
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+}

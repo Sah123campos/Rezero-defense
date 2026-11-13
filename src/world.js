@@ -1,4 +1,4 @@
-import * as THREE from "../vendor/three.module.js";
+import * as THREE from "../vendor/three.module.js?v=2.1.0";
 
 // Original, deterministic dioramas. All solid scenery is merged by material;
 // vegetation uses instancing and only water and atmospheric motes animate.
