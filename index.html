@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width,initial-scale=1,viewport-fit=cover"
     />
-    <meta name="theme-color" content="#edf0e5" />
+    <meta name="theme-color" content="#132f6a" />
     <meta
       name="description"
       content="Defenda Lugunica com Emilia, Rem, Beatrice e Subaru. Um tower defense 3D de fantasia, estratégia e novos destinos."
@@ -14,7 +14,7 @@
     <title>Re:Zero — Astral Defense</title>
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232c5146'/%3E%3Cpath d='M32 9v46M12 20l40 24M12 44l40-24M24 13l8 8 8-8M24 51l8-8 8 8' stroke='%23f4e4b8' fill='none' stroke-width='3'/%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232857ca'/%3E%3Cpath d='M32 9v46M12 20l40 24M12 44l40-24M24 13l8 8 8-8M24 51l8-8 8 8' stroke='%23ffdf61' fill='none' stroke-width='3'/%3E%3C/svg%3E"
     />
     <link rel="stylesheet" href="./astral3d.css" />
   </head>
@@ -74,6 +74,11 @@
         </symbol>
       </defs>
     </svg>
+    <div class="sky-decoration" aria-hidden="true">
+      <span class="sky-orb"></span><span class="cloud cloud-one"></span
+      ><span class="cloud cloud-two"></span><i></i><i></i><i></i><i></i><i></i
+      ><i></i>
+    </div>
     <div id="stage" aria-label="Cenário 3D interativo">
       <div id="loading">
         <span class="loading-sigil">✧</span
@@ -97,7 +102,7 @@
         ><button id="how">Como jogar <span>?</span></button>
       </nav>
       <div class="header-end">
-        <span class="edition">A JORNADA COMEÇA AQUI</span
+        <span class="edition">A MAGIA ESTÁ NO SEU ESQUADRÃO</span
         ><button class="icon-button" id="settings" aria-label="Configurações">
           <svg><use href="#i-settings" /></svg>
         </button>
@@ -105,24 +110,32 @@
     </header>
     <main id="menu" class="menu-screen">
       <section class="hero-copy">
-        <div class="eyebrow"><span></span> UM NOVO DESTINO, A CADA DEFESA</div>
-        <h1>
-          Proteja o que<br />torna este mundo<br /><em>extraordinário.</em>
+        <div class="eyebrow hero-badge">
+          <svg><use href="#i-star" /></svg> TOWER DEFENSE • UM NOVO DESTINO
+        </div>
+        <h1 class="game-title">
+          <span>RE:ZERO</span><em>ASTRAL<br />DEFENSE</em>
         </h1>
         <p>
-          Reúna seus guardiões. Domine a magia.<br />Escreva um novo destino
-          para Lugunica.
+          Seus guardiões. Seus poderes.<br /><strong
+            >Uma nova chance de vencer!</strong
+          >
         </p>
         <button class="primary-button" id="play">
-          <svg><use href="#i-play" /></svg>Começar a jornada<svg
+          <svg><use href="#i-play" /></svg>JOGAR AGORA!<svg
             class="button-arrow"
           >
             <use href="#i-arrow" />
           </svg>
         </button>
         <div class="hero-footnote">
-          <svg><use href="#i-shield" /></svg> Sua estratégia. Seus guardiões.
-          Sua história.
+          <span
+            ><svg><use href="#i-shield" /></svg> 3 CAPÍTULOS</span
+          ><span
+            ><svg><use href="#i-star" /></svg> 15 ONDAS</span
+          ><span
+            ><svg><use href="#i-snow" /></svg> MUITA MAGIA</span
+          >
         </div>
       </section>
       <div class="scene-caption">
@@ -132,17 +145,19 @@
       <div class="scene-note">
         <svg><use href="#i-leaf" /></svg>
         <div>
-          Um mundo para proteger.<small>Uma nova chance para recomeçar.</small>
+          LUGUNICA PRECISA DE VOCÊ!<small
+            >Monte sua defesa. Libere seu poder.</small
+          >
         </div>
       </div>
       <section class="roster-section" id="rosterSection">
         <div class="section-heading">
           <div>
-            <span class="eyebrow">LAÇOS QUE MUDAM O DESTINO</span>
-            <h2>Conheça seus guardiões</h2>
+            <span class="eyebrow">ESCOLHA SEU ESQUADRÃO</span>
+            <h2>QUATRO GUARDIÕES. UM DESTINO.</h2>
           </div>
           <span class="section-aside"
-            >Quatro aliados. Infinitas estratégias.
+            >Gelo. Impacto. Magia. Determinação.
             <svg><use href="#i-star" /></svg
           ></span>
         </div>
@@ -165,9 +180,9 @@
         <button class="text-button" id="campaignBack">
           ← Voltar ao início
         </button>
-        <div class="eyebrow">CADA CAMINHO GUARDA UMA HISTÓRIA</div>
-        <h1>Os capítulos de Lugunica</h1>
-        <p>Vença as 15 ondas para revelar o próximo destino.</p>
+        <div class="eyebrow">SUA AVENTURA COMEÇA AQUI</div>
+        <h1>ESCOLHA SEU DESTINO</h1>
+        <p>Defenda a base, derrote os chefes e desbloqueie novos capítulos!</p>
       </div>
       <div id="campaignGrid" class="campaign-grid"></div>
       <p class="campaign-save">
@@ -190,8 +205,20 @@
         </div>
         <div class="battle-stats">
           <div class="stat health">
-            <svg><use href="#i-heart" /></svg><span id="hp">25</span
-            ><small>VIDAS</small>
+            <svg><use href="#i-heart" /></svg
+            ><span class="health-value"
+              ><b id="hp">25</b><small class="hp-max">/25</small></span
+            ><small class="defense-label"
+              >DEFESA
+              <button
+                id="defenseInfo"
+                class="defense-info"
+                aria-label="Como funciona a defesa"
+                title="Como funciona a defesa"
+              >
+                ?
+              </button></small
+            >
           </div>
           <div class="stat gold">
             <svg><use href="#i-coin" /></svg><span id="coins">500</span
@@ -227,7 +254,12 @@
       <div class="map-status">
         <span class="live-dot"></span
         ><span id="waveStatus">Prepare sua defesa</span
-        ><span id="enemiesLeft"></span>
+        ><span id="enemiesLeft"></span
+        ><span id="leakCount" class="leak-counter">0 atravessaram</span>
+      </div>
+      <div class="leak-legend">
+        Dano à base: <b>Comum −1</b><span>•</span><b>Blindado −2</b
+        ><span>•</span><b>Chefe −5</b>
       </div>
       <div class="placement-hint hidden" id="placementHint">
         <svg><use href="#i-star" /></svg
@@ -255,7 +287,7 @@
         <div class="details" id="details">
           <div class="empty-details">
             <svg><use href="#i-shield" /></svg
-            ><strong>Juntos, somos mais fortes.</strong>
+            ><strong>SEU ESQUADRÃO, SEU PODER!</strong>
             <p>Selecione um guardião no mapa para descobrir suas evoluções.</p>
           </div>
         </div>
@@ -279,7 +311,7 @@
             1<span>×</span>
           </button>
           <div class="round-tip" id="roundTip">
-            Uma boa defesa começa com bons laços.
+            Combine os poderes. Proteja sua base!
           </div>
         </div>
         <div class="battle-actions">
