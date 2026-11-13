@@ -2,7 +2,9 @@
 
 Tower defense 3D para navegador, com quatro guardiões, três capítulos e partidas de 15 ondas. Esta reconstrução implementa a Etapa 1 e estabiliza a base para as próximas expansões.
 
-![Re:Zero — Astral Defense](docs/screenshots/desktop-menu.png)
+A revisão de arte e controles adiciona folhagem instanciada, terreno pintado, cabelos com volume, detalhes de roupas, poses próprias de ataque e um visor 3D interativo dos guardiões. Veja [as mudanças e os limites desta revisão](docs/ART_REFINEMENT.md).
+
+![Re:Zero — Astral Defense](docs/screenshots/refined-menu.png)
 
 ## Jogar e desenvolver
 
@@ -15,7 +17,8 @@ npm run dev
 Abra `http://127.0.0.1:5173`. O jogo usa módulos ES; sirva os arquivos por HTTP em vez de abrir `index.html` pelo protocolo `file:`.
 
 - Escolha um capítulo, selecione um guardião e clique/toque em um terreno livre.
-- Toque em um guardião posicionado para evoluir ou vender.
+- Toque em um guardião posicionado, inclusive na cabeça ou equipamento, para evoluir ou vender. A prévia translúcida e o círculo indicam o local de convocação; arrastar não compra unidades.
+- No menu **Guardiões**, abra um personagem para girar seu modelo e demonstrar o ataque.
 - Use **+ / −** para aproximar; arraste o mapa ampliado para explorar e use **⌖** para centralizar.
 - Um caminho pode chegar ao nível 5; um segundo, ao nível 2. O terceiro fica bloqueado.
 - Emilia desacelera; Rem causa dano em área; Beatrice acelera aliados; Subaru oferece ataques rápidos e apoio tático.
@@ -42,6 +45,8 @@ O teste de navegador está em `tests/browser.test.mjs`; veja `docs/VALIDATION.md
 - `src/rules.js`: regras puras, personagens, combinações de evolução, ondas e validação de salvamento.
 - `src/view.js`: câmera, renderização, efeitos, seleção e retratos.
 - `src/models.js`: modelos originais, detalhes e animações dos quatro guardiões e cinco tipos de inimigo.
+- `src/character-preview.js`: visor 3D dos personagens, controles de giro e descarte de contexto.
+- `src/foliage.js`: folhas dobradas, copas, troncos e samambaias originais.
 - `src/world.js`: três dioramas, vegetação instanciada, caminhos, água e arquitetura.
 - `src/audio.js`: trilha e efeitos originais sintetizados com Web Audio.
 

@@ -14,7 +14,21 @@ A suíte de navegador cria seu próprio servidor temporário e encerra servidor 
 
 Os cenários de integração acessam `?test=1`, que expõe uma API de QA. O jogo normal não expõe essa API. Os testes de vitória e evoluções máximas usam moedas de preparação para exercitar todos os caminhos; não representam uma medição de dificuldade de uma partida comum.
 
-Última execução: **7/7 testes de domínio e 12/12 resultados da suíte de navegador passaram**, sem falhas, testes ignorados, erros de console ou exceções. O resultado do navegador inclui 11 cenários e o contêiner da suíte. Data: 13/11/2026.
+Última execução: **7/7 testes de domínio e 16/16 resultados da suíte de navegador passaram**, sem falhas, testes ignorados, erros de console ou exceções. O resultado do navegador inclui 15 cenários e o contêiner da suíte. Data: 13/11/2026.
+
+## Revalidação da revisão de arte e controles
+
+A suíte ampliada passou integralmente em 165,2 segundos no Chromium com SwiftShader. A primeira execução excedeu o antigo limite de 240 segundos; o cenário antes encoberto foi retirado do desenho durante diálogos, e o limite da suíte foi ajustado para 360 segundos para acomodar a compilação dos quatro visores em CI. A execução final não teve falhas, cancelamentos, testes ignorados ou erros de console.
+
+Quatro cenários adicionais verificam:
+
+- Os quatro visores 3D abrem, giram, demonstram o ataque e removem seu canvas ao fechar.
+- A prévia de convocação respeita terreno válido/inválido; arrastar não altera moedas nem compra torres; Escape remove a prévia e seu círculo.
+- Um clique projetado na cabeça seleciona o guardião pelo modelo.
+- A execução final repete os controles e os layouts de retrato/paisagem com o novo enquadramento móvel.
+- Alta/leve mudam a quantidade de folhas, preservam os guardiões e liberam os mundos anteriores. Três reconstruções em qualidade leve mantêm estável a contagem de geometrias observada pelo renderer.
+
+O ensaio de economia foi repetido com o orçamento real: 15 ondas vencidas, 25 vidas, 398 eliminações e 1.840 moedas ao final, em 515 segundos simulados. Não houve alteração das regras econômicas.
 
 ## O que foi executado
 
@@ -49,7 +63,11 @@ Uma simulação separada venceu as 15 ondas da Floresta com o orçamento inicial
 | Recursos GPU eram abandonados ao trocar mapas | Descarte do mundo e projéteis; cache compartilhado dos modelos |
 | Three.js dependia de CDN | Distribuição local com licença MIT |
 
-## Capturas reais
+## Capturas desta revisão
+
+A comparação com `3c3ae91`, os quatro modelos refinados e o novo retrato móvel estão em [ART_REFINEMENT.md](ART_REFINEMENT.md#comparação-desta-revisão). A partida de captura usa um orçamento aumentado para expor os quatro modelos; o teste de viabilidade mantém o orçamento real. O build final também foi aberto sob `/dist/`, com início de partida, ausência da API de QA na URL normal e nenhuma requisição externa.
+
+## Capturas da reconstrução anterior
 
 | Antes | Depois |
 | --- | --- |
