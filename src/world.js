@@ -5,37 +5,40 @@ import * as THREE from "../vendor/three.module.js";
 const TAU = Math.PI * 2;
 const palettes = [
   {
-    turf: "#78a75c",
-    turf2: "#92b969",
-    leaf: [0x3f7754, 0x568c55, 0x75a65f, 0x9abb67],
-    bark: 0x6d5941,
-    stone: 0xa3ad91,
-    road: "#e8d2a0",
-    bank: 0x9c9870,
-    glow: 0x8ee1e1,
-    flowers: [0xf1c45d, 0xd490b1, 0xb59bdc],
+    turf: "#348a3b",
+    turf2: "#68b33d",
+    leaf: [0x1d6839, 0x248a3b, 0x44a934, 0x87c538],
+    bark: 0x814624,
+    stone: 0x7b95a0,
+    road: "#deb36b",
+    bank: 0x91734a,
+    soil: [0x3b8c34, 0x4c852d, 0x9a6030, 0x87512b, 0x6b4530, 0x4c4543],
+    glow: 0x78f6cb,
+    flowers: [0xffa424, 0xf04a96, 0x9d50e5],
   },
   {
-    turf: "#78a78d",
-    turf2: "#9dc395",
-    leaf: [0x3b735f, 0x538b70, 0x79a789, 0xa0c4a0],
-    bark: 0x655544,
-    stone: 0xa7b6b0,
-    road: "#e4d8bc",
-    bank: 0xa4a98a,
-    glow: 0xffd79c,
-    flowers: [0xd991a9, 0xffe0b9, 0xa38bd3],
+    turf: "#2c8a57",
+    turf2: "#56b565",
+    leaf: [0x166c4d, 0x1e8a54, 0x3ca454, 0x7ec85b],
+    bark: 0x704227,
+    stone: 0x849aa9,
+    road: "#d8b27b",
+    bank: 0x94784b,
+    soil: [0x2e8c49, 0x437a39, 0x94623c, 0x7f5139, 0x634737, 0x43464c],
+    glow: 0xffc75c,
+    flowers: [0xec3d85, 0xffb833, 0x944ce4],
   },
   {
-    turf: "#899b86",
-    turf2: "#a4b49a",
-    leaf: [0x596d73, 0x718a88, 0x8ea797, 0xb2c0a1],
-    bark: 0x665b63,
-    stone: 0xadb8b0,
-    road: "#d9d5be",
-    bank: 0x969383,
-    glow: 0xbd9cf4,
-    flowers: [0xc3b8f7, 0xf2e6ff, 0xa8e0dc],
+    turf: "#367e78",
+    turf2: "#4ca58e",
+    leaf: [0x493575, 0x704095, 0x9955b9, 0xba78d5],
+    bark: 0x554467,
+    stone: 0x7d92b5,
+    road: "#b9b1d6",
+    bank: 0x776487,
+    soil: [0x39867b, 0x3c7277, 0x6f5c86, 0x604d78, 0x514265, 0x3d3e56],
+    glow: 0x5eeeff,
+    flowers: [0xd752f4, 0xff76b4, 0x52e8df],
   },
 ];
 
@@ -292,12 +295,12 @@ function ground(parent, p, index) {
     colors = [];
   const shade = new THREE.Color();
   const rings = [
-    { y: -0.035, s: 1, c: 0x73924e },
-    { y: -0.23, s: 1.005, c: 0x779152 },
-    { y: -0.58, s: 1, c: 0x9b865c },
-    { y: -1.38, s: 0.985, c: 0x9b7954 },
-    { y: -1.85, s: 0.94, c: 0x76634d },
-    { y: -2, s: 0.87, c: 0x645d4d },
+    { y: -0.035, s: 1, c: p.soil[0] },
+    { y: -0.23, s: 1.005, c: p.soil[1] },
+    { y: -0.58, s: 1, c: p.soil[2] },
+    { y: -1.38, s: 0.985, c: p.soil[3] },
+    { y: -1.85, s: 0.94, c: p.soil[4] },
+    { y: -2, s: 0.87, c: p.soil[5] },
   ];
   const random = rng(321);
   for (let j = 0; j < rings.length - 1; j++)
@@ -333,7 +336,7 @@ function ground(parent, p, index) {
     const m = mesh(
       parent,
       geo.pebble,
-      material(i % 2 ? 0xa79b7c : 0x8d8b70),
+      material(i % 2 ? p.stone : 0x687786),
       x * 0.99,
       -0.9 - (i % 3) * 0.19,
       z * 0.99,
@@ -386,7 +389,7 @@ function road(parent, route, p, index) {
     0.71,
     0.035,
     new THREE.MeshStandardMaterial({
-      map: texture(p.road, "#958775", 90 + index, true),
+      map: texture(p.road, index === 2 ? "#685592" : "#996a38", 90 + index, true),
       roughness: 1,
     }),
   );
@@ -405,7 +408,7 @@ function road(parent, route, p, index) {
       const peb = mesh(
         parent,
         geo.pebble,
-        material(i % 4 ? 0xd2cfaf : 0xaaa78c),
+        material(i % 4 ? 0xa3b3ad : p.stone),
         x - (dz / l) * w * side,
         0.075,
         z + (dx / l) * w * side,
@@ -654,7 +657,7 @@ function vegetation(parent, route, p, index, quality, obstacles, water) {
     ),
   );
   blade.computeVertexNormals();
-  const grassMat = material(index === 2 ? 0x829d83 : 0x78a75d, {
+  const grassMat = material(0xffffff, {
     side: THREE.DoubleSide,
   });
   const count = quality === "low" ? 170 : 430,
@@ -672,7 +675,7 @@ function vegetation(parent, route, p, index, quality, obstacles, water) {
     dummy.updateMatrix();
     grass.setMatrixAt(n, dummy.matrix);
     color
-      .setHex(index === 2 ? 0xa7b79d : 0x9dbb70)
+      .setHex(index === 2 ? 0x48a69b : index === 1 ? 0x3ba653 : 0x5dae32)
       .multiplyScalar(0.75 + random() * 0.4);
     grass.setColorAt(n, color);
     n++;
@@ -750,7 +753,7 @@ function pond(parent, p, animated) {
   }
   const bank = new THREE.Mesh(
     new THREE.ShapeGeometry(shape),
-    material(0xbcc795),
+    material(0x829d4c),
   );
   bank.rotation.x = -Math.PI / 2;
   bank.position.set(water.x, 0.016, water.z);
@@ -760,9 +763,9 @@ function pond(parent, p, animated) {
   const waves = document.createElement("canvas");
   waves.width = waves.height = 128;
   const ctx = waves.getContext("2d");
-  ctx.fillStyle = "#7fbfbe";
+  ctx.fillStyle = "#59d5df";
   ctx.fillRect(0, 0, 128, 128);
-  ctx.strokeStyle = "#b4ded4";
+  ctx.strokeStyle = "#b9faff";
   ctx.lineWidth = 1;
   for (let i = 0; i < 16; i++) {
     ctx.beginPath();
@@ -777,7 +780,7 @@ function pond(parent, p, animated) {
   t.repeat.set(2, 2);
   t.colorSpace = THREE.SRGBColorSpace;
   const mat = new THREE.MeshPhysicalMaterial({
-    color: 0x64c2bf,
+    color: 0x20bdcf,
     map: t,
     roughness: 0.2,
     metalness: 0.05,
@@ -815,7 +818,7 @@ function pond(parent, p, animated) {
     const pad = mesh(
       parent,
       new THREE.CircleGeometry(0.2, 15, 0.2, TAU - 0.4),
-      material(0x669b70, { side: THREE.DoubleSide }),
+      material(0x258350, { side: THREE.DoubleSide }),
       x,
       0.055,
       z,
@@ -828,7 +831,7 @@ function pond(parent, p, animated) {
         const m = mesh(
           parent,
           geo.sphere,
-          material(0xf4d5d7),
+        material(0xff629e),
           x + Math.cos(a) * 0.05,
           0.105,
           z + Math.sin(a) * 0.05,
@@ -984,9 +987,9 @@ function manor(parent, p, obstacles) {
   g.scale.setScalar(0.92);
   parent.add(g);
   obstacles.push({ x: 7.8, z: -5.05, r: 2.5 });
-  const ivory = 0xe6ddc9,
-    wood = 0x695c67,
-    roof = 0x70677b;
+  const ivory = 0xf2d8b6,
+    wood = 0x663752,
+    roof = 0x6d369f;
   box(g, 0, 0.14, 0, 5.4, 0.28, 3.3, 0xb4b4a5);
   box(g, 0, 1.35, 0, 4.7, 2.4, 2.55, ivory);
   box(g, 0, 0.4, 1.36, 4.85, 0.2, 0.12, 0xc6bfae);
@@ -1012,13 +1015,13 @@ function manor(parent, p, obstacles) {
         0.42,
         0.055,
         0.07,
-        r % 2 ? 0x80778c : 0x625d72,
+        r % 2 ? 0x965bc5 : 0x4f2b85,
       );
       shingle.rotation.z = x > 0 ? -0.42 : 0.42;
     }
   for (const x of [-1.48, 1.48]) {
     box(g, x, 1.8, 1.34, 0.68, 0.9, 0.09, 0x746e7e);
-    box(g, x, 1.8, 1.4, 0.53, 0.72, 0.035, 0x9ccbd3, { roughness: 0.3 });
+    box(g, x, 1.8, 1.4, 0.53, 0.72, 0.035, 0x39b6d6, { roughness: 0.3 });
     box(g, x, 1.8, 1.43, 0.045, 0.76, 0.025, ivory);
     box(g, x, 1.8, 1.43, 0.55, 0.045, 0.025, ivory);
     box(g, x, 1.27, 1.53, 0.83, 0.16, 0.34, 0xa78d78);
@@ -1028,7 +1031,7 @@ function manor(parent, p, obstacles) {
       mesh(
         g,
         geo.sphere,
-        material(0xddb8cd),
+        material(0xf24491),
         x + (k - 1) * 0.19,
         1.51,
         1.56,
@@ -1065,8 +1068,8 @@ function manor(parent, p, obstacles) {
   box(g, -2.15, 1.85, -0.55, 1.15, 3.6, 1.25, ivory);
   const turret = new THREE.ConeGeometry(1.02, 1.22, 4);
   turret.rotateY(Math.PI / 4);
-  mesh(g, turret, material(0x766c85), -2.15, 4.23, -0.55, 1, 1, 0.95);
-  box(g, -2.15, 2.95, 0.1, 0.43, 0.72, 0.045, 0xa9cdda, { roughness: 0.3 });
+  mesh(g, turret, material(0x542693), -2.15, 4.23, -0.55, 1, 1, 0.95);
+  box(g, -2.15, 2.95, 0.1, 0.43, 0.72, 0.045, 0x49c0e3, { roughness: 0.3 });
   box(g, -2.15, 2.95, 0.14, 0.04, 0.76, 0.025, wood);
   box(g, 1.2, 3.25, -0.4, 0.42, 0.9, 0.5, 0xc7b7a8);
   box(g, 1.2, 3.75, -0.4, 0.51, 0.11, 0.59, 0x9d9790);
@@ -1198,7 +1201,7 @@ function sanctuary(parent, p, obstacles, animated) {
   const ring = mesh(
     g,
     new THREE.TorusGeometry(0.64, 0.055, 6, 32),
-    material(0xb9a1df, { emissive: 0xb098e1, emissiveIntensity: 0.52 }),
+    material(0x58e4ef, { emissive: 0x34d5ed, emissiveIntensity: 0.65 }),
     0,
     1.55,
     0.14,
@@ -1208,9 +1211,9 @@ function sanctuary(parent, p, obstacles, animated) {
   const sigil = mesh(
     g,
     new THREE.OctahedronGeometry(0.32, 0),
-    material(0xbca0e8, {
-      emissive: 0xa58acd,
-      emissiveIntensity: 0.3,
+    material(0xb547f2, {
+      emissive: 0x9330d1,
+      emissiveIntensity: 0.45,
       metalness: 0.12,
       roughness: 0.3,
     }),
@@ -1225,12 +1228,13 @@ function sanctuary(parent, p, obstacles, animated) {
       z = 1.1 + (i % 2) * 0.3;
     box(g, x, 0.2, z, 0.44, 0.4, 0.6, 0x9eaaa0).rotation.y = i * 0.5;
   }
-  const crystalMat = material(0xafb6e2, {
+  const crystalMat = material(0x9870e9, {
     roughness: 0.28,
     metalness: 0.12,
-    emissive: 0x5c6a8a,
-    emissiveIntensity: 0.12,
+    emissive: 0x6e35a9,
+    emissiveIntensity: 0.22,
   });
+  animated.push({ type: "crystalGlow", material: crystalMat });
   for (const [x, z, s] of [
     [-9.6, 4.8, 0.8],
     [1.4, -5.4, 1],
@@ -1353,9 +1357,9 @@ function atmosphere(parent, p, animated, quality) {
     g,
     new THREE.PointsMaterial({
       color: p.glow,
-      size: 0.09,
+      size: 0.11,
       transparent: true,
-      opacity: 0.58,
+      opacity: 0.74,
       depthWrite: false,
       sizeAttenuation: true,
     }),
@@ -1428,6 +1432,8 @@ export function animateWorld(group, time) {
       a.last = Math.sin(time * 1.8 + a.phase) * 0.06;
     } else if (a.type === "portal") {
       a.mesh.rotation.z = time * 0.17;
+    } else if (a.type === "crystalGlow") {
+      a.material.emissiveIntensity = 0.24 + Math.sin(time * 1.5) * 0.08;
     } else if (a.type === "fountain") {
       a.mesh.scale.x = 0.9 + Math.sin(time * 7) * 0.1;
       a.mesh.material.opacity = 0.5 + Math.sin(time * 4) * 0.08;
