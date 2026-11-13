@@ -4,8 +4,8 @@ import * as THREE from '../vendor/three.module.js';
 // vegetation uses instancing and only water and atmospheric motes animate.
 const TAU = Math.PI * 2;
 const palettes = [
-  { turf: '#78a75c', turf2: '#92b969', leaf: [0x3f7754, 0x568c55, 0x75a65f, 0x9abb67], bark: 0x6d5941, stone: 0xa3ad91, road: '#e8d2a0', bank: 0x9c9870, glow: 0x8ee1e1, flowers: [0xffe6b0, 0xe9b5d8, 0xece8fd] },
-  { turf: '#78a78d', turf2: '#9dc395', leaf: [0x3b735f, 0x538b70, 0x79a789, 0xa0c4a0], bark: 0x655544, stone: 0xa7b6b0, road: '#e4d8bc', bank: 0xa4a98a, glow: 0xffd79c, flowers: [0xf4c3cc, 0xffeee3, 0xbba5e5] },
+  { turf: '#78a75c', turf2: '#92b969', leaf: [0x3f7754, 0x568c55, 0x75a65f, 0x9abb67], bark: 0x6d5941, stone: 0xa3ad91, road: '#e8d2a0', bank: 0x9c9870, glow: 0x8ee1e1, flowers: [0xf1c45d, 0xd490b1, 0xb59bdc] },
+  { turf: '#78a78d', turf2: '#9dc395', leaf: [0x3b735f, 0x538b70, 0x79a789, 0xa0c4a0], bark: 0x655544, stone: 0xa7b6b0, road: '#e4d8bc', bank: 0xa4a98a, glow: 0xffd79c, flowers: [0xd991a9, 0xffe0b9, 0xa38bd3] },
   { turf: '#899b86', turf2: '#a4b49a', leaf: [0x596d73, 0x718a88, 0x8ea797, 0xb2c0a1], bark: 0x665b63, stone: 0xadb8b0, road: '#d9d5be', bank: 0x969383, glow: 0xbd9cf4, flowers: [0xc3b8f7, 0xf2e6ff, 0xa8e0dc] },
 ];
 
@@ -49,6 +49,15 @@ const geo = {
   cylinder: new THREE.CylinderGeometry(1,1,1,9),
   leaf: new THREE.SphereGeometry(1,14,10),
 };
+{
+  const flower=new THREE.Shape();
+  for(let i=0;i<=40;i++){
+    const a=i/40*TAU,r=.09*(.72+.28*Math.cos(a*5));
+    i?flower.lineTo(Math.cos(a)*r,Math.sin(a)*r):flower.moveTo(Math.cos(a)*r,Math.sin(a)*r);
+  }
+  geo.flower=new THREE.ShapeGeometry(flower);geo.flower.rotateX(-Math.PI/2);
+  geo.flowerCenter=new THREE.SphereGeometry(1,6,4);
+}
 const sharedGeometries = new Set(Object.values(geo));
 // Sculpt lobes into a single crown rather than stacking cone primitives.
 {
@@ -202,10 +211,14 @@ function vegetation(parent,route,p,index,quality,obstacles,water) {
     }else if(index===0&&i%4===0)mushroom(parent,x,z,.65+random()*.45,i%2?0xcf9d70:0xb96754);
     else spots.push([x,z]);
   }
-  // One instanced draw for hundreds of fine, tapered blades.
-  const blade=new THREE.BufferGeometry();blade.setAttribute('position',new THREE.Float32BufferAttribute([-.032,0,0,.032,0,0,.012,.3,.025],3));blade.computeVertexNormals();
+  // Three splayed blades per tuft stay readable on small screens, in one draw.
+  const blade=new THREE.BufferGeometry();blade.setAttribute('position',new THREE.Float32BufferAttribute([
+    -.035,0,0,.035,0,0,.012,.3,.025,
+    -.025,0,-.025,.025,0,.025,-.09,.23,.04,
+    .025,0,-.025,-.025,0,.025,.095,.25,-.02,
+  ],3));blade.computeVertexNormals();
   const grassMat=material(index===2?0x829d83:0x78a75d,{side:THREE.DoubleSide});
-  const count=quality==='low'?250:650,grass=new THREE.InstancedMesh(blade,grassMat,count),dummy=new THREE.Object3D(),color=new THREE.Color();
+  const count=quality==='low'?170:430,grass=new THREE.InstancedMesh(blade,grassMat,count),dummy=new THREE.Object3D(),color=new THREE.Color();
   let n=0;
   for(let i=0;i<count*3&&n<count;i++){
     const x=(random()-.5)*23.5,z=(random()-.5)*13;
@@ -214,14 +227,24 @@ function vegetation(parent,route,p,index,quality,obstacles,water) {
     color.setHex(index===2?0xa7b79d:0x9dbb70).multiplyScalar(.75+random()*.4);grass.setColorAt(n,color);n++;
   }
   grass.count=n;grass.castShadow=false;grass.receiveShadow=true;parent.add(grass);
-  // Tiny five-petal flowers are geometry, not sprites; grouped into material batches.
-  for(let i=0;i<(quality==='low'?35:75);i++){
-    const x=(random()-.5)*22.8,z=(random()-.5)*12.7;if(!free(x,z,-.05))continue;
-    const stem=.13+random()*.12;
+  // Petal outlines replace six tiny spheres: richer clustered flowers at a
+  // fraction of the triangles, still batched into only three blossom materials.
+  const flower=(x,z,color,s=1)=>{
+    const stem=(.15+random()*.12)*s;
     mesh(parent,geo.cylinder,material(0x4f7951),x,stem/2,z,.012,stem,.012);
-    for(let k=0;k<5;k++){const a=k/5*TAU;mesh(parent,geo.sphere,material(p.flowers[i%3]),x+Math.cos(a)*.052,stem,z+Math.sin(a)*.052,.047,.017,.04);}
-    mesh(parent,geo.sphere,material(0xf3d68b),x,stem+.013,z,.025,.018,.025);
+    const bloom=mesh(parent,geo.flower,material(color,{side:THREE.DoubleSide}),x,stem,z,s,1,s);bloom.rotation.y=random()*TAU;
+    mesh(parent,geo.flowerCenter,material(0xe3b84e),x,stem+.013,z,.024*s,.017,.024*s);
+  };
+  for(let i=0;i<(quality==='low'?24:45);i++){
+    const x=(random()-.5)*22.8,z=(random()-.5)*12.7;if(free(x,z,-.05))flower(x,z,p.flowers[i%3]);
   }
+  spots.slice(0,quality==='low'?6:12).forEach(([x,z],i)=>{
+    ellipsoid(parent,x,.055,z,.29,.06,.22,p.leaf[2]);
+    for(let k=0;k<5;k++){
+      const a=k/5*TAU,r=.1+random()*.17,fx=x+Math.cos(a)*r,fz=z+Math.sin(a)*r;
+      if(free(fx,fz,-.1))flower(fx,fz,p.flowers[i%3],.95+random()*.35);
+    }
+  });
 }
 
 function pond(parent,p,animated) {
