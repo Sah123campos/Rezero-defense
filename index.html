@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23c79bff'/%3E%3Cstop offset='1' stop-color='%238fd4ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%230b0a1f'/%3E%3Cpath d='M32 7 L53 16 V34 C53 46 43 55 32 59 C21 55 11 46 11 34 V16 Z' fill='url(%23g)'/%3E%3Cpath d='M32 19 l3.2 8.4 h8.8 l-6.6 6 2.2 9.2 -7.6-5.4 -7.6 5.4 2.2-9.2 -6.6-6 h8.8 z' fill='%230b0a1f'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Fredoka:wght@500;600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#0b0a1f; --panel:#16132e; --panel2:#201a42; --ink:#eae6ff; --muted:#a9a2d6;
@@ -187,9 +187,9 @@
   .ptile.lock{opacity:.4}
   @keyframes pulseT{0%,100%{box-shadow:0 0 0 1px var(--gold)}50%{box-shadow:0 0 0 2px var(--gold),0 0 12px rgba(255,209,102,.55)}}
   .ppips{display:flex;gap:3px;justify-content:center;margin-top:2px}
-  /* ===== menu premium (glassmorphism + pétalas + névoa) ===== */
+  /* ===== menu estilo Bloons TD6 (botões 3D, logo com contorno) ===== */
   #scMenu{background:transparent;justify-content:flex-start;align-items:center;
-    padding:0 0 0 clamp(14px,6vw,96px)}
+    padding:0 0 0 clamp(14px,6vw,88px)}
   #scMenu .fog{position:absolute;left:-20%;right:-20%;height:70%;pointer-events:none;z-index:1;
     background:radial-gradient(55% 55% at 50% 50%,rgba(199,155,255,.12),transparent 72%);
     filter:blur(22px);animation:fogDrift 42s linear infinite}
@@ -204,31 +204,51 @@
   @keyframes petalFall{from{top:-6%}to{top:106%}}
   @keyframes petalSway{from{transform:translateX(calc(var(--sway,18px)*-1)) rotate(0)}
     to{transform:translateX(var(--sway,18px)) rotate(200deg)}}
-  .menuPanel{position:relative;z-index:2;background:rgba(18,14,40,.52);
-    -webkit-backdrop-filter:blur(16px) saturate(1.2);backdrop-filter:blur(16px) saturate(1.2);
-    border:1px solid rgba(255,255,255,.16);border-radius:24px;text-align:left;
-    padding:clamp(20px,3.6vmin,38px) clamp(22px,3.6vmin,40px);max-width:min(460px,90vw);
-    box-shadow:0 24px 70px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.12)}
-  #scMenu .logo{font-family:'Cinzel',serif;text-align:left;line-height:.95;
-    animation:titleGlow 4.5s ease-in-out infinite}
-  @keyframes titleGlow{0%,100%{filter:drop-shadow(0 0 10px rgba(199,155,255,.45))}
-    50%{filter:drop-shadow(0 0 24px rgba(143,212,255,.65))}}
-  #scMenu .logo small{letter-spacing:3px}
-  #scMenu .sub{margin:.8em 0 0;max-width:none}
-  .menuNav{display:flex;flex-direction:column;gap:9px;margin-top:16px}
-  .mbtn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;
-    font-family:inherit;font-weight:700;font-size:clamp(14px,2.3vmin,18px);color:var(--ink);
-    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;
-    padding:.7em 1em;transition:transform .09s,background .15s,border-color .15s}
-  .mbtn svg{width:21px;height:21px;flex:0 0 auto;stroke:var(--gold);fill:none;stroke-width:1.8}
-  .mbtn:hover{background:rgba(255,255,255,.12);border-color:var(--gold);transform:translateX(5px)}
-  .mbtn.primary{background:linear-gradient(180deg,#ffe7a3,var(--gold));color:#201a33;
-    border-color:transparent;box-shadow:0 8px 22px rgba(255,209,102,.32)}
-  .mbtn.primary svg{stroke:#201a33}
-  .mbtn.primary:hover{background:linear-gradient(180deg,#fff0c2,#ffd95e)}
-  .menuCrystalsLine{margin-top:16px;display:flex;align-items:center;gap:8px;font-weight:800;
-    color:var(--gold);font-size:14px}
-  .menuCrystalsLine svg{width:18px;height:18px;fill:var(--ice);stroke:none}
+  .menuPanel{position:relative;z-index:2;text-align:left;
+    background:linear-gradient(180deg,rgba(44,30,86,.86),rgba(20,13,46,.92));
+    -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
+    border:3px solid rgba(255,221,128,.55);border-radius:26px;
+    padding:clamp(18px,3.2vmin,34px) clamp(20px,3.4vmin,38px) clamp(16px,2.8vmin,28px);
+    max-width:min(440px,92vw);
+    box-shadow:0 22px 60px rgba(0,0,0,.6),inset 0 2px 0 rgba(255,255,255,.14),0 0 0 2px rgba(0,0,0,.35)}
+  /* logo chunky com contorno (estilo BTD6) */
+  #scMenu .logo{font-family:'Fredoka','Inter',sans-serif;font-weight:700;text-align:left;
+    line-height:.9;letter-spacing:1px;color:#ffe14d;
+    -webkit-text-stroke:3px #2a1850;paint-order:stroke fill;
+    text-shadow:0 5px 0 #2a1850,0 9px 16px rgba(0,0,0,.55);
+    animation:logoPop 4.5s ease-in-out infinite}
+  @keyframes logoPop{0%,100%{transform:rotate(-1deg) scale(1)}50%{transform:rotate(-1deg) scale(1.025)}}
+  #scMenu .logo small{display:block;margin-top:.5em;font-size:clamp(11px,2.1vmin,16px);
+    font-weight:600;letter-spacing:2px;color:#fff;-webkit-text-stroke:0;
+    text-shadow:0 2px 0 rgba(0,0,0,.5)}
+  #scMenu .sub{margin:.7em 0 0;max-width:none;color:#dcd6ff;font-weight:600;
+    text-shadow:0 1px 2px rgba(0,0,0,.5)}
+  .menuNav{display:flex;flex-direction:column;gap:12px;margin-top:18px}
+  /* botões 3D com bisel inferior e pressionar (estilo BTD6) */
+  .mbtn{position:relative;display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+    cursor:pointer;font-family:'Fredoka','Inter',sans-serif;font-weight:600;
+    font-size:clamp(16px,2.7vmin,23px);color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.4);
+    padding:.5em .9em;border-radius:18px;
+    background:linear-gradient(180deg,#63b6ff 0%,#2f80e4 55%,#2365c2 100%);
+    border:3px solid #163f7d;
+    box-shadow:0 6px 0 #163f7d,0 11px 16px rgba(0,0,0,.45),inset 0 2px 0 rgba(255,255,255,.5);
+    transition:transform .07s ease,box-shadow .07s ease,filter .15s}
+  .mbtn svg{width:26px;height:26px;flex:0 0 auto;stroke:#fff;fill:none;stroke-width:2;
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
+  .mbtn:hover{filter:brightness(1.08)}
+  .mbtn:active{transform:translateY(5px);
+    box-shadow:0 1px 0 #163f7d,0 3px 7px rgba(0,0,0,.4),inset 0 2px 0 rgba(255,255,255,.45)}
+  .mbtn.primary{font-size:clamp(19px,3.1vmin,27px);padding:.58em .95em;
+    background:linear-gradient(180deg,#9bf070 0%,#49c73a 55%,#36a52c 100%);
+    border-color:#1f6b1a;
+    box-shadow:0 7px 0 #1f6b1a,0 13px 18px rgba(0,0,0,.48),inset 0 2px 0 rgba(255,255,255,.55)}
+  .mbtn.primary:active{transform:translateY(6px);
+    box-shadow:0 1px 0 #1f6b1a,0 3px 7px rgba(0,0,0,.4),inset 0 2px 0 rgba(255,255,255,.5)}
+  .menuCrystalsLine{margin-top:16px;display:inline-flex;align-items:center;gap:8px;
+    font-family:'Fredoka',sans-serif;font-weight:600;color:#201a33;font-size:clamp(13px,2.2vmin,17px);
+    background:linear-gradient(180deg,#ffe49a,#ffd166);border:3px solid #b98a1f;border-radius:14px;
+    padding:.32em .7em;box-shadow:0 4px 0 #b98a1f,inset 0 2px 0 rgba(255,255,255,.6)}
+  .menuCrystalsLine svg{width:18px;height:18px;fill:#2f80e4;stroke:none}
   @media (max-width:560px){ #scMenu{justify-content:center;padding:0 14px} }
 </style>
 </head>
