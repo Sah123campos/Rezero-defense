@@ -1,140 +1,67 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#090916"><title>Re:Zero — Astral Defense</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@400;500;700&display=swap');
-:root{--bg:#090916;--panel:#111126;--line:#282747;--white:#f4f2ff;--muted:#9896ba;--violet:#a78bfa;--cyan:#7dd3fc;--gold:#f5cf83;--red:#fb7185}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 70% 15%,#21183d 0%,#090916 55%);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh}button{font:inherit;color:inherit;cursor:pointer;border:0}button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}.hidden{display:none!important}
-.brand{font:700 clamp(34px,6vw,68px) Rajdhani,sans-serif;letter-spacing:.06em;line-height:.9}.brand span{color:#c4b5fd}.eyebrow{font:700 11px Rajdhani;letter-spacing:.24em;color:var(--cyan);text-transform:uppercase}.muted{color:var(--muted)}.btn{background:linear-gradient(135deg,#a78bfa,#7863d5);color:#100d24;font-weight:700;border-radius:12px;padding:13px 20px;box-shadow:0 8px 26px #8b5cf633;transition:.18s}.btn:hover{transform:translateY(-2px);filter:brightness(1.1)}.btn.secondary{background:#1b1936;color:#ddd6fe;border:1px solid #3b3565;box-shadow:none}.btn.ghost{background:transparent;border:1px solid #383456;box-shadow:none;color:#d6d2ed}.shell{max-width:1200px;margin:auto;padding:28px}.screen{min-height:100vh}
-.hero{display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:40px;min-height:85vh}.heroText{padding:35px 0}.heroText p{max-width:480px;line-height:1.8;color:#b7b4d1}.heroVisual{height:520px;position:relative;border:1px solid #393158;border-radius:28px;overflow:hidden;background:radial-gradient(ellipse at 50% 70%,#54418b 0,#20193f 35%,#101025 75%);box-shadow:0 35px 90px #0008}.heroVisual:before{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#090916 0%,transparent 65%),radial-gradient(circle at 50% 20%,#c4b5fd30,transparent 50%)}.moon{position:absolute;width:190px;height:190px;border-radius:50%;background:#d8d3ff;box-shadow:0 0 90px #a78bfa;top:45px;left:calc(50% - 95px);opacity:.8}.silhouette{position:absolute;bottom:-40px;left:50%;transform:translateX(-50%);width:270px;height:400px;background:linear-gradient(120deg,#e0d8ff,#9b8bd4 30%,#32265e 65%,#151329);clip-path:polygon(40% 0,60% 0,68% 12%,78% 18%,90% 42%,100% 100%,0 100%,10% 42%,22% 18%,32% 12%);filter:drop-shadow(0 0 25px #c4b5fd55)}.orbit{position:absolute;border:1px solid #c4b5fd44;border-radius:50%;width:390px;height:390px;left:calc(50% - 195px);top:70px;animation:spin 22s linear infinite}.orbit:after{content:"✦";position:absolute;top:20px;left:70px;color:#fff;font-size:23px;text-shadow:0 0 15px #fff}@keyframes spin{to{transform:rotate(360deg)}}.heroBadge{position:absolute;bottom:22px;left:22px;background:#100e25c9;border:1px solid #ffffff22;padding:12px 15px;border-radius:12px;backdrop-filter:blur(12px)}.heroBadge b{display:block;font:700 19px Rajdhani}.heroBadge small{color:#aaa6c8}
-.menuActions{display:flex;gap:12px;margin:26px 0;flex-wrap:wrap}.featureRow{display:flex;gap:20px;flex-wrap:wrap;color:#aaa6c8;font-size:12px}.featureRow span{display:flex;gap:7px;align-items:center}
-.top{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid #ffffff12;background:#090916b8;position:sticky;top:0;z-index:5;backdrop-filter:blur(15px)}.smallBrand{font:700 24px Rajdhani;letter-spacing:.08em}.smallBrand span{color:var(--violet)}.topRight{display:flex;gap:10px;align-items:center}.chip{padding:9px 13px;border:1px solid #302c50;background:#15132b;border-radius:10px;font:700 14px Rajdhani}
-.sectionHead{display:flex;align-items:end;justify-content:space-between;margin:28px 0 18px}.sectionHead h2{font:700 32px Rajdhani;margin:0}.mapsGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.mapCard{border:1px solid #302c50;background:linear-gradient(145deg,#17152f,#0e0d20);border-radius:18px;overflow:hidden;cursor:pointer;transition:.2s}.mapCard:hover{transform:translateY(-4px);border-color:#a78bfa}.mapArt{height:180px;position:relative;overflow:hidden;background:linear-gradient(145deg,#243d58,#4a3577)}.mapArt canvas{width:100%;height:100%}.mapInfo{padding:17px}.mapInfo h3{font:700 22px Rajdhani;margin:0 0 7px}.mapInfo p{font-size:12px;color:var(--muted);line-height:1.5;min-height:36px}.mapMeta{display:flex;justify-content:space-between;color:#c4b5fd;font:700 12px Rajdhani}
-.roster{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.unitCard{padding:15px;background:#14122a;border:1px solid #302c50;border-radius:15px;display:flex;gap:12px;align-items:center}.portrait{width:54px;height:64px;border-radius:10px;display:grid;place-items:center;font:700 24px Rajdhani;background:linear-gradient(145deg,#42356e,#17152e);color:#ddd6fe;border:1px solid #5d4c91}.unitCard b{display:block;font:700 17px Rajdhani}.unitCard small{font-size:11px;color:var(--muted)}
-/* GAME */
-#game{height:100vh;overflow:hidden;background:#080812;display:flex;flex-direction:column}.gameTop{height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:#0d0c1e;border-bottom:1px solid #272342;gap:10px}.gameStats{display:flex;gap:8px}.gstat{background:#17152d;border:1px solid #302c50;border-radius:10px;padding:8px 13px;font:700 14px Rajdhani}.gstat span{color:var(--gold)}.gameBody{flex:1;min-height:0;display:flex;position:relative}.boardWrap{flex:1;min-width:0;position:relative;background:#11182a}#board{width:100%;height:100%;display:block;touch-action:none}.sidePanel{width:290px;background:#0e0d20;border-left:1px solid #292542;padding:16px;overflow:auto;flex-shrink:0}.panelTitle{font:700 19px Rajdhani;margin:0 0 12px}.unitShop{display:grid;grid-template-columns:1fr 1fr;gap:8px}.shopUnit{background:#17152d;border:1px solid #302c50;border-radius:12px;padding:10px 6px;text-align:center;min-height:100px}.shopUnit:hover{border-color:#a78bfa}.shopUnit .uicon{font-size:25px;display:block;margin-bottom:5px}.shopUnit b{display:block;font:700 15px Rajdhani}.shopUnit small{color:var(--gold);font-size:12px}.shopUnit em{font-size:10px;color:var(--muted);font-style:normal}.divider{height:1px;background:#292542;margin:17px 0}.selectedInfo{background:#17152d;border:1px solid #302c50;border-radius:13px;padding:13px}.selectedInfo h3{font:700 20px Rajdhani;margin:0}.selectedInfo p{font-size:11px;color:var(--muted);line-height:1.5}.upgradeBtn{display:flex;width:100%;justify-content:space-between;align-items:center;background:#28204a;border:1px solid #493b77;padding:10px;border-radius:9px;margin-top:7px;font-size:12px}.upgradeBtn:disabled{opacity:.35;cursor:not-allowed}.upgradeBtn strong{color:var(--gold)}.gameBottom{height:53px;flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:0 18px;background:#0d0c1e;border-top:1px solid #272342;font-size:12px;color:var(--muted)}.gameBottom button{background:#28204a;border-radius:9px;padding:9px 15px;color:#ddd6fe;font-weight:700}.gameBottom button:disabled{opacity:.45;cursor:not-allowed}.branchGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.branchBtn{background:#211b40;border:1px solid #4b3b76;padding:9px 6px;border-radius:8px;font-size:11px;color:#ddd6fe}.branchBtn:hover{border-color:#c4b5fd}.mapCard.locked{opacity:.48;filter:grayscale(.7);cursor:not-allowed}.mapCard.locked:after{content:'🔒 DESBLOQUEIO: ONDA '+attr(data-wave);display:block;padding:8px;color:#f5cf83;font-size:11px}.abilityBtn{background:linear-gradient(135deg,#4c1d95,#7c3aed)!important;border:1px solid #a78bfa!important;color:#fff!important}
-.overlay{position:absolute;inset:0;background:#070711b8;display:grid;place-items:center;z-index:4;backdrop-filter:blur(8px)}.modal{width:min(430px,90vw);background:#15132c;border:1px solid #51427c;border-radius:22px;padding:28px;text-align:center;box-shadow:0 30px 100px #0008}.modal h2{font:700 32px Rajdhani;margin:0 0 8px}.modal p{color:var(--muted);line-height:1.6}.modalActions{display:flex;justify-content:center;gap:10px;margin-top:22px;flex-wrap:wrap}.toast{position:absolute;top:16px;left:50%;transform:translateX(-50%);background:#211b40;border:1px solid #5b4b8a;border-radius:12px;padding:10px 17px;z-index:8;font-size:13px}
-@media(max-width:850px){.shell{padding:18px}.hero{grid-template-columns:1fr;min-height:auto;padding:40px 0}.heroVisual{height:330px;order:-1}.silhouette{height:280px;width:190px}.moon{width:130px;height:130px;left:calc(50% - 65px)}.orbit{width:260px;height:260px;left:calc(50% - 130px)}.mapsGrid{grid-template-columns:repeat(2,1fr)}.roster{grid-template-columns:repeat(2,1fr)}.sidePanel{width:230px;padding:10px}.gameTop{padding:0 8px}.gstat{padding:7px 8px;font-size:12px}}
-@media(max-width:560px){.mapsGrid{grid-template-columns:1fr}.mapArt{height:145px}.roster{grid-template-columns:1fr 1fr}.unitCard{padding:9px;gap:8px}.portrait{width:42px;height:52px}.gameTop{height:52px}.gameStats{gap:4px}.gstat{padding:6px;font-size:11px}.gameBody{flex-direction:column}.boardWrap{flex:1;min-height:0}.sidePanel{width:100%;height:150px;overflow:auto;border-left:0;border-top:1px solid #292542;padding:8px}.unitShop{grid-template-columns:repeat(4,1fr);gap:5px}.shopUnit{min-height:78px;padding:5px}.shopUnit .uicon{font-size:18px;margin:0}.shopUnit b{font-size:12px}.shopUnit em{display:none}.divider,.panelTitle{display:none}.selectedInfo{padding:8px}.selectedInfo p{display:none}.upgradeBtn{display:inline-flex;width:48%;margin:4px 1% 0 0}.gameBottom{height:42px;padding:0 8px}.top{padding:12px}.brand{font-size:40px}}
-</style></head><body>
-<div id="menu" class="screen">
-<header class="top"><div class="smallBrand">RE:ZERO <span>✦ DEFENSE</span></div><div class="topRight"><button class="btn ghost" id="musicBtn" style="padding:9px 12px">♫ Música: OFF</button><div class="chip">✧ BEST WAVE <b id="bestWaveMenu">0</b></div></div></header>
-<div class="shell"><section class="hero"><div class="heroText"><div class="eyebrow">TOWER DEFENSE · FAN GAME</div><h1 class="brand" style="margin:18px 0">DEFENDA O<br><span>DESTINO.</span></h1><p>As sombras avançam sobre Lugunica. Reúna aliados, domine poderes elementais e proteja o caminho — uma onda de cada vez.</p><div class="menuActions"><button class="btn" id="playBtn">✦ INICIAR JORNADA</button><button class="btn secondary" id="howBtn">COMO JOGAR</button></div><div class="featureRow"><span>◈ Estratégia</span><span>✧ Evoluções</span><span>⌁ Chefes</span></div></div>
-<div class="heroVisual"><div class="moon"></div><div class="orbit"></div><div class="silhouette"></div><div class="heroBadge"><b>THE WITCH'S PROPHECY</b><small>O destino pode ser reescrito.</small></div></div></section>
-<div class="sectionHead"><div><div class="eyebrow">SEU ESQUADRÃO</div><h2>Guardiões disponíveis</h2></div><span class="muted">4 unidades iniciais</span></div><div class="roster">
-<div class="unitCard"><div class="portrait" style="color:#a5e4ff">❄</div><div><b>Emilia</b><small>Maga · Controle</small></div></div><div class="unitCard"><div class="portrait" style="color:#91d9ff">✦</div><div><b>Rem</b><small>Atacante · Área</small></div></div><div class="unitCard"><div class="portrait" style="color:#e2c6ff">♧</div><div><b>Beatrice</b><small>Arcana · Suporte</small></div></div><div class="unitCard"><div class="portrait" style="color:#ffbfbd">⚔</div><div><b>Subaru</b><small>Guardião · Impacto</small></div></div></div>
-<p class="muted" style="font-size:11px;margin-top:28px">Projeto de fã não oficial. Personagens e universo pertencem aos seus respectivos criadores.</p></div></div>
-<div id="maps" class="screen hidden"><header class="top"><button class="btn ghost" id="backMenu">← Menu</button><div class="smallBrand">SELECIONE <span>O MUNDO</span></div><div class="chip">✦ CAMPANHA</div></header><div class="shell"><div class="sectionHead"><div><div class="eyebrow">CAPÍTULO 01 · LUGUNICA</div><h2>Escolha seu campo de batalha</h2></div></div><div class="mapsGrid" id="mapsGrid"></div></div></div>
-<div id="game" class="hidden"><div class="gameTop"><button class="btn ghost" id="exitGame" style="padding:8px 12px">✕</button><div class="smallBrand" id="mapName">LUGUNICA</div><div class="gameStats"><div class="gstat">♥ <span id="lives">20</span></div><div class="gstat">◈ <span id="gold">400</span></div><div class="gstat">WAVE <span id="wave">0</span></div></div></div>
-<div class="gameBody"><div class="boardWrap"><canvas id="board"></canvas><div class="overlay" id="gameOverlay"><div class="modal"><div class="eyebrow">PREPARE-SE</div><h2 id="modalTitle">A batalha começa</h2><p id="modalText">Posicione seus guardiões ao redor da estrada e impeça os inimigos de alcançar o portal.</p><div class="modalActions"><button class="btn" id="modalMain">COMEÇAR ONDA 1</button><button class="btn secondary" id="modalAlt">Voltar ao mapa</button></div></div></div></div>
-<aside class="sidePanel"><h3 class="panelTitle">✦ CONVOCAR GUARDIÕES</h3><div class="unitShop" id="unitShop"></div><div class="divider"></div><div id="inspect" class="selectedInfo"><h3 id="selName">Nenhum guardião</h3><p id="selDesc">Selecione uma unidade na loja e toque em uma área livre do mapa.</p><div id="upgrades"></div><div id="branches"></div></div></aside></div>
-<div class="gameBottom"><span id="hint">Toque em uma unidade e depois no terreno para posicionar.</span><div><button id="abilityBtn" class="abilityBtn" disabled>✦ HABILIDADE</button> <button id="speedBtn">▶ 1×</button> <button id="waveBtn">INICIAR ONDA</button></div></div></div>
-<div id="toast" class="toast hidden"></div>
-<script>
-const $=id=>document.getElementById(id), canvas=$('board'),ctx=canvas.getContext('2d');$('bestWaveMenu').textContent=localStorage.getItem('rezero-best-wave')||0;
-const maps=[
-{name:'Floresta de Lugunica',sub:'Trilha das primeiras aventuras',color:'#477b68',path:[[0,.35],[.28,.35],[.28,.72],[.58,.72],[.58,.25],[.83,.25],[.83,.65],[1,.65]]},
-{name:'Mansão Roswaal',sub:'Jardins e corredores encantados',color:'#66528c',path:[[0,.72],[.2,.72],[.2,.3],[.5,.3],[.5,.7],[.78,.7],[.78,.22],[1,.22]]},
-{name:'Santuário',sub:'Ruínas sob a lua violeta',color:'#9a536e',path:[[0,.22],[.3,.22],[.3,.52],[.12,.52],[.12,.82],[.62,.82],[.62,.38],[.86,.38],[.86,.7],[1,.7]]}];
-const units={
-emilia:{name:'Emilia',icon:'❄',cost:160,color:'#8edcff',desc:'Gelo mágico: desacelera inimigos e atinge alvos em linha.',dmg:22,range:115,rate:.8,slow:.45,up:['Cristais afiados','Nevasca arcana'],upgrade:[130,260]},
-rem:{name:'Rem',icon:'✦',cost:210,color:'#8fcaff',desc:'Manguelo: golpes poderosos em área, ideal contra grupos.',dmg:38,range:82,rate:1.15,splash:35,up:['Manguelo reforçado','Fúria oni'],upgrade:[160,320]},
-bea:{name:'Beatrice',icon:'♧',cost:250,color:'#d7adff',desc:'Magia yin: fortalece aliados próximos e fere inimigos.',dmg:15,range:100,rate:1.2,buff:true,up:['Biblioteca proibida','Grande espírito'],upgrade:[190,380]},
-subaru:{name:'Subaru',icon:'⚔',cost:120,color:'#ffb8aa',desc:'Determinação: ataque rápido e barato, bom para começar.',dmg:13,range:95,rate:.45,up:['Coragem renovada','Retorno da morte'],upgrade:[100,220]}}
-let state={map:0,started:false,wave:0,gold:430,lives:20,towers:[],enemies:[],shots:[],selected:null,placing:null,spawn:0,queue:0,clock:0,speed:1,paused:false,won:false,abilityCd:0,abilityReady:false,bestWave:0,music:false,audio:null,musicNodes:[]};
-function drawMapThumb(c,m){let g=c.getContext('2d'),w=c.width,h=c.height;g.fillStyle=m.color;g.fillRect(0,0,w,h);for(let i=0;i<70;i++){g.fillStyle=i%2?'#ffffff09':'#00000012';g.beginPath();g.arc(Math.random()*w,Math.random()*h,2+Math.random()*12,0,7);g.fill()}g.strokeStyle='#d8c7a5';g.lineWidth=20;g.lineCap='round';g.beginPath();m.path.forEach((p,i)=>i?g.lineTo(p[0]*w,p[1]*h):g.moveTo(p[0]*w,p[1]*h));g.stroke();g.strokeStyle='#f8e5bd';g.lineWidth=2;g.stroke()}
-maps.forEach((m,i)=>{let d=document.createElement('div');d.className='mapCard';d.dataset.wave=i===0?0:i===1?3:7;d.innerHTML='<div class="mapArt"><canvas></canvas></div><div class="mapInfo"><h3>'+m.name+'</h3><p>'+m.sub+'</p><div class="mapMeta"><span>✦ '+(i+1)+'º mundo</span><span>▶ JOGAR</span></div></div>';let c=d.querySelector('canvas');c.width=600;c.height=250;drawMapThumb(c,m);d.onclick=()=>{let req=Number(d.dataset.wave),best=Number(localStorage.getItem('rezero-best-wave')||0);if(best<req){toast('Desbloqueie ao alcançar a onda '+req);return}startMap(i)};$('mapsGrid').appendChild(d)});
-Object.entries(units).forEach(([k,u])=>{let b=document.createElement('button');b.className='shopUnit';b.innerHTML='<span class="uicon" style="color:'+u.color+'">'+u.icon+'</span><b>'+u.name+'</b><small>◈ '+u.cost+'</small><em>'+u.range+' alcance</em>';b.onclick=()=>{state.placing=k;state.selected=null;inspect();toast('Toque no terreno para posicionar '+u.name)};$('unitShop').appendChild(b)});
-function startMap(i){let req=i===0?0:i===1?3:7;if(Number(localStorage.getItem('rezero-best-wave')||0)<req){toast('Mapa bloqueado: alcance a onda '+req);return}state.map=i;state.started=false;state.wave=0;state.gold=430;state.lives=20;state.towers=[];state.enemies=[];state.shots=[];state.selected=null;state.placing=null;state.speed=1;state.paused=false;state.abilityCd=0;state.abilityReady=false;$('maps').classList.add('hidden');$('menu').classList.add('hidden');$('game').classList.remove('hidden');$('mapName').textContent=maps[i].name.toUpperCase();resize();overlay(true,'A batalha começa','Monte sua defesa. Escolha uma unidade e posicione fora da estrada.','COMEÇAR ONDA 1');updateHUD();inspect();draw()}
-function overlay(show,title='Batalha',msg='',main='CONTINUAR'){ $('gameOverlay').classList.toggle('hidden',!show);$('modalTitle').textContent=title;$('modalText').textContent=msg;$('modalMain').textContent=main}
-function resize(){let r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);canvas.width=Math.floor(r.width*d);canvas.height=Math.floor(r.height*d);ctx.setTransform(d,0,0,d,0,0);draw()}
-function pathPoints(){let m=maps[state.map],w=canvas.clientWidth,h=canvas.clientHeight;return m.path.map(p=>[p[0]*w,p[1]*h])}
-function trace(g,pts){g.beginPath();pts.forEach((p,i)=>i?g.lineTo(...p):g.moveTo(...p))}
-
-function drawTree(g,x,y,s,variant){
-g.save();g.translate(x,y);g.scale(s,s);
-g.fillStyle='#102f2c55';g.beginPath();g.ellipse(4,8,22,10,-.2,0,7);g.fill();
-g.fillStyle='#594536';g.fillRect(-3,-4,6,15);
-for(let i=0;i<3;i++){g.fillStyle=[variant?'#355b62':'#245449',variant?'#478277':'#31715a',variant?'#72a39b':'#4b9873'][i];g.beginPath();g.moveTo(0,-42+i*9);g.lineTo(-19+i*2,-10+i*6);g.quadraticCurveTo(0,-2+i*4,19-i*2,-10+i*6);g.closePath();g.fill()}
-g.fillStyle='#b2ddc644';g.beginPath();g.ellipse(-7,-23,5,12,-.5,0,7);g.fill();g.restore()
-}
-function drawGuardian(g,t){
-let {x,y,key,u,level}=t,scale=level===2?1.15:level===1?1.07:1;
-g.save();g.translate(x,y+Math.sin(state.clock*2+x)*1.6);g.scale(scale,scale);
-g.fillStyle='#061b2477';g.beginPath();g.ellipse(0,17,22,9,0,0,7);g.fill();
-g.shadowColor=u.color;g.shadowBlur=17;g.strokeStyle=u.color;g.lineWidth=2;g.beginPath();g.ellipse(0,15,20,8,0,0,7);g.stroke();g.shadowBlur=0;
-let hair={emilia:'#ecf6ff',rem:'#368cda',bea:'#f5d37c',subaru:'#282b3b'}[key],coat={emilia:'#e7e4fc',rem:'#292e55',bea:'#f6d8b3',subaru:'#20293e'}[key];
-g.fillStyle='#22243a';g.fillRect(-8,12,6,7);g.fillRect(3,12,6,7);
-g.fillStyle=coat;g.beginPath();g.moveTo(-10,-2);g.lineTo(-15,15);g.lineTo(15,15);g.lineTo(10,-2);g.closePath();g.fill();
-g.strokeStyle=u.color;g.lineWidth=2;g.beginPath();g.moveTo(-10,2);g.lineTo(0,8);g.lineTo(10,2);g.stroke();
-g.fillStyle=hair;g.beginPath();g.ellipse(0,-12,13,16,0,0,7);g.fill();
-if(key==='emilia'||key==='bea'){g.fillRect(-14,-10,5,24);g.fillRect(9,-10,5,24)}
-g.fillStyle='#ffe3d7';g.beginPath();g.ellipse(0,-11,9,11,0,0,7);g.fill();
-g.fillStyle=hair;g.beginPath();g.moveTo(-12,-19);g.quadraticCurveTo(-3,-32,12,-21);g.lineTo(7,-15);g.lineTo(1,-22);g.lineTo(-8,-13);g.closePath();g.fill();
-g.fillStyle=key==='rem'?'#7bd9ff':'#7358a3';g.beginPath();g.ellipse(-4,-11,2.1,2.6,0,0,7);g.ellipse(4,-11,2.1,2.6,0,0,7);g.fill();
-g.fillStyle='#fff';g.beginPath();g.arc(-4.6,-12,0.8,0,7);g.arc(3.4,-12,0.8,0,7);g.fill();
-if(key==='rem'){g.fillStyle='#fff';g.fillRect(-8,3,16,3);g.fillStyle='#f2b2b6';g.fillRect(-3,-28,6,4)}
-if(key==='bea'){g.fillStyle='#d6a8f6';g.beginPath();g.arc(-13,-21,5,0,7);g.arc(13,-21,5,0,7);g.fill()}
-if(key==='emilia'){g.fillStyle='#86e7ff';g.beginPath();g.moveTo(13,-14);g.lineTo(21,-28);g.lineTo(25,-13);g.closePath();g.fill()}
-if(level>0){g.fillStyle=u.color;for(let i=0;i<level+2;i++){let a=state.clock*1.3+i*6.28/(level+2);g.beginPath();g.arc(Math.cos(a)*23,Math.sin(a)*19-5,2.8,0,7);g.fill()}}
-g.restore();
-}
-function drawEnemy(g,e){
-g.save();g.translate(e.x,e.y+Math.sin(state.clock*5+e.d*20)*2);
-g.fillStyle='#0007';g.beginPath();g.ellipse(0,e.r*.8,e.r*1.3,e.r*.45,0,0,7);g.fill();
-g.shadowColor=e.color;g.shadowBlur=e.boss?23:10;
-g.fillStyle=e.color;g.beginPath();g.moveTo(-e.r,0);g.quadraticCurveTo(-e.r*1.2,-e.r*1.5,0,-e.r*1.1);g.quadraticCurveTo(e.r*1.2,-e.r*1.5,e.r,0);g.lineTo(e.r*.8,e.r*.8);g.lineTo(0,e.r*.4);g.lineTo(-e.r*.8,e.r*.8);g.closePath();g.fill();g.shadowBlur=0;
-g.fillStyle=e.boss?'#48152c':'#271b43';g.beginPath();g.moveTo(-e.r*.8,-e.r*.6);g.lineTo(-e.r*1.4,-e.r*1.4);g.lineTo(-e.r*.15,-e.r*.9);g.moveTo(e.r*.8,-e.r*.6);g.lineTo(e.r*1.4,-e.r*1.4);g.lineTo(e.r*.15,-e.r*.9);g.fill();
-g.fillStyle='#fff';g.beginPath();g.ellipse(-e.r*.35,-e.r*.18,e.r*.19,e.r*.25,0,0,7);g.ellipse(e.r*.35,-e.r*.18,e.r*.19,e.r*.25,0,0,7);g.fill();
-if(e.boss){g.strokeStyle='#ffd1e8';g.lineWidth=2;g.beginPath();g.arc(0,0,e.r+5,0,7);g.stroke()}
-g.restore();
-g.fillStyle='#181527';g.fillRect(e.x-17,e.y-e.r-12,34,5);g.fillStyle=e.boss?'#f7a1c4':'#a3f7da';g.fillRect(e.x-17,e.y-e.r-12,34*Math.max(0,e.hp/e.max),5)
-}
-function draw(){
-if(!canvas.clientWidth)return;
-let w=canvas.clientWidth,h=canvas.clientHeight,g=ctx,m=maps[state.map],pts=pathPoints(),scale=Math.min(w,h);
-g.clearRect(0,0,w,h);
-let palettes=[['#275e55','#3a7766','#6ba78a'],['#333454','#4e4b78','#7771a2'],['#3d314c','#69516d','#ad789a']],p=palettes[state.map];
-let grad=g.createLinearGradient(0,0,w,h);grad.addColorStop(0,p[0]);grad.addColorStop(.7,p[1]);grad.addColorStop(1,p[2]);g.fillStyle=grad;g.fillRect(0,0,w,h);
-for(let i=0;i<5;i++){g.fillStyle=i%2?'#ffffff08':'#001c1b0c';g.beginPath();g.moveTo(0,h*(.13+i*.17));for(let x=0;x<=w+24;x+=24)g.lineTo(x,h*(.13+i*.17)+Math.sin(x*.013+i*1.7)*16);g.lineTo(w,h);g.lineTo(0,h);g.fill()}
-let seed=1249+state.map*487;function rnd(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
-for(let i=0;i<175;i++){
-let x=rnd()*w,y=rnd()*h,s=.55+rnd()*1.15;
-if(Math.min(...pts.slice(1).map((q,j)=>pointSegment(x,y,pts[j],q)))<scale*.11)continue;
-if(i%7===0){g.fillStyle='#b9bdab';g.beginPath();g.ellipse(x,y,7*s,4*s,-.2,0,7);g.fill()}
-else if(i%4===0){g.fillStyle=i%8?'#e3c6ec':'#ffdf95';for(let j=0;j<4;j++){let a=j*Math.PI/2;g.beginPath();g.arc(x+Math.cos(a)*3,y+Math.sin(a)*3,2.4,0,7);g.fill()}}
-else drawTree(g,x,y,s,i%5===0)
-}
-g.lineCap='round';g.lineJoin='round';trace(g,pts);g.strokeStyle='#172d30aa';g.lineWidth=scale*.17;g.stroke();trace(g,pts);g.strokeStyle='#7d6b5c';g.lineWidth=scale*.149;g.stroke();trace(g,pts);g.strokeStyle='#cfb78e';g.lineWidth=scale*.126;g.stroke();trace(g,pts);g.strokeStyle='#e6d6af';g.lineWidth=2;g.setLineDash([4,16]);g.stroke();g.setLineDash([]);
-g.fillStyle='#a5f3fc';g.shadowColor='#67e8f9';g.shadowBlur=20;g.beginPath();g.arc(...pts[0],12,0,7);g.fill();g.fillStyle='#fda4af';g.shadowColor='#fb7185';g.beginPath();g.arc(...pts.at(-1),13,0,7);g.fill();g.shadowBlur=0;
-state.towers.forEach(t=>{drawGuardian(g,t);if(state.selected===t){g.strokeStyle='#ffffffbb';g.lineWidth=2;g.beginPath();g.arc(t.x,t.y,26,0,7);g.stroke();g.fillStyle=t.u.color+'15';g.beginPath();g.arc(t.x,t.y,t.range,0,7);g.fill();g.strokeStyle=t.u.color+'99';g.stroke()}});
-state.enemies.forEach(e=>drawEnemy(g,e));
-state.shots.forEach(s=>{g.shadowColor=s.color;g.shadowBlur=16;g.fillStyle=s.color;g.beginPath();g.arc(s.x,s.y,5,0,7);g.fill();g.shadowBlur=0});
-if(state.placing){let v=units[state.placing],p=pointer;g.strokeStyle=v.color;g.setLineDash([6,5]);g.beginPath();g.arc(p.x,p.y,v.range,0,7);g.stroke();g.setLineDash([]);g.fillStyle=v.color+'77';g.beginPath();g.arc(p.x,p.y,20,0,7);g.fill()}
-}
-let pointer={x:0,y:0};
-function inspect(){let t=state.selected;$('branches').innerHTML='';if(!t){$('selName').textContent=state.placing?units[state.placing].name+' · posicionar':'Nenhum guardião';$('selDesc').textContent=state.placing?'Toque em uma área fora da estrada para colocar a unidade.':'Escolha uma unidade e toque no terreno para posicionar.';$('upgrades').innerHTML='';return}
-$('selName').textContent=t.u.name+' · Nv.'+(t.level+1);$('selDesc').textContent=t.u.desc;$('upgrades').innerHTML='';t.u.up.forEach((name,i)=>{let b=document.createElement('button');b.className='upgradeBtn';b.disabled=t.level!==i||state.gold<t.u.upgrade[i];b.innerHTML='<span>✦ '+name+'</span><strong>◈ '+t.u.upgrade[i]+'</strong>';b.onclick=()=>upgrade(t);$('upgrades').appendChild(b)});if(t.level===2){let title=document.createElement('p');title.textContent='ESCOLHA UMA ESPECIALIZAÇÃO';title.style.cssText='font-size:10px;color:#c4b5fd;margin:12px 0 4px';$('branches').appendChild(title);let grid=document.createElement('div');grid.className='branchGrid';['Poder','Alcance'].forEach((n,i)=>{let b=document.createElement('button');b.className='branchBtn';b.textContent=(t.branch===i?'✓ ':'✧ ')+n;b.onclick=()=>{if(t.branch!==undefined)return;t.branch=i;if(i===0)t.dmg*=1.7;else t.range*=1.45;inspect();toast('Especialização: '+n)};grid.appendChild(b)});$('branches').appendChild(grid)}let sell=document.createElement('button');sell.className='upgradeBtn';sell.innerHTML='<span>↩ Vender unidade</span><strong>+'+Math.floor(t.paid*.65)+'</strong>';sell.onclick=()=>{state.gold+=Math.floor(t.paid*.65);state.towers=state.towers.filter(x=>x!==t);state.selected=null;inspect();updateHUD()};$('upgrades').appendChild(sell)}
-function upgrade(t){let cost=t.u.upgrade[t.level];if(state.gold<cost||t.level>=2)return;state.gold-=cost;t.paid+=cost;t.level++;t.dmg*=1.65;t.range*=1.12;t.rate*=.85;if(t.level===1){t.splash=(t.splash||0)+20;t.slow=t.slow||.2}if(t.level===2){t.splash=(t.splash||0)+35;t.rate*=.8}sound('upgrade');toast(t.u.name+' evoluiu!');updateHUD();inspect()}
-function updateHUD(){$('lives').textContent=state.lives;$('gold').textContent=state.gold;$('wave').textContent=state.wave}
-function toggleMusic(){try{if(!state.audio)state.audio=new (window.AudioContext||window.webkitAudioContext)();if(state.music){state.musicNodes.forEach(n=>{try{n.stop()}catch(e){}});state.musicNodes=[];state.music=false;$('musicBtn').textContent='♫ Música: OFF';return}state.music=true;$('musicBtn').textContent='♫ Música: ON';let ac=state.audio;[110,164.81,220].forEach((hz,i)=>{let o=ac.createOscillator(),g=ac.createGain();o.type='triangle';o.frequency.value=hz;g.gain.value=.012/(i+1);o.connect(g);g.connect(ac.destination);o.start();state.musicNodes.push(o)});}catch(e){toast('Áudio indisponível neste navegador')}}$('musicBtn').onclick=toggleMusic;function sound(type='hit'){try{if(!state.audio){state.audio=new (window.AudioContext||window.webkitAudioContext)()}let a=state.audio,o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.type=type==='boss'?'sawtooth':'sine';o.frequency.value=type==='upgrade'?660:type==='boss'?95:type==='magic'?880:300;g.gain.setValueAtTime(.045,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.16);o.start();o.stop(a.currentTime+.17)}catch(e){}}function toast(msg){$('toast').textContent=msg;$('toast').classList.remove('hidden');clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').classList.add('hidden'),1800)}
-function pointSegment(x,y,a,b){let dx=b[0]-a[0],dy=b[1]-a[1],t=Math.max(0,Math.min(1,((x-a[0])*dx+(y-a[1])*dy)/(dx*dx+dy*dy||1)));return Math.hypot(x-a[0]-t*dx,y-a[1]-t*dy)}
-function onBoard(e){let r=canvas.getBoundingClientRect();pointer={x:e.clientX-r.left,y:e.clientY-r.top};if(state.placing)draw()}
-canvas.addEventListener('pointermove',onBoard);canvas.addEventListener('pointerdown',e=>{e.preventDefault();onBoard(e);let x=pointer.x,y=pointer.y;
-if(state.placing){let pts=pathPoints(),near=Math.min(...pts.slice(1).map((p,i)=>pointSegment(x,y,pts[i],p)));if(near<42){toast('Muito perto da estrada!');return}let u=units[state.placing];if(state.gold<u.cost){toast('Ouro insuficiente');return}state.gold-=u.cost;let t={key:state.placing,u,x,y,level:0,dmg:u.dmg,range:u.range,rate:u.rate,cd:.2,paid:u.cost};state.towers.push(t);state.selected=t;state.placing=null;inspect();updateHUD();draw();return}
-let picked=state.towers.find(t=>Math.hypot(t.x-x,t.y-y)<26);if(picked){state.selected=picked;inspect();draw()}else{state.selected=null;inspect();draw()}});
-function startWave(){if(state.started)return;state.started=true;state.wave++;state.queue=7+state.wave*3;state.bestWave=Math.max(state.bestWave,state.wave);localStorage.setItem('rezero-best-wave',state.bestWave);$('bestWaveMenu').textContent=state.bestWave;document.querySelectorAll('.mapCard').forEach((el,i)=>{let req=i===0?0:i===1?3:7;el.classList.toggle('locked',state.bestWave<req)});state.spawn=0;state.spawnTimer=0;state.abilityReady=true;$('abilityBtn').disabled=false;$('abilityBtn').textContent='✦ HABILIDADE';$('waveBtn').textContent='ONDA '+state.wave+' EM ANDAMENTO';$('waveBtn').disabled=true;overlay(false);updateHUD()}
-$('waveBtn').onclick=startWave;$('modalMain').onclick=startWave;$('modalAlt').onclick=()=>{state.paused=true;overlay(false);$('game').classList.add('hidden');$('maps').classList.remove('hidden')};
-$('abilityBtn').onclick=()=>{if(!state.started||state.abilityCd>0)return;let pts=pathPoints();state.enemies.forEach(e=>{e.hp-=e.boss?180: e.tank?100:150});state.enemies=state.enemies.filter(e=>{if(e.hp<=0){state.gold+=e.boss?100:12;return false}return true});state.abilityCd=18;$('abilityBtn').disabled=true;$('abilityBtn').textContent='⏳ 18s';sound('magic');toast('EMILIA · NEVASCA!');updateHUD();draw()};$('speedBtn').onclick=()=>{state.speed=state.speed===1?2:state.speed===2?3:1;$('speedBtn').textContent='▶ '+state.speed+'×'};
-$('exitGame').onclick=()=>{overlay(true,'Sair da batalha?','Seu progresso desta partida será perdido.','VOLTAR AO MAPA');$('modalMain').onclick=()=>{$('game').classList.add('hidden');$('maps').classList.remove('hidden')};$('modalAlt').textContent='CONTINUAR';$('modalAlt').onclick=()=>overlay(false)};
-function towerSplash(target,damage,radius){if(!radius)return false;state.enemies.forEach(e=>{if(e!==target&&Math.hypot(e.x-target.x,e.y-target.y)<radius)e.hp-=damage*.45});return true}function getPos(d){let pts=pathPoints(),lens=[],total=0;for(let i=1;i<pts.length;i++){let l=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);lens.push(l);total+=l}let z=d*total;for(let i=0;i<lens.length;i++){if(z<=lens[i]){let t=z/lens[i];return[pts[i][0]+(pts[i+1][0]-pts[i][0])*t,pts[i][1]+(pts[i+1][1]-pts[i][1])*t]}z-=lens[i]}return pts.at(-1)}
-let last=0;function loop(ts){let dt=Math.min(.04,(ts-last)/1000||0);last=ts;if(state.started&&!state.paused){state.clock+=dt*state.speed;state.spawnTimer+=dt*state.speed;state.abilityCd=Math.max(0,state.abilityCd-dt*state.speed);if(state.abilityCd<=0&&state.started){$('abilityBtn').disabled=false;$('abilityBtn').textContent='✦ HABILIDADE'}
-if(state.queue>0&&state.spawnTimer>.65){state.spawnTimer=0;let p=getPos(0);let boss=(state.wave%5===0&&state.queue===1),tank=state.spawn%4===3;let hp=(boss?650:tank?110:40)+state.wave*(boss?90:tank?24:13);state.enemies.push({d:0,x:p[0],y:p[1],hp,max:hp,r:boss?21:tank?15:10,color:boss?'#ff5c91':tank?'#fbbf24':state.wave%4===0?'#fda4af':'#e9b7ff',speed:boss?.035:tank?.045:.075+state.wave*.001,boss,tank,kind:boss?'boss':tank?'tank':'normal'});if(boss){sound('boss');toast('CHEFE: GUARDIÃO DAS SOMBRAS!')}state.spawn++;state.queue--}
-state.enemies.forEach(e=>{e.d+=e.speed*dt*state.speed;let p=getPos(e.d);e.x=p[0];e.y=p[1]});
-state.towers.forEach(t=>{t.cd-=dt*state.speed;if(t.cd<=0){let target=state.enemies.filter(e=>Math.hypot(e.x-t.x,e.y-t.y)<t.range).sort((a,b)=>b.d-a.d)[0];if(target){t.cd=t.rate;state.shots.push({x:t.x,y:t.y,target,damage:t.dmg,color:t.u.color,speed:360,splash:t.splash||0})}}});
-state.shots.forEach(s=>{if(!state.enemies.includes(s.target)){s.dead=true;return}let dx=s.target.x-s.x,dy=s.target.y-s.y,d=Math.hypot(dx,dy),step=s.speed*dt*state.speed;if(d<step+5){s.target.hp-=s.damage;s.dead=true;sound();if(towerSplash(s.target,s.damage,s.splash)){}if(s.target.hp<=0){state.gold+=12;state.enemies=state.enemies.filter(e=>e!==s.target)}}else{s.x+=dx/d*step;s.y+=dy/d*step}});
-state.shots=state.shots.filter(s=>!s.dead);state.enemies=state.enemies.filter(e=>{if(e.d>=1){state.lives--;return false}return e.hp>0});
-if(state.lives<=0){state.started=false;state.queue=-1;$('abilityBtn').disabled=true;overlay(true,'O destino foi rompido','As criaturas alcançaram o portal. Reorganize sua defesa!','TENTAR NOVAMENTE');$('modalMain').onclick=()=>{state.lives=20;state.gold=430;state.wave=0;state.enemies=[];state.towers=[];state.started=false;updateHUD();overlay(false)}}
-if(state.queue===0&&state.enemies.length===0&&state.lives>0){state.started=false;$('abilityBtn').disabled=true;state.gold+=60+state.wave*10;$('waveBtn').disabled=false;$('waveBtn').textContent='INICIAR ONDA '+(state.wave+1);overlay(true,'Onda '+state.wave+' concluída!','+'+(60+state.wave*10)+' de ouro bônus. '+(state.wave===3?'Mansão Roswaal desbloqueada! ':state.wave===7?'Santuário desbloqueado! ':'')+'Prepare-se para a próxima.','PRÓXIMA ONDA');$('modalMain').onclick=startWave;$('modalAlt').textContent='VOLTAR AO MAPA';$('modalAlt').onclick=()=>{$('game').classList.add('hidden');$('maps').classList.remove('hidden')}}updateHUD()}
-draw();requestAnimationFrame(loop)}
-document.querySelectorAll('.mapCard').forEach((el,i)=>{let req=i===0?0:i===1?3:7;el.classList.toggle('locked',Number(localStorage.getItem('rezero-best-wave')||0)<req)});$('playBtn').onclick=()=>{$('menu').classList.add('hidden');$('maps').classList.remove('hidden')};$('backMenu').onclick=()=>{$('maps').classList.add('hidden');$('menu').classList.remove('hidden')};$('howBtn').onclick=()=>alert('1. Escolha um mundo. 2. Selecione um guardião e toque fora da estrada. 3. Inicie as ondas e evolua unidades. 4. A cada 5 ondas aparece um CHEFE. 5. Durante a onda, use HABILIDADE para uma explosão mágica global (recarga de 18s). Ouro e bônus são ganhos ao derrotar inimigos.');window.addEventListener('resize',()=>{if(!$('game').classList.contains('hidden'))resize()});
-</script></body></html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#151426">
+<meta name="description" content="Re:Zero Astral Defense, tower defense 3D de fantasia com três capítulos, 15 ondas, chefes e evoluções.">
+<title>Re:Zero • Astral Defense 3D</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23151426'/%3E%3Ctext x='50' y='74' font-size='73' text-anchor='middle'%3E%E2%9D%84%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="./astral3d.css?v=3">
+</head>
+<body>
+<main id="menu" class="page">
+ <header class="topbar"><div class="brand">RE:ZERO <b>✦ ASTRAL DEFENSE</b></div><button class="pill" id="musicToggle">♫ Música: OFF</button></header>
+ <section class="hero">
+ <div>
+ <div class="tiny">UMA NOVA JORNADA • TOWER DEFENSE 3D</div>
+ <h1>DESAFIE<br><span>O DESTINO.</span></h1>
+ <p>Convide Emilia, Rem, Beatrice e Subaru para defender Lugunica contra hordas de sombras. Explore três mundos em 3D, descubra poderes mágicos e crie a estratégia perfeita.</p>
+ <div class="buttons"><button class="button" id="play">✦ COMEÇAR A JORNADA</button><button class="button alt" id="how">COMO JOGAR</button></div>
+ <p class="tiny" style="margin-top:26px;color:#b9aadd">3 CAPÍTULOS ✦ 15 ONDAS POR MAPA ✦ CHEFES ✦ EVOLUÇÕES</p>
+ </div>
+ <div class="heroArt" aria-hidden="true"><div class="artSilhouette"></div><div class="artOverlay"><strong>THE ASTRAL PROPHECY</strong><span>Uma nova história começa.</span></div></div>
+ </section>
+ <section class="section">
+ <div class="tiny">CONHEÇA O ESQUADRÃO</div><h2>Os quatro guardiões</h2>
+ <div class="roster">
+ <div class="rosterCard"><div class="avatar" style="--unit:#b4e8ff">❄</div><div><strong>Emilia</strong><span>Controle e congelamento</span></div></div>
+ <div class="rosterCard"><div class="avatar" style="--unit:#609de6">✦</div><div><strong>Rem</strong><span>Dano em área</span></div></div>
+ <div class="rosterCard"><div class="avatar" style="--unit:#ba8ce2">✧</div><div><strong>Beatrice</strong><span>Apoio mágico</span></div></div>
+ <div class="rosterCard"><div class="avatar" style="--unit:#f0a783">⚔</div><div><strong>Subaru</strong><span>Ataques rápidos</span></div></div>
+ </div></section>
+ <p class="footer">Projeto de fã não oficial. Re:Zero e seus personagens pertencem aos respectivos criadores. A arte tridimensional e a música deste protótipo são produzidas por código.</p>
+</main>
+<section class="page hidden" id="campaign" aria-label="Seleção de capítulos">
+ <header class="topbar"><button class="button alt small" id="campaignBack">← VOLTAR</button><div class="brand">ASTRAL <b>✦ CAMPANHA</b></div><span class="pill">3 MUNDOS</span></header>
+ <div class="section" style="padding-top:46px"><div class="tiny">ESCOLHA SEU CAMINHO</div><h2>Capítulos da profecia</h2><p style="color:#b7b2ce">Complete 15 ondas de um capítulo para abrir o próximo.</p><div class="cardGrid" id="campaignGrid"></div></div>
+</section>
+<section id="battle" class="hidden" aria-label="Campo de batalha">
+ <header class="battleTop">
+  <button class="button flat small" id="exit" aria-label="Sair da batalha">✕</button>
+  <div class="battleTitle" id="battleName">FLORESTA DE LUGUNICA</div>
+  <div class="stats"><div class="stat">♥ <span id="hp">25</span></div><div class="stat">◈ <span id="coins">500</span></div><div class="stat">ONDA <span id="waveNo">0/15</span></div></div>
+ </header>
+ <div class="battleMain">
+  <div id="viewport" class="viewport">
+   <div class="hudHint" id="hint">Selecione um guardião na loja e toque no campo de batalha para posicioná-lo.</div>
+   <div class="fullOverlay" id="battleDialog">
+    <div class="dialog"><div class="tiny">A PROFECIA AGUARDA</div><h2 id="dialogTitle">PREPARE SEU EXÉRCITO</h2><p id="dialogDesc">Comece sua jornada.</p><div class="buttons"><button class="button" id="dialogMain">COMEÇAR</button><button class="button alt" id="dialogSecond">VOLTAR</button></div></div>
+   </div>
+  </div>
+  <aside class="shop">
+   <h3>✦ GUARDIÕES</h3><div class="shopSub">Escolha uma unidade e posicione no terreno</div>
+   <div class="shopUnits">
+    <button class="shopItem" data-hero="emilia"><span class="avatar" style="--unit:#b4e8ff">❄</span><strong>Emilia</strong><small>◈ 165</small></button>
+    <button class="shopItem" data-hero="rem"><span class="avatar" style="--unit:#609de6">✦</span><strong>Rem</strong><small>◈ 220</small></button>
+    <button class="shopItem" data-hero="beatrice"><span class="avatar" style="--unit:#ba8ce2">✧</span><strong>Beatrice</strong><small>◈ 245</small></button>
+    <button class="shopItem" data-hero="subaru"><span class="avatar" style="--unit:#f0a783">⚔</span><strong>Subaru</strong><small>◈ 115</small></button>
+   </div>
+   <div class="details" id="details"><h4 id="detailsTitle">Selecione um guardião</h4><p id="detailsText">Veja as evoluções e habilidades ao selecionar uma unidade.</p><div class="upgradeRows" id="upgradeRows"></div><button id="sellButton" class="sellBtn hidden">Vender guardião</button></div>
+  </aside>
+ </div>
+ <footer class="battleBottom"><button class="action magic" id="magic" disabled>❄ NEVASCA</button><button class="action alt" id="speed">⏩ 1×</button><button class="action major" id="startWave">▶ INICIAR ONDA 1</button></footer>
+</section>
+<div id="toast" class="toast hidden" role="status"></div>
+<script type="module" src="./astral3d.js?v=3"></script>
+</body></html>
