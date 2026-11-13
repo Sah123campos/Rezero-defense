@@ -485,22 +485,20 @@ function createHead(parent, key) {
     new THREE.SphereGeometry(0.46, 28, 16, 0, PI * 2, 0, PI * 0.43),
     p.hair,
   );
+  // Shallow swept ridges suggest combed hair without raised slabs at the crown.
+  const cap = scalp.geometry.attributes.position;
+  for (let i = 0; i < cap.count; i++) {
+    const x = cap.getX(i),
+      z = cap.getZ(i),
+      y = cap.getY(i);
+    const a = Math.atan2(z, x);
+    const ridge =
+      Math.sin(a * 18 + y * 7) * 0.009 * Math.min(1, Math.hypot(x, z) * 4);
+    cap.setXYZ(i, x * (1 + ridge), y + ridge * 0.2, z * (1 + ridge));
+  }
+  scalp.geometry.computeVertexNormals();
   scalp.scale.set(1, 0.92, 0.92);
   add(head, scalp, 0, 0.035, -0.015);
-  // Layered crown locks break up the smooth scalp and sweep into the fringe.
-  const crownHair = group(head, "hair-crown", 0, 0.44, 0.08);
-  for (let i = -3; i <= 3; i++) {
-    const strand = hairLock(
-      0.16,
-      key === "subaru" ? 0.36 : 0.41,
-      p.hair,
-      i * 0.008,
-      0.065,
-    );
-    strand.rotation.x = -1.05;
-    strand.rotation.z = -i * 0.09;
-    add(crownHair, strand, i * 0.105, -Math.abs(i) * 0.022, 0);
-  }
   // Sculpted, overlapping fringe pieces form the silhouette and frame the face.
   const fringe = group(head, "fringe", 0, 0.32, 0.255);
   const fringeCount = key === "subaru" ? 7 : 5;
@@ -524,7 +522,7 @@ function createHead(parent, key) {
       lock,
       u * (key === "subaru" ? 0.1 : 0.145),
       -0.025 * Math.abs(u),
-      0.065 - Math.abs(u) * 0.025,
+      0.065 - Math.abs(u) * 0.025 + (key === "rem" && u > 0 ? 0.08 : 0),
     );
   }
   if (key === "emilia") {
@@ -1166,7 +1164,7 @@ function connectRig(root) {
     head: root.getObjectByName("head"),
     left: root.getObjectByName("arm--1"),
     right: root.getObjectByName("arm-1"),
-    hair: ["hair--1", "hair-1", "hair-back", "fringe", "hair-crown"]
+    hair: ["hair--1", "hair-1", "hair-back", "fringe"]
       .map((n) => root.getObjectByName(n))
       .filter(Boolean),
     weapon: root.getObjectByName("weapon"),

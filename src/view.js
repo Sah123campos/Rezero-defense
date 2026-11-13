@@ -132,7 +132,35 @@ export class GameView {
     if (width < 2 || height < 2) return;
     this.renderer.setSize(width, height, false);
     const ratio = width / height;
-    const h = Math.max(9.3, 15 / ratio);
+    const portrait = this.screen === "battle" && ratio < 0.9;
+    const changed = this.portrait !== portrait;
+    this.portrait = portrait;
+    this.cameraHome = new THREE.Vector3(
+      ...(portrait ? [30, 30, 0] : [12, 22, 27]),
+    );
+    if (changed) {
+      this.panX = 0;
+      this.panZ = 0;
+    }
+    this.camera.position
+      .copy(this.cameraHome)
+      .add(new THREE.Vector3(this.panX || 0, 0, this.panZ || 0));
+    this.camera.lookAt(this.panX || 0, 0, this.panZ || 0);
+    this.camera.updateMatrixWorld();
+    // Fit the entire playable envelope. In portrait its long axis runs up the
+    // screen, making units larger without cropping gates or tower positions.
+    const inverse = this.camera.matrixWorldInverse;
+    const corner = new THREE.Vector3();
+    let maxX = 0,
+      maxY = 0;
+    for (const x of [-12.8, 12.8])
+      for (const y of [-2.2, 3.8])
+        for (const z of [-7.6, 7.6]) {
+          corner.set(x, y, z).applyMatrix4(inverse);
+          maxX = Math.max(maxX, Math.abs(corner.x));
+          maxY = Math.max(maxY, Math.abs(corner.y));
+        }
+    const h = Math.max(9.3, maxY * 1.04, (maxX * 1.04) / ratio);
     this.camera.left = -h * ratio;
     this.camera.right = h * ratio;
     this.camera.top = h;
@@ -145,13 +173,15 @@ export class GameView {
     this.resize();
   }
   resetCamera() {
-    this.camera.position.set(12, 22, 27);
+    this.camera.position.copy(this.cameraHome || new THREE.Vector3(12, 22, 27));
     this.camera.lookAt(0, 0, 0);
     this.camera.zoom = 1;
     this.panX = 0;
     this.panZ = 0;
     this.camera.updateProjectionMatrix();
+    this.camera.updateMatrixWorld();
   }
+
   zoom(delta) {
     this.camera.zoom = THREE.MathUtils.clamp(this.camera.zoom + delta, 1, 1.8);
     if (this.camera.zoom === 1) this.resetCamera();
@@ -167,7 +197,11 @@ export class GameView {
       this.camera.matrixWorld,
       0,
     );
-    const back = new THREE.Vector3(12, 0, 27).normalize();
+    const back = new THREE.Vector3(
+      this.cameraHome.x,
+      0,
+      this.cameraHome.z,
+    ).normalize();
     const nx = THREE.MathUtils.clamp(
         (this.panX || 0) - right.x * dx * factor + (back.x * dy * factor) / 0.7,
         -5,
@@ -178,8 +212,8 @@ export class GameView {
         -4,
         4,
       );
-    this.camera.position.x = 12 + nx;
-    this.camera.position.z = 27 + nz;
+    this.camera.position.x = this.cameraHome.x + nx;
+    this.camera.position.z = this.cameraHome.z + nz;
     this.panX = nx;
     this.panZ = nz;
     this.camera.updateMatrixWorld();
