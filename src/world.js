@@ -1,13 +1,14 @@
 import * as THREE from "../vendor/three.module.js";
+import { createTree, fern } from "./foliage.js";
 
 // Original, deterministic dioramas. All solid scenery is merged by material;
 // vegetation uses instancing and only water and atmospheric motes animate.
 const TAU = Math.PI * 2;
 const palettes = [
   {
-    turf: "#78a75c",
-    turf2: "#92b969",
-    leaf: [0x3f7754, 0x568c55, 0x75a65f, 0x9abb67],
+    turf: "#729850",
+    turf2: "#a5bf67",
+    leaf: [0x285944, 0x407a4c, 0x689447, 0xa0b857],
     bark: 0x6d5941,
     stone: 0xa3ad91,
     road: "#e8d2a0",
@@ -273,17 +274,87 @@ function topOutline(scale = 1) {
     ];
   });
 }
+function cliffFragment(seed) {
+  const random = rng(seed),
+    sides = 7,
+    vertices = [],
+    indices = [];
+  const rings = [
+    { y: 0.7, r: 0.66 },
+    { y: 0.28, r: 1 },
+    { y: -0.3, r: 0.9 },
+    { y: -0.85, r: 0.48 },
+  ];
+  for (const ring of rings)
+    for (let i = 0; i < sides; i++) {
+      const a = (i / sides) * TAU,
+        r = ring.r * (0.83 + random() * 0.25);
+      vertices.push(
+        Math.cos(a) * r,
+        ring.y + (random() - 0.5) * 0.2,
+        Math.sin(a) * r,
+      );
+    }
+  for (let j = 0; j < rings.length - 1; j++)
+    for (let i = 0; i < sides; i++) {
+      const n = j * sides + i,
+        next = j * sides + ((i + 1) % sides);
+      indices.push(n, next, n + sides, next, next + sides, n + sides);
+    }
+  for (let i = 1; i < sides - 1; i++) indices.push(0, i + 1, i);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
+  g.setIndex(indices);
+  const flat = g.toNonIndexed();
+  g.dispose();
+  flat.computeVertexNormals();
+  return flat;
+}
+
 function ground(parent, p, index) {
   const outline = topOutline();
   const s = new THREE.Shape();
   outline.forEach(([x, z], i) => (i ? s.lineTo(x, -z) : s.moveTo(x, -z)));
   s.closePath();
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 1024;
+  const ctx = canvas.getContext("2d"),
+    paint = rng(index + 74);
+  ctx.fillStyle = p.turf;
+  ctx.fillRect(0, 0, 1024, 1024);
+  for (let i = 0; i < 260; i++) {
+    const x = paint() * 1024,
+      y = paint() * 1024,
+      r = 15 + paint() * 110;
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, r);
+    gradient.addColorStop(
+      0,
+      i % 3 === 0 ? "#d5d27a55" : i % 3 === 1 ? "#284f3e44" : "#b2d78355",
+    );
+    gradient.addColorStop(1, "#81a26000");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  for (let i = 0; i < 11000; i++) {
+    ctx.fillStyle = i % 3 === 0 ? "#eef3b216" : "#355e3e12";
+    ctx.fillRect(
+      paint() * 1024,
+      paint() * 1024,
+      1 + paint() * 2,
+      1 + paint() * 3,
+    );
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  const groundGeo = new THREE.ShapeGeometry(s),
+    pos = groundGeo.attributes.position;
+  const uv = groundGeo.attributes.uv;
+  for (let i = 0; i < pos.count; i++)
+    uv.setXY(i, (pos.getX(i) + 12.5) / 25, (pos.getY(i) + 7.5) / 15);
   const top = new THREE.Mesh(
-    new THREE.ShapeGeometry(s),
-    new THREE.MeshStandardMaterial({
-      map: texture(p.turf, p.turf2, index + 5),
-      roughness: 0.97,
-    }),
+    groundGeo,
+    new THREE.MeshStandardMaterial({ map: tex, roughness: 0.97 }),
   );
   top.rotation.x = -Math.PI / 2;
   top.receiveShadow = true;
@@ -327,21 +398,33 @@ function ground(parent, p, index) {
   g.computeVertexNormals();
   mesh(parent, g, material(0xffffff, { vertexColors: true }));
   // A few exposed pieces of limestone tell the story of the island's geology.
-  for (let i = 0; i < 23; i++) {
-    const a = (i / 23) * TAU,
-      [x, z] = outline[Math.floor((i / 23) * outline.length)];
+  // Fractured rock faces, moss ledges and roots at the exposed edge.
+  for (let i = 0; i < 38; i++) {
+    const a = (i / 38) * TAU,
+      [x, z] = outline[Math.floor((i / 38) * outline.length)];
     const m = mesh(
       parent,
-      geo.pebble,
-      material(i % 2 ? 0xa79b7c : 0x8d8b70),
-      x * 0.99,
-      -0.9 - (i % 3) * 0.19,
-      z * 0.99,
-      0.3 + (i % 4) * 0.13,
-      0.19,
-      0.23,
+      cliffFragment(320 + i),
+      material(i % 3 ? 0x8a8870 : 0xb5ac8d),
+      x * 0.987,
+      -0.66 - (i % 4) * 0.13,
+      z * 0.987,
+      0.45 + (i % 3) * 0.16,
+      0.58 + (i % 4) * 0.12,
+      0.38 + (i % 2) * 0.15,
     );
-    m.rotation.set(a * 0.3, a, 0);
+    m.rotation.set(a * 0.13, a, 0.13 * Math.sin(a * 5));
+    if (i % 2 === 0)
+      ellipsoid(
+        parent,
+        x * 0.992,
+        -0.035,
+        z * 0.992,
+        0.48,
+        0.1,
+        0.3,
+        p.leaf[1],
+      );
   }
 }
 
@@ -416,20 +499,26 @@ function road(parent, route, p, index) {
       peb.rotation.y = random() * TAU;
     }
   }
-  for (let i = 9; i < route.length - 8; i += 19) {
-    const [x, z] = route[i];
-    const m = mesh(
-      parent,
-      geo.pebble,
-      material(0xc4b795),
-      x,
-      0.043,
-      z,
-      0.14,
-      0.014,
-      0.11,
-    );
-    m.rotation.y = i;
+  for (let i = 3; i < route.length - 3; i += 5) {
+    const [x, z] = route[i],
+      a = route[i - 1],
+      b = route[i + 1];
+    const angle = Math.atan2(b[1] - a[1], b[0] - a[0]);
+    for (let j = 0; j < 3; j++) {
+      const offset = (j - 1) * 0.33 + (random() - 0.5) * 0.1;
+      const stone = mesh(
+        parent,
+        geo.pebble,
+        material(j % 2 ? 0xd6c79c : 0xcdbb8e),
+        x - Math.sin(angle) * offset,
+        0.043,
+        z + Math.cos(angle) * offset,
+        0.13 + random() * 0.09,
+        0.018,
+        0.09 + random() * 0.07,
+      );
+      stone.rotation.y = angle + random() * 0.7;
+    }
   }
 }
 function routeDistance(x, z, route) {
@@ -448,71 +537,6 @@ function routeDistance(x, z, route) {
   return best;
 }
 
-function tree(parent, x, z, s, p, seed) {
-  const g = new THREE.Group();
-  g.position.set(x, 0, z);
-  g.scale.setScalar(s);
-  parent.add(g);
-  const random = rng(seed);
-  const bark = p.bark;
-  branch(g, [0, 0, 0], [0.08, 1.9, 0], 0.24, 0.13, bark);
-  for (const [a, b, r] of [
-    [[0.03, 0.88, 0], [-0.62, 2.13, 0.12], 0.12],
-    [[0.07, 1.3, 0], [0.69, 2.5, -0.08], 0.11],
-    [[0.06, 1.5, 0], [-0.1, 2.64, 0.47], 0.1],
-    [[0.04, 0.6, 0.01], [0.24, 1.17, -0.6], 0.07],
-  ])
-    branch(g, a, b, r, 0.025, bark);
-  for (let i = 0; i < 5; i++) {
-    const a = (i / 5) * TAU;
-    branch(
-      g,
-      [0, 0.16, 0],
-      [Math.cos(a) * 0.55, 0.015, Math.sin(a) * 0.55],
-      0.095,
-      0.045,
-      bark,
-    );
-  }
-  const crowns = [
-    [-0.75, 2.38, 0.08, 0.95, 0.72, 0.78],
-    [0.65, 2.64, -0.05, 1.08, 0.79, 0.92],
-    [-0.05, 3.04, -0.25, 1.2, 0.85, 1.05],
-    [-0.15, 2.54, 0.65, 1.07, 0.66, 0.9],
-    [0.18, 3.48, 0.13, 0.91, 0.61, 0.81],
-  ];
-  crowns.forEach(([a, b, c, rx, ry, rz], i) => {
-    const m = ellipsoid(
-      g,
-      a,
-      b,
-      c,
-      rx,
-      ry,
-      rz,
-      p.leaf[Math.min(3, (i % 3) + Math.floor(random() * 2))],
-    );
-    m.rotation.y = random() * TAU;
-  });
-  // Small leaf fans give each crown a leafy silhouette at the sunny edge.
-  for (let i = 0; i < 8; i++) {
-    const a = random() * TAU,
-      r = 0.8 + random() * 0.5,
-      y = 2.5 + random() * 0.8;
-    const leaf = ellipsoid(
-      g,
-      Math.cos(a) * r,
-      y,
-      Math.sin(a) * r,
-      0.28,
-      0.09,
-      0.16,
-      p.leaf[3],
-    );
-    leaf.rotation.set(0.1, a, 0.2);
-  }
-  g.rotation.y = random() * TAU;
-}
 function rock(parent, x, z, s, p, seed = 1) {
   const m = mesh(
     parent,
@@ -579,6 +603,12 @@ function mushroom(parent, x, z, s, color) {
 function vegetation(parent, route, p, index, quality, obstacles, water) {
   const random = rng(738 + index * 153),
     spots = [];
+  const foliageMaterials = {
+    bark: material(p.bark),
+    crown: p.leaf.map((c) => material(c)),
+    leaf: material(0xffffff, { roughness: 0.83, side: THREE.DoubleSide }),
+    fungi: [material(0xad7b54), material(0xcba477)],
+  };
   const inWater = (x, z) =>
     water &&
     ((x - water.x) / water.rx) ** 2 + ((z - water.z) / water.rz) ** 2 < 1.25;
@@ -606,7 +636,16 @@ function vegetation(parent, route, p, index, quality, obstacles, water) {
   if (index === 2) treeSpots.push([7.2, -5.6, 0.9], [10.7, -5.8, 0.7]);
   treeSpots.forEach(([x, z, s], i) => {
     if (free(x, z, 0.7 * s)) {
-      tree(parent, x, z, s, p, i * 51 + index + 1);
+      createTree(
+        parent,
+        x,
+        z,
+        s,
+        p,
+        i * 51 + index + 1,
+        quality,
+        foliageMaterials,
+      );
       obstacles.push({ x, z, r: 0.56 * s });
     }
   });
@@ -638,7 +677,10 @@ function vegetation(parent, route, p, index, quality, obstacles, water) {
         0.65 + random() * 0.45,
         i % 2 ? 0xcf9d70 : 0xb96754,
       );
-    else spots.push([x, z]);
+    else {
+      spots.push([x, z]);
+      fern(parent, x, z, 0.65 + random() * 0.5, p.leaf[1], i + index * 31);
+    }
   }
   // Three splayed blades per tuft stay readable on small screens, in one draw.
   const blade = new THREE.BufferGeometry();
