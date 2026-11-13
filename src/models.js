@@ -8,35 +8,35 @@ const faceMaterials = new Map();
 const PI = Math.PI;
 const palette = {
   emilia: {
-    hair: 0xe8e9f4,
-    shadow: 0xada7ce,
-    dress: 0xf9f3ff,
-    accent: 0x916ac2,
-    magic: 0x9deeff,
-    eye: "#9256c1",
+    hair: 0xe9edff,
+    shadow: 0x9580cc,
+    dress: 0xfffaff,
+    accent: 0x7937d6,
+    magic: 0x27dfff,
+    eye: "#a037d5",
   },
   rem: {
-    hair: 0x73bcec,
-    shadow: 0x3f83bd,
-    dress: 0x28293c,
-    accent: 0x99d6f4,
-    magic: 0x68caff,
-    eye: "#399bc6",
+    hair: 0x3799ec,
+    shadow: 0x1757b8,
+    dress: 0x171c31,
+    accent: 0x358dff,
+    magic: 0x08bfff,
+    eye: "#176bd5",
   },
   beatrice: {
-    hair: 0xf3ce75,
-    shadow: 0xc28a45,
-    dress: 0xe397ad,
-    accent: 0xa63e69,
-    magic: 0xe6adff,
-    eye: "#5a89b5",
+    hair: 0xffc94e,
+    shadow: 0xc78324,
+    dress: 0xf15d9d,
+    accent: 0xa71d66,
+    magic: 0xd94dff,
+    eye: "#177cc9",
   },
   subaru: {
-    hair: 0x252a35,
-    shadow: 0x101521,
-    dress: 0x303440,
-    accent: 0xf49a39,
-    magic: 0xffbd6c,
+    hair: 0x181c29,
+    shadow: 0x080d18,
+    dress: 0x202639,
+    accent: 0xff821c,
+    magic: 0xffa629,
     eye: "#79554c",
   },
 };
@@ -617,7 +617,7 @@ function createBody(parent, key) {
           [-0.14, -0.21],
         ],
         0.02,
-        key === "emilia" ? 0xc8b7e3 : 0xa94873,
+        key === "emilia" ? 0xb69ae9 : 0xb9236e,
         0.015,
       );
       add(body, bodice, 0, 1.01, 0.245);
@@ -837,9 +837,9 @@ function heroEquipment(root, key, levels) {
   } else if (key === "beatrice") {
     const book = group(left, "weapon", -0.05, -0.31, 0.17);
     book.rotation.set(-0.25, -0.3, 0.05);
-    add(book, box(0.3, 0.38, 0.09, 0x71384f, 0.018));
+    add(book, box(0.3, 0.38, 0.09, 0x86184f, 0.018));
     add(book, box(0.27, 0.345, 0.07, 0xf9eccb, 0.008), 0.007, 0, 0.015);
-    add(book, box(0.32, 0.39, 0.025, 0x9a4467, 0.012), 0, 0, 0.065);
+    add(book, box(0.32, 0.39, 0.025, 0xc22b80, 0.012), 0, 0, 0.065);
     for (const y of [-0.14, 0.14])
       add(book, box(0.28, 0.016, 0.018, 0xe1b96c, 0.003), 0, y, 0.084);
     const seal = mesh(new THREE.TorusGeometry(0.065, 0.012, 5, 16), 0xe8c985);
@@ -862,6 +862,15 @@ function heroEquipment(root, key, levels) {
       -0.15,
       0.08,
     );
+    // This small cast glyph is part of the rig, not a per-frame particle. It
+    // follows Beatrice's open hand and appears only during the release pose.
+    const focus = group(right, "cast-focus", 0.06, -0.42, 0.18);
+    const glyphMaterial = { emissive: p.magic, emissiveIntensity: 1.25, roughness: 0.35 };
+    add(focus, mesh(new THREE.TorusGeometry(0.19, 0.017, 6, 36), p.magic, glyphMaterial));
+    const diamond = mesh(new THREE.TorusGeometry(0.125, 0.012, 4, 4), p.magic, glyphMaterial);
+    diamond.rotation.z = PI / 4;
+    add(focus, diamond);
+    focus.visible = false;
   } else {
     const whip = group(right, "weapon", 0.05, -0.38, 0.01);
     add(whip, box(0.055, 0.24, 0.055, 0x5d4541, 0.009), 0, -0.03, 0);
@@ -881,6 +890,13 @@ function heroEquipment(root, key, levels) {
       ),
     );
   }
+  const muzzle = new THREE.Object3D();
+  muzzle.name = "attack-muzzle";
+  const muzzleHolder = key === "beatrice"
+    ? root.getObjectByName("cast-focus")
+    : key === "rem" ? root.getObjectByName("mace") : root.getObjectByName("weapon");
+  muzzleHolder.add(muzzle);
+  muzzle.position.z = key === "subaru" ? 0.06 : 0.03;
   if (tier > 0) {
     const head = root.getObjectByName("head");
     for (let i = 0; i < Math.min(5, tier); i++)
@@ -987,6 +1003,8 @@ function batchRigidParts(root) {
 }
 
 function connectRig(root) {
+  const weapon = root.getObjectByName("weapon");
+  root.userData.muzzle = root.getObjectByName("attack-muzzle");
   root.userData.rig = {
     body: root.getObjectByName("body"),
     head: root.getObjectByName("head"),
@@ -995,7 +1013,13 @@ function connectRig(root) {
     hair: ["hair--1", "hair-1", "hair-back", "fringe"]
       .map((n) => root.getObjectByName(n))
       .filter(Boolean),
-    weapon: root.getObjectByName("weapon"),
+    weapon,
+    mace: root.getObjectByName("mace"),
+    focus: root.getObjectByName("cast-focus"),
+    weaponRest: weapon ? {
+      x: weapon.position.x, y: weapon.position.y, z: weapon.position.z,
+      rx: weapon.rotation.x, ry: weapon.rotation.y, rz: weapon.rotation.z,
+    } : null,
   };
   return root;
 }
@@ -1016,20 +1040,104 @@ export function createHero(key, levels = [0, 0, 0]) {
   return connectRig(templates.get(cacheKey).clone(true));
 }
 
+// Callers can reuse their own target Vector3. Refreshing matrices here lets a
+// projectile originate at the posed hand/weapon, including rotated heroes.
+export function getAttackOrigin(root, target = new THREE.Vector3()) {
+  root.updateWorldMatrix(true, true);
+  return (root.userData.muzzle || root.userData.rig?.right || root).getWorldPosition(target);
+}
+
 export function animateHero(root, time, attack = 0) {
   const rig = root.userData.rig;
   if (!rig) return;
-  const phase = time * 2.3 + (root.userData.hero === "subaru" ? 1.5 : 0);
-  rig.head.rotation.z = Math.sin(phase) * 0.025;
-  rig.head.rotation.y = Math.sin(time * 0.7) * 0.04;
-  rig.body.rotation.x = Math.sin(phase) * 0.012 - attack * 0.07;
-  rig.left.rotation.z = 0.12 + Math.sin(phase + 0.7) * 0.025 - attack * 0.13;
-  rig.right.rotation.x = Math.sin(phase) * 0.04 - attack * 1.05;
-  rig.right.rotation.z = -0.12 - attack * 0.35;
-  for (let i = 0; i < rig.hair.length; i++)
-    rig.hair[i].rotation.z = Math.sin(phase + i * 0.8) * 0.022;
-  if (rig.weapon && root.userData.hero === "emilia")
-    rig.weapon.rotation.y = time * 0.8;
+  const hero = root.userData.hero;
+  const phase = time * 2.3 + (hero === "subaru" ? 1.5 : 0);
+  const breath = Math.sin(phase);
+  // The engine supplies a countdown from 1 to 0. A brief anticipation gives
+  // way to a much larger release gesture, then settles back into idle. The
+  // envelopes are zero at both ends and never accumulate transforms.
+  const progress = 1 - Math.max(0, Math.min(1, attack));
+  const windup = attack > 0 ? Math.sin(Math.min(1, progress / 0.3) * PI) : 0;
+  const release = attack > 0 ? Math.sin(Math.min(1, Math.max(0, (progress - 0.18) / 0.82)) * PI) : 0;
+  const recoil = attack > 0 ? Math.sin(progress * PI * 2) * Math.sin(progress * PI) : 0;
+
+  rig.head.position.y = 1.63 + breath * 0.012 - release * 0.035;
+  rig.head.rotation.set(release * 0.06, Math.sin(time * 0.7) * 0.04, breath * 0.03);
+  rig.body.rotation.set(breath * 0.018, Math.sin(phase * 0.7) * 0.025, breath * 0.012);
+  rig.body.scale.y = 1 + breath * 0.006;
+  rig.left.position.y = rig.right.position.y = 1.19 + breath * 0.009;
+  rig.left.rotation.set(breath * 0.045, 0, 0.14 + Math.sin(phase + 0.7) * 0.04);
+  rig.right.rotation.set(-breath * 0.045, 0, -0.14 - Math.sin(phase + 0.7) * 0.04);
+
+  const weapon = rig.weapon;
+  const rest = rig.weaponRest;
+  if (weapon) {
+    weapon.position.set(rest.x, rest.y, rest.z);
+    weapon.rotation.set(rest.rx, rest.ry, rest.rz);
+    weapon.scale.setScalar(1);
+  }
+  if (hero === "emilia") {
+    // Gather an ice crystal beside the shoulder, then cast with an extended
+    // hand; the second arm opens to frame the spell silhouette.
+    rig.right.rotation.x += windup * 0.55 - release * 1.5;
+    rig.right.rotation.y = -windup * 0.25 - release * 0.2;
+    rig.right.rotation.z += windup * 0.32 - release * 0.38;
+    rig.left.rotation.x -= release * 0.8;
+    rig.left.rotation.z += release * 0.48;
+    rig.body.rotation.x += windup * 0.06 - release * 0.14;
+    rig.body.rotation.y += windup * 0.15 - release * 0.18;
+    weapon.rotation.y = time * 1.1 + release * 2.4;
+    weapon.scale.setScalar(1 + release * 0.55);
+  } else if (hero === "rem") {
+    // A broad shoulder-led mace sweep, with the chain/ball carried by their
+    // own weapon pivot instead of a barely visible wrist twitch.
+    rig.right.rotation.x += windup * 0.8 - release * 1.35;
+    rig.right.rotation.y = -windup * 0.65 + release * 0.85;
+    rig.right.rotation.z += windup * 0.55 - release * 0.95;
+    rig.left.rotation.x -= release * 0.4;
+    rig.left.rotation.z += release * 0.55;
+    rig.body.rotation.x += windup * 0.07 - release * 0.2;
+    rig.body.rotation.y += -windup * 0.28 + release * 0.5;
+    rig.head.rotation.z -= release * 0.08;
+    weapon.rotation.y += -windup * 0.35 + release * 1.2;
+    weapon.rotation.z += windup * 0.4 - release * 1.3;
+    if (rig.mace) rig.mace.rotation.set(release * 2.4, time * 0.3, -release * 1.6);
+  } else if (hero === "beatrice") {
+    // Lift the grimoire into reading position and push a yin seal outward
+    // with the free hand. The book remains attached to the left-hand pivot.
+    rig.left.rotation.x += windup * 0.12 - release * 0.9;
+    rig.left.rotation.y = -release * 0.18;
+    rig.left.rotation.z += release * 0.34;
+    rig.right.rotation.x += windup * 0.4 - release * 1.45;
+    rig.right.rotation.z -= release * 0.42;
+    rig.body.rotation.x += windup * 0.05 - release * 0.12;
+    rig.head.rotation.x += release * 0.1;
+    weapon.rotation.x -= release * 0.32;
+    weapon.rotation.y += release * 0.2;
+    weapon.position.y += Math.sin(phase * 0.8) * 0.01 + release * 0.04;
+    if (rig.focus) {
+      rig.focus.visible = release > 0.1;
+      rig.focus.scale.setScalar(0.75 + release * 0.9);
+      rig.focus.rotation.z = time * 0.9 + release * 1.1;
+    }
+  } else {
+    // Subaru puts his weight into a quick whip lash, with the other arm
+    // counterbalancing the torso. No external root placement is modified.
+    rig.right.rotation.x += windup * 0.65 - release * 1.4;
+    rig.right.rotation.y = -windup * 0.65 + release * 0.85;
+    rig.right.rotation.z += windup * 0.45 - release * 0.8;
+    rig.left.rotation.x -= release * 0.35;
+    rig.left.rotation.z += release * 0.58;
+    rig.body.rotation.x += windup * 0.09 - release * 0.21;
+    rig.body.rotation.y += -windup * 0.25 + release * 0.42;
+    weapon.rotation.x -= release * 0.5;
+    weapon.rotation.y += -windup * 0.45 + release * 1.15;
+    weapon.rotation.z -= release * 0.7;
+  }
+  for (let i = 0; i < rig.hair.length; i++) {
+    rig.hair[i].rotation.z = Math.sin(phase + i * 0.8) * 0.034 + recoil * (i % 2 ? 1 : -1) * 0.055;
+    rig.hair[i].rotation.x = Math.sin(phase * 0.8 + i) * 0.022 + release * 0.075;
+  }
 }
 
 function enemyBody(type) {
@@ -1042,15 +1150,15 @@ function enemyBody(type) {
   root.userData.enemy = type;
   const body = group(root, "body");
   const ink = boss
-    ? 0x3f2646
+    ? 0x69264f
     : armored
-      ? 0x53506c
+      ? 0x465674
       : runner
-        ? 0x3c6a75
+        ? 0x257d9c
         : wraith
-          ? 0x644476
-          : 0x4b4366;
-  const glow = boss ? 0xff5b95 : runner ? 0x8ffff0 : 0xd9abff;
+          ? 0x7c3aa7
+          : 0x57378c;
+  const glow = boss ? 0xff3c8e : runner ? 0x42edff : 0xd58bff;
   if (runner) {
     // A masked shadow fox: distinct fast, low silhouette with four legs and tail.
     add(body, ellipsoid(0.27, 0.31, 0.56, ink), 0, 0.48, -0.03);
@@ -1163,7 +1271,7 @@ function enemyBody(type) {
         [-0.22, -0.12],
       ],
       0.045,
-      boss ? 0xe1c4d8 : 0xd6d5e2,
+      boss ? 0xffd4e6 : 0xf0e6ff,
       0.035,
     );
     mask.scale.setScalar(boss ? 1.3 : 1);
@@ -1241,7 +1349,7 @@ function enemyBody(type) {
           [-0.25, -0.17],
         ],
         0.09,
-        boss ? 0x8c597a : 0x8c91a0,
+        boss ? 0xab427d : 0x8498bd,
         0.025,
       );
       armor.scale.setScalar(boss ? 1.4 : 1);
@@ -1268,7 +1376,7 @@ function enemyBody(type) {
             [s * 0.25, -0.2],
           ],
           0.045,
-          0x9069a8,
+          0xa852ce,
           0.018,
         );
         add(body, wing, s * 0.18, 0.9, -0.14);
