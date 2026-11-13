@@ -18,17 +18,17 @@ export const MAPS = [
   {
     id: 'lugunica', name: 'Floresta de Lugunica', subtitle: 'CAPÍTULO I',
     description: 'Entre copas douradas e águas cristalinas, a jornada começa.',
-    route: smoothRoute([[-11.35,-3.45],[-8.2,-3.55],[-6.1,-2.55],[-5.8,.2],[-5.5,2.6],[-3.8,3.65],[-1.7,3.15],[-.75,1.5],[-.8,-1.65],[.6,-3.25],[3.5,-3.35],[5.4,-2.1],[5.6,.8],[7.3,3.3],[9.6,3.5],[11.35,3.4]]),
+    route: smoothRoute([[-11.35,-3.95],[-8.2,-4.05],[-6.3,-2.8],[-5.9,.4],[-5.55,3.65],[-3.8,4.55],[-1.65,3.95],[-.75,1.6],[-.8,-2.65],[.6,-4.35],[3.25,-4.35],[5.1,-2.9],[5.6,1.2],[7.3,4.35],[9.5,4.55],[11.35,4.4]]),
   },
   {
     id: 'roswaal', name: 'Mansão Roswaal', subtitle: 'CAPÍTULO II',
     description: 'Jardins de rosas guardam os segredos de uma antiga mansão.',
-    route: smoothRoute([[-11.35,3.15],[-8,3.15],[-6.3,2],[-5.9,-1.3],[-5.2,-3.1],[-3.2,-3.65],[-1.6,-2.2],[-1.35,1.5],[.2,3.3],[2.1,3.1],[3.2,1.3],[3.1,-1.5],[4.8,-2.8],[7.1,-2.3],[8.2,.45],[11.35,.6]]),
+    route: smoothRoute([[-11.35,4.4],[-8,4.4],[-6.3,3.1],[-5.9,-1.8],[-5.2,-3.95],[-3.2,-4.55],[-1.6,-3.2],[-1.35,2.2],[.2,4.5],[2.1,4.3],[3.2,2.1],[3.1,-1.5],[4.8,-2.8],[7.1,-2.3],[8.2,.95],[11.35,1.1]]),
   },
   {
     id: 'sanctuary', name: 'Santuário', subtitle: 'CAPÍTULO III',
     description: 'Ruínas esquecidas. Espíritos ancestrais. Um último juramento.',
-    route: smoothRoute([[-11.35,-2.9],[-8.2,-3],[-6.4,-1.7],[-6.2,1.7],[-4.4,3.4],[-1.9,3.3],[-.6,1.7],[-.6,-1.8],[1.5,-3.4],[3.8,-2.8],[4.8,-.9],[4.8,2.2],[6.7,3.6],[9.2,2.8],[11.35,2.7]]),
+    route: smoothRoute([[-11.35,-4],[-8.2,-4.1],[-6.4,-2.7],[-6.2,2.7],[-4.4,4.5],[-1.9,4.4],[-.6,2.7],[-.6,-2.8],[1.5,-4.45],[3.8,-3.8],[4.8,-1.4],[4.8,3.2],[6.7,4.6],[9.2,3.8],[11.35,3.7]]),
   },
 ];
 
@@ -413,7 +413,7 @@ export function createWorld(index=0,quality='high') {
   vegetation(root,MAPS[index].route,p,index,quality,obstacles,water);
   for(const [x,z] of index===0?[[-8.3,-1.9],[2.1,4.7],[4,-4.7]]:index===1?[[-7.6,4.7],[-3.8,-4.9],[5,4.8]]:[[-8.3,-1.4],[1.7,4.6],[5.7,-4.5]])lantern(root,x,z,p,obstacles);
   gates(root,MAPS[index].route,p,animated);batchStatics(root);atmosphere(root,p,animated,quality);
-  root.userData={groundY:0,obstacles,water,animated,index};return root;
+  root.userData={groundY:0,obstacles,water,animated,index,dispose:()=>disposeWorld(root)};return root;
 }
 
 export function animateWorld(group,time) {
