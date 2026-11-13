@@ -1,468 +1,1095 @@
+import { GameView, THREE, MAPS } from "./src/view.js";
+import { createHero, createEnemy } from "./src/models.js";
+import {
+  HEROES,
+  WAVES,
+  towerStats,
+  upgradeState,
+  enemyStats,
+  wavePlan,
+  sanitizeSave,
+  createRoute,
+  routePoint,
+  distanceToRoute,
+} from "./src/rules.js";
+import { AudioManager } from "./src/audio.js";
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js';
-
-const $=id=>document.getElementById(id);
-const W=24,H=14,WAVES=15;
-const maps=[
- {name:'Floresta de Lugunica',short:'Capítulo I',desc:'Bosques verdejantes, flores mágicas e o começo da profecia.',ground:0x44785b,grass:0x5b9973,path:0xdac39b,water:0x64bdba,
- route:[[-13,-3.1],[-7,-3.1],[-7,2.8],[-2,2.8],[-2,-1.5],[5,-1.5],[5,2.5],[13,2.5]]},
- {name:'Mansão Roswaal',short:'Capítulo II',desc:'Jardins nobres sob os mistérios da mansão.',ground:0x67708a,grass:0x8d879f,path:0xd4b5a7,water:0x92a6cc,
- route:[[-13,2.8],[-7,2.8],[-7,-2.8],[-2,-2.8],[-2,2],[4,2],[4,-2.5],[13,-2.5]]},
- {name:'Santuário',short:'Capítulo III',desc:'Ruínas, cristais antigos e uma magia inquietante.',ground:0x5e527d,grass:0x8a709b,path:0xbfa6ae,water:0xba80cc,
- route:[[-13,-3],[-5,-3],[-5,.5],[-9,.5],[-9,4.5],[2,4.5],[2,-2.2],[8,-2.2],[8,2],[13,2]]}
-];
-const heroes={
- emilia:{name:'Emilia',symbol:'❄',role:'Gelo • lentidão',cost:165,damage:19,range:3.55,rate:.87,color:0x8deaff,coat:0xf1eaff,hair:0xe2f0f8,desc:'Espíritos de gelo desaceleram e controlam o avanço inimigo.',paths:[['Cristal vivo','Estilhaço polar','Geada eterna','Lança glacial','Era do gelo'],['Alcance lunar','Conjuração','Horizonte frio','Círculo de gelo','Domínio espiritual'],['Afinidade','Ritmo arcano','Vento frio','Reflexo da lua','Magia contínua']]},
- rem:{name:'Rem',symbol:'✦',role:'Área • impacto',cost:220,damage:34,range:2.8,rate:1.15,color:0x7cc6ff,coat:0x2c3c6c,hair:0x4395e1,desc:'Manguelo com impacto em área, excelente contra grupos de sombras.',paths:[['Corrente reforçada','Impacto forte','Esfera oni','Fúria azul','Aniquilação'],['Corrente longa','Giro amplo','Arremesso','Órbita de ferro','Dança mortal'],['Reflexos','Força oni','Instinto','Velocidade brutal','Oni desperta']]},
- beatrice:{name:'Beatrice',symbol:'✧',role:'Suporte • magia',cost:245,damage:13,range:3.5,rate:1.15,color:0xe8b4ff,coat:0x704386,hair:0xf1d27c,desc:'Magia yin e aura de apoio: acelera os ataques dos guardiões.',paths:[['Mana densa','Códice oculto','Selo yin','Ruptura espiritual','Biblioteca infinita'],['Aura ampla','Proteção','Canal arcano','Campo espiritual','Santuário de mana'],['Leitura veloz','Páginas vivas','Ritual acelerado','Dobra arcana','Tempo suspenso']]},
- subaru:{name:'Subaru',symbol:'⚔',role:'Rápido • precisão',cost:115,damage:13,range:2.9,rate:.42,color:0xffaa85,coat:0x252f45,hair:0x242332,desc:'Guerreiro acessível e rápido, perfeito para as primeiras ondas.',paths:[['Golpe certeiro','Coragem','Estocada','Persistência','Vontade inabalável'],['Vigilância','Olhar atento','Longo alcance','Tática','Sentinela'],['Esquiva','Contra-ataque','Determinação','Ritmo intenso','Retorno do herói']]}
+const $ = (id) => document.getElementById(id),
+  icon = (name) => `<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
+const SAVE_KEY = "rezero-astral3d-save";
+let raw;
+try {
+  raw = JSON.parse(localStorage.getItem(SAVE_KEY) || "null");
+} catch {}
+let save = sanitizeSave(raw),
+  storageAvailable = true;
+const persist = () => {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+  } catch {
+    storageAvailable = false;
+  }
 };
-const branchLabels=['PODER','ALCANCE','VELOCIDADE'];
-let save;
-try{save=JSON.parse(localStorage.getItem('rezero-astral3d-save')||'null')}catch{}
-if(!save||typeof save!=='object')save={unlocked:1,best:[0,0,0],wins:[false,false,false]};
-function persist(){try{localStorage.setItem('rezero-astral3d-save',JSON.stringify(save))}catch{}}
-let scene,camera,renderer,raycaster,field,ground,rangeRing,clock=new THREE.Clock(),active=false;
-let decor=[],towers=[],enemies=[],projectiles=[],particles=[],mapsGroup,actorsGroup,projectileGroup,particleGroup;
-let route=[],routeLengths=[],totalRoute=0,groundColor=0;
-let state={map:0,wave:0,gold:500,lives:25,started:false,spawning:0,spawnTime:0,spawned:0,spawnTotal:0,speed:1,selected:null,placing:null,abilityCd:0,gameOver:false,mode:'menu'};
-let musicCtx=null,musicTimer=null,musicStep=0,muted=true,lastSound=0;
-const mat=(col,rough=.72)=>new THREE.MeshStandardMaterial({color:col,roughness:rough,metalness:.05,flatShading:false});
-const plain=col=>new THREE.MeshBasicMaterial({color:col});
-const glow=col=>new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.7});
-const sphere=(r,col,segments=14)=>new THREE.Mesh(new THREE.SphereGeometry(r,segments,10),mat(col));
-const box=(w,h,d,col)=>new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(col));
-const cyl=(top,bottom,h,col,n=9)=>new THREE.Mesh(new THREE.CylinderGeometry(top,bottom,h,n),mat(col));
-const cone=(r,h,col,n=9)=>new THREE.Mesh(new THREE.ConeGeometry(r,h,n),mat(col));
-function add(p,o,x=0,y=0,z=0){o.position.set(x,y,z);p.add(o);return o}
-function shade(hex,amount){return new THREE.Color(hex).multiplyScalar(amount)}
-function pseudo(n){return ((Math.sin(n*127.1+state.map*91.9)*43758.5453)%1+1)%1}
-function uiToast(s){let a=$('toast');a.textContent=s;a.classList.remove('hidden');clearTimeout(uiToast.timer);uiToast.timer=setTimeout(()=>a.classList.add('hidden'),2300)}
-function sound(freq=440,duration=.16,type='sine',vol=.04){
- try{if(!musicCtx)musicCtx=new (window.AudioContext||window.webkitAudioContext)();if(musicCtx.state==='suspended')musicCtx.resume();let a=musicCtx,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(freq,a.currentTime);o.frequency.exponentialRampToValueAtTime(Math.max(60,freq*.65),a.currentTime+duration);g.gain.setValueAtTime(vol,a.currentTime);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+duration);o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+duration)}catch{}
+const audio = new AudioManager(save.settings);
+let view,
+  images = {},
+  mapImages = [],
+  preview = [],
+  towers = [],
+  enemies = [],
+  projectiles = [],
+  route;
+let state = {
+  screen: "menu",
+  map: 0,
+  wave: 0,
+  gold: 500,
+  lives: 25,
+  running: false,
+  ended: false,
+  speed: 1,
+  elapsed: 0,
+  plan: [],
+  spawned: 0,
+  spawnTimer: 0,
+  selected: null,
+  placing: null,
+  abilityCd: 0,
+  kills: 0,
+};
+let modalOpen = false,
+  modalDismiss = null,
+  returnFocus = null,
+  lastHUD = "",
+  nextId = 1,
+  uiTimer = 0,
+  accumulator = 0;
+function toast(message) {
+  $("toast").textContent = message;
+  $("toast").classList.remove("hidden");
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => $("toast").classList.add("hidden"), 2800);
 }
-function musicToggle(){
- muted=!muted;$('musicToggle').textContent=muted?'♫ Música: OFF':'♫ Música: ON';
- if(musicTimer){clearInterval(musicTimer);musicTimer=null}
- if(!muted){
-  const notes=[220,261.63,329.63,392,329.63,261.63,196,246.94,293.66,392,293.66,246.94,174.61,220,261.63,349.23];
-  musicStep=0;musicTimer=setInterval(()=>{if(muted)return;let n=notes[musicStep%notes.length];sound(n,.75,'triangle',.012);if(musicStep%4===0)sound(n/2,1.1,'sine',.009);musicStep++},430);
-  sound(523,.25,'sine',.035)
- }
+function paused() {
+  return modalOpen || document.hidden;
 }
-function initThree(){
- if(renderer)return;
- scene=new THREE.Scene();scene.background=new THREE.Color(0x90b1ab);scene.fog=new THREE.FogExp2(0x8fb5a8,.014);
- raycaster=new THREE.Raycaster();
- renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',alpha:false});
- renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.7));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.48;
- field=$('viewport');field.prepend(renderer.domElement);
- scene.add(new THREE.HemisphereLight(0xd8eeff,0x2e483b,2.1));
- const sun=new THREE.DirectionalLight(0xfff4d8,3.4);sun.position.set(-8,19,8);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-20;sun.shadow.camera.right=20;sun.shadow.camera.top=19;sun.shadow.camera.bottom=-19;sun.shadow.normalBias=.035;sun.shadow.bias=-.0001;scene.add(sun);
- const fill=new THREE.DirectionalLight(0xa89bff,1.1);fill.position.set(9,8,-7);scene.add(fill);
- camera=new THREE.OrthographicCamera(-14,14,10,-10,.1,120);camera.position.set(0,21,17);camera.lookAt(0,0,0);
- const board=box(26,.5,16,0x294339);board.receiveShadow=true;add(scene,board,0,-.38,0);ground=board;
- mapsGroup=new THREE.Group();actorsGroup=new THREE.Group();projectileGroup=new THREE.Group();particleGroup=new THREE.Group();
- scene.add(mapsGroup,actorsGroup,projectileGroup,particleGroup);
- rangeRing=new THREE.Mesh(new THREE.RingGeometry(.98,1,64),new THREE.MeshBasicMaterial({color:0xdac7ff,side:THREE.DoubleSide,transparent:true,opacity:.5,depthWrite:false}));
- rangeRing.rotation.x=-Math.PI/2;rangeRing.visible=false;add(scene,rangeRing,0,.15,0);
- renderer.domElement.addEventListener('pointerdown',handleBoard);
- window.addEventListener('resize',resize);resize();animate()
+function syncAudio() {
+  audio.pause(document.hidden || (modalOpen && state.screen === "battle"));
 }
-function resize(){
- if(!renderer)return;let r=field.getBoundingClientRect();if(r.width<10||r.height<10)return;
- renderer.setSize(r.width,r.height,false);let a=r.width/r.height;
- let halfH=Math.max(9.4,14.3/a);camera.left=-halfH*a;camera.right=halfH*a;camera.top=halfH;camera.bottom=-halfH;
- camera.updateProjectionMatrix()
+function closeModal() {
+  if (!modalOpen) return;
+  modalOpen = false;
+  $("modal").classList.add("hidden");
+  modalDismiss = null;
+  syncAudio();
+  returnFocus?.focus?.();
+  returnFocus = null;
 }
-function clearWorld(){
- for(const t of towers)actorsGroup.remove(t.group);
- for(const e of enemies)actorsGroup.remove(e.group);
- towers=[];enemies=[];projectiles=[];particles=[];selected(null);mapsGroup.clear();actorsGroup.clear();projectileGroup.clear();particleGroup.clear()
-}
-function nearRoute(x,z){
- let best=1e8;
- for(let i=0;i<route.length-1;i++){let a=route[i],b=route[i+1],dx=b[0]-a[0],dz=b[1]-a[1],t=Math.max(0,Math.min(1,((x-a[0])*dx+(z-a[1])*dz)/(dx*dx+dz*dz)));best=Math.min(best,Math.hypot(x-a[0]-t*dx,z-a[1]-t*dz))}
- return best
-}
-function buildPath(){
- let back=mat(0x63574b),edge=mat(0x9f8768),road=mat(maps[state.map].path);
- for(let i=1;i<route.length;i++){
-  let [ax,az]=route[i-1],[bx,bz]=route[i],dx=bx-ax,dz=bz-az,len=Math.hypot(dx,dz),angle=-Math.atan2(dz,dx);
-  for(const [width,height,y,material] of [[1.92,.15,.08,back],[1.67,.15,.16,edge],[1.48,.12,.24,road]]){
-   const piece=box(len+width*.35,height,width,0xffffff);piece.material=material;piece.rotation.y=angle;piece.receiveShadow=true;add(mapsGroup,piece,(ax+bx)/2,y,(az+bz)/2)
+function openModal({
+  title,
+  content = "",
+  eyebrow = "O DESTINO ESTÁ EM SUAS MÃOS",
+  sigil = "✧",
+  actions = [],
+  dismiss = closeModal,
+}) {
+  returnFocus = modalOpen ? returnFocus : document.activeElement;
+  modalOpen = true;
+  modalDismiss = dismiss;
+  $("modalTitle").textContent = title;
+  $("modalContent").innerHTML = content;
+  $("modalEyebrow").textContent = eyebrow;
+  $("modalSigil").textContent = sigil;
+  $("modalActions").replaceChildren();
+  for (const action of actions) {
+    const b = document.createElement("button");
+    b.className = action.secondary ? "secondary-button" : "primary-button";
+    b.textContent = action.label;
+    b.onclick = action.run;
+    $("modalActions").append(b);
   }
- }
- for(const [x,z] of route){for(const [r,y,ma] of [[.92,.12,back],[.83,.21,edge],[.74,.28,road]]){let c=new THREE.Mesh(new THREE.CylinderGeometry(r,r,.15,18),ma);c.receiveShadow=true;add(mapsGroup,c,x,y,z)}}
- for(let i=0;i<totalRoute;i+=.68){let [x,z]=routePosition(i),tile=box(.16,.012,.036,0xf4dfb3);tile.rotation.y=routeAngle(i);add(mapsGroup,tile,x,.35,z)}
- const portal=(x,z,color)=>{
-  let ring=new THREE.Mesh(new THREE.TorusGeometry(.66,.17,10,24),glow(color));ring.rotation.x=-Math.PI/2;add(mapsGroup,ring,x,.37,z);
-  let crystal=cone(.36,1.2,color,6);crystal.rotation.z=Math.PI;add(mapsGroup,crystal,x,1,z);
- };
- portal(route[0][0],route[0][1],0x6ee7ff);portal(route.at(-1)[0],route.at(-1)[1],0xff829f)
+  $("modalClose").classList.toggle("hidden", !dismiss);
+  $("modal").classList.remove("hidden");
+  syncAudio();
+  requestAnimationFrame(() =>
+    $("modal").querySelector("button:not(.hidden)")?.focus(),
+  );
 }
-function routeAngle(dist){
- let z=Math.max(0,dist);for(let i=0;i<routeLengths.length;i++){if(z<routeLengths[i]){let a=route[i],b=route[i+1];return -Math.atan2(b[1]-a[1],b[0]-a[0])}z-=routeLengths[i]}return 0
+function switchScreen(screen) {
+  closeModal();
+  state.screen = screen;
+  document.body.dataset.screen = screen;
+  for (const name of ["menu", "campaign", "battle"])
+    $(name).classList.toggle("hidden", screen !== name);
+  $("mainHeader").classList.toggle("hidden", screen === "battle");
+  view.setScreen(screen);
+  window.scrollTo(0, 0);
+  audio.setMood(screen === "battle" ? "battle" : "menu");
+  syncAudio();
 }
-function routePosition(dist){
- let d=Math.max(0,dist);for(let i=0;i<routeLengths.length;i++){if(d<=routeLengths[i]){let a=route[i],b=route[i+1],t=d/routeLengths[i];return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]}d-=routeLengths[i]}return route.at(-1)
-}
-function tree(x,z,s,i){
- const g=new THREE.Group();add(mapsGroup,g,x,0,z);
- add(g,cyl(.18*s,.26*s,.95*s,0x68523e),0,.45*s,0);
- const colors=state.map===0?[0x2d7054,0x4b9868,0x79bc85]:state.map===1?[0x365a78,0x4d7994,0x88adc1]:[0x55416e,0x876caa,0xb69ac7];
- for(let n=0;n<3;n++){let top=cone((1.04-n*.2)*s,(1.85-n*.17)*s,colors[n],7);add(g,top,0,(1.4+n*.58)*s,0);top.castShadow=true}
- g.rotation.y=pseudo(i*16)*6.3;
-}
-function rock(x,z,s){
- const c=new THREE.Mesh(new THREE.IcosahedronGeometry(s,.0),mat(state.map===2?0x937b9f:0x9aaca1));c.scale.y=.68;c.rotation.y=pseudo(x+z)*Math.PI;add(mapsGroup,c,x,s*.4,z);c.castShadow=true;
-}
-function decorScene(){
- const config=maps[state.map];
- ground.material.color.setHex(config.ground);
- scene.background.setHex(state.map===0?0x9ac7ba:state.map===1?0xb3b0cc:0xa694be);
- scene.fog.color.set(scene.background);
- const base=new THREE.Mesh(new THREE.PlaneGeometry(25.8,15.7),mat(config.ground));base.rotation.x=-Math.PI/2;add(mapsGroup,base,0,-.115,0);base.receiveShadow=true;
- for(let i=0;i<170;i++){
-  let x=(pseudo(i*71+4)-.5)*25,z=(pseudo(i*41+9)-.5)*15;
-  if(nearRoute(x,z)<1.65||Math.abs(x)>11.65||Math.abs(z)>6.65)continue;
-  if(i%7===0){rock(x,z,.18+pseudo(i*12)*.28);continue}
-  if(i%3===0){let flower=sphere(.08,i%2?0xffd7c7:0xe7c0ff,8);add(mapsGroup,flower,x,.12,z);continue}
-  if(i%4===0){let bush=sphere(.28+pseudo(i)*.25,state.map===2?0x9478ab:0x3a8558,9);bush.scale.y=.55;add(mapsGroup,bush,x,.18,z);continue}
-  tree(x,z,.4+pseudo(i*3)*.42,i)
- }
- if(state.map===0){
-  const lake=new THREE.Mesh(new THREE.CircleGeometry(2.35,44),new THREE.MeshStandardMaterial({color:0x74cfbd,roughness:.27,metalness:.16,transparent:true,opacity:.83}));
-  lake.rotation.x=-Math.PI/2;lake.scale.y=.58;add(mapsGroup,lake,-9,.014,5);
-  for(let i=0;i<9;i++){let a=i*6.28/9;rock(-9+Math.cos(a)*2.1,5+Math.sin(a)*1.2,.25)}
- }
- if(state.map===1){
-  let manor=new THREE.Group();add(mapsGroup,manor,9.25,0,-5.1);
-  const wall=box(3.4,2.2,2.25,0xf4e7df);wall.castShadow=true;add(manor,wall,0,1.1,0);
-  let roof=cone(2.65,2.2,0x5b426e,4);roof.rotation.y=Math.PI/4;roof.scale.z=.66;add(manor,roof,0,3.13,0);
-  for(let i=-1;i<=1;i++){let win=box(.36,.55,.06,0x86cde9);add(manor,win,i*.91,1.35,1.17)}
-  for(let x of [-5,6]){let lamp=cyl(.04,.08,1.2,0x34314e);add(mapsGroup,lamp,x,.6,5);let a=sphere(.24,0xffdaa2);add(mapsGroup,a,x,1.3,5)}
- }
- if(state.map===2){
-  for(let i=0;i<20;i++){
-   let x=(pseudo(i*33)-.5)*22,z=(pseudo(i*82)-.5)*12;
-   if(nearRoute(x,z)<1.4)continue;
-   let crystal=cone(.45+pseudo(i+6)*.3,1.6+pseudo(i*9),i%3?0xae86e7:0x7de1ed,5);crystal.castShadow=true;add(mapsGroup,crystal,x,.8,z)
+function removeActors() {
+  for (const t of towers) view.actors.remove(t.group);
+  for (const e of enemies) {
+    view.actors.remove(e.group);
+    removeHealth(e);
   }
-  const altar=new THREE.Group();add(mapsGroup,altar,-10,0,5);
-  add(altar,cyl(1.15,1.42,.45,0x81758c,8),0,.22,0);
-  add(altar,cyl(.68,.77,.3,0xb5a6bc,8),0,.6,0);
-  add(altar,cone(.48,1.8,0xb28be8,6),0,1.5,0)
- }
- buildPath()
+  for (const p of projectiles) view.removeProjectile(p.mesh);
+  for (const p of preview) view.actors.remove(p.group);
+  towers = [];
+  enemies = [];
+  projectiles = [];
+  preview = [];
+  view.clearEffects();
+  view.selection(null);
 }
-function makeHero(key){
- const u=heroes[key],g=new THREE.Group(),skin=mat(0xffe0d5),hair=mat(u.hair),cloth=mat(u.coat),trim=mat(u.color);
- // stone platform, small legs and boots
- const base=cyl(.56,.64,.21,0x383654,16);add(g,base,0,.11,0);
- const rim=new THREE.Mesh(new THREE.TorusGeometry(.53,.055,8,24),new THREE.MeshStandardMaterial({color:u.color,emissive:u.color,emissiveIntensity:.45}));rim.rotation.x=-Math.PI/2;add(g,rim,0,.235,0);
- for(let x of [-.19,.19]){add(g,cyl(.115,.13,.38,0x24243b,8),x,.48,.02);add(g,sphere(.15,0x29263c,10),x,.31,.16)}
- const body=cyl(key==='bea'?.43:.32,.42,.83,u.coat,12);add(g,body,0,.91,0);body.castShadow=true;
- if(key==='emilia'||key==='bea'){let skirt=cone(key==='bea'?.65:.59,.72,u.coat,14);skirt.rotation.z=Math.PI;add(g,skirt,0,.63,0)}
- for(let x of [-.43,.43]){add(g,sphere(.16,u.coat,10),x,1.17,0);let arm=cyl(.11,.1,.5,key==='subaru'?u.coat:0xffe0d5,8);arm.rotation.z=x<0?-.22:.22;add(g,arm,x*1.12,.93,.03)}
- const head=sphere(.46,0xffe0d5,22);add(g,head,0,1.75,.035);head.castShadow=true;
- // layered hair and fringe
- const cap=sphere(.485,u.hair,20);cap.scale.y=.68;add(g,cap,0,1.97,-.025);
- for(let i=0;i<5;i++){let bang=cone(.12,.46,u.hair,8);bang.rotation.z=(i-2)*.15;add(g,bang,(i-2)*.165,1.92,.34)}
- if(key==='emilia'){
-  for(let a of [-1,1]){let lock=cyl(.15,.1,1.0,u.hair,9);add(g,lock,a*.44,1.36,-.08);let ear=cone(.15,.42,0xffe0d5,7);ear.rotation.z=a*Math.PI/2;add(g,ear,a*.55,1.73,0)}
-  let jewel=sphere(.13,0x9beaff);add(g,jewel,0,2.17,.25);
- }else if(key==='rem'){
-  for(let a of [-1,1]){add(g,sphere(.31,u.hair,12),a*.36,1.59,-.04)}
-  const ribbon=box(.62,.11,.15,0xffffff);add(g,ribbon,0,2.11,.08);
-  add(g,sphere(.11,0xfed1d4),-.23,2.19,.1)
- }else if(key==='bea'){
-  for(let a of [-1,1]){for(let y of [1.89,1.56,1.27]){add(g,sphere(.21,u.hair),a*.56,y,-.05)}add(g,sphere(.18,0x9d6bc9),a*.65,2.11,.02)}
-  add(g,sphere(.18,0xf6dc9f),0,2.17,.2)
- }else{
-  for(let i=0;i<7;i++){let spike=cone(.22,.5,u.hair,8);spike.rotation.z=(i-3)*.24;add(g,spike,(i-3)*.13,2.17,-.1)}
-  for(let a of [-1,1]){let stripe=box(.1,.7,.09,0xee8445);add(g,stripe,a*.21,.94,.37)}
- }
- // anime eyes toward camera, positive z
- for(let x of [-.18,.18]){
-  const white=sphere(.135,0xffffff,12);white.scale.set(.89,1,.34);add(g,white,x,1.74,.416);
-  const eye=sphere(.076,key==='rem'?0x56acdb:key==='subaru'?0x292338:0x7752a2,12);eye.scale.z=.42;add(g,eye,x,1.74,.52);
-  add(g,sphere(.024,0xffffff),x-.024,1.77,.562)
- }
- const mouth=box(.12,.018,.012,0x9f6063);add(g,mouth,0,1.51,.47);
- if(key==='rem'){const weapon=cyl(.09,.08,.85,0xa6abbc);weapon.rotation.z=.5;add(g,weapon,-.72,.98,.06);add(g,sphere(.29,0x637a94),-.91,.58,.13)}
- if(key==='subaru'){const sword=box(.08,.88,.12,0xa0b5c0);sword.rotation.z=-.24;add(g,sword,.67,1.06,.04)}
- if(key==='bea'){const book=box(.35,.45,.12,0x754f9d);add(g,book,.56,.95,.23)}
- if(key==='emilia'){let snow=cone(.15,.4,0x98f4ff,6);add(g,snow,.73,1.15,.08)}
- return g
+function menuPreview() {
+  removeActors();
+  view.setWorld(0);
+  const spots = [
+    [-4.3, -0.3],
+    [-2.8, 1.2],
+    [1.5, 0.4],
+    [3.2, 2.3],
+  ];
+  Object.keys(HEROES).forEach((key, i) => {
+    const g = createHero(key);
+    g.position.set(spots[i][0], 0, spots[i][1]);
+    g.rotation.y = 0.3;
+    g.scale.setScalar(1.25);
+    view.actors.add(g);
+    preview.push({ group: g });
+  });
+  view.render();
 }
-function showHeroTier(t){
- const lev=t.level;t.group.scale.setScalar(1+lev*.065);
- if(lev===0)return;
- const n=lev+1;
- for(let i=0;i<n;i++){
-  const a=6.283*i/n;let c=new THREE.Mesh(new THREE.OctahedronGeometry(.1+lev*.025),new THREE.MeshBasicMaterial({color:t.u.color}));
-  add(t.group,c,Math.cos(a)*(.7+lev*.05),1.45+Math.sin(a)*.2,Math.sin(a)*(.7+lev*.05));c.userData.orb=true
- }
- if(lev>=3){let halo=new THREE.Mesh(new THREE.TorusGeometry(.55,.04,8,24),new THREE.MeshBasicMaterial({color:t.u.color}));halo.rotation.x=Math.PI/2;add(t.group,halo,0,2.5,0)}
- if(lev===5){let crown=cone(.39,.56,t.u.color,7);add(t.group,crown,0,2.58,0)}
+function home() {
+  state.running = false;
+  state.placing = null;
+  state.selected = null;
+  menuPreview();
+  switchScreen("menu");
 }
-function makeEnemy(type,wave){
- const defs={shade:{hp:48,speed:1.3,color:0x9b81cf,reward:15,scale:.82},runner:{hp:40,speed:2.25,color:0x7ddce0,reward:17,scale:.68},armored:{hp:145,speed:.83,color:0xf5bf74,reward:27,scale:1.02},wraith:{hp:94,speed:1.5,color:0xde83ce,reward:22,scale:.85},boss:{hp:1050,speed:.55,color:0xff609c,reward:200,scale:2.2}};
- const d=defs[type],g=new THREE.Group(),body=sphere(.55,d.color,15);body.scale.y=1.16;add(g,body,0,.95,0);body.castShadow=true;
- const cloak=cone(.68,.93,type==='boss'?0x61204d:0x343054,11);cloak.rotation.z=Math.PI;add(g,cloak,0,.52,0);
- for(let a of [-1,1]){let horn=cone(.19,.63,type==='boss'?0xffc2dc:0x55446b,7);horn.rotation.z=a*.43;add(g,horn,a*.36,1.6,0)}
- for(let a of [-1,1]){let eye=sphere(.105,type==='runner'?0x153c45:0xffffff);eye.scale.z=.55;add(g,eye,a*.2,1.04,.53)}
- if(type==='armored'||type==='boss'){let armor=box(.85,.19,.45,type==='boss'?0xdb97c5:0xb7a6a0);add(g,armor,0,1.37,.06)}
- g.scale.setScalar(d.scale);
- const hp=d.hp*(1+wave*(type==='boss'?.34:.2));return{type,group:g,hp,maxHp:hp,speed:d.speed*(1+wave*.012),reward:d.reward,dist:0,slowUntil:0,slowRate:1,boss:type==='boss',bar:null}
+function campaign() {
+  state.running = false;
+  state.placing = null;
+  state.selected = null;
+  removeActors();
+  view.setWorld(0);
+  switchScreen("campaign");
+  $("campaignGrid").innerHTML = MAPS.map(
+    (m, i) =>
+      `<button class="map-card ${i >= save.unlocked ? "locked" : ""}" data-map="${i}" ${i >= save.unlocked ? "disabled" : ""}><div class="map-illustration"><img src="${mapImages[i]}" alt="Diorama de ${m.name}">${i >= save.unlocked ? `<span class="map-lock">${icon("lock")}</span>` : ""}</div><div class="map-info"><div class="eyebrow">${m.subtitle}</div><h2>${m.name}</h2><p>${m.description}</p><div class="map-bottom"><span>${i >= save.unlocked ? "Complete o capítulo anterior" : save.wins[i] ? "Capítulo concluído · Jogar novamente" : `Melhor onda: ${save.best[i]} / ${WAVES}`}</span>${icon(i >= save.unlocked ? "lock" : "arrow")}</div></div></button>`,
+  ).join("");
+  document
+    .querySelectorAll("[data-map]")
+    .forEach((b) => (b.onclick = () => startMap(Number(b.dataset.map))));
 }
-function healthBar(e){
- let bg=box(1.02,.105,.05,0x2d2131);add(e.group,bg,0,2.13,.02);
- const front=box(.96,.11,.065,e.boss?0xff83b0:0x9fe1bb);add(e.group,front,0,2.13,.075);e.bar=front
+function startMap(index) {
+  if (index >= save.unlocked) return false;
+  removeActors();
+  uiTimer = 0;
+  accumulator = 0;
+  view.resetCamera();
+  state = {
+    ...state,
+    map: index,
+    wave: 0,
+    gold: 500,
+    lives: 25,
+    running: false,
+    ended: false,
+    speed: 1,
+    elapsed: 0,
+    plan: [],
+    spawned: 0,
+    spawnTimer: 0,
+    selected: null,
+    placing: null,
+    abilityCd: 0,
+    kills: 0,
+  };
+  route = createRoute(MAPS[index].route);
+  view.setWorld(index);
+  switchScreen("battle");
+  $("battleName").textContent = MAPS[index].name;
+  $("battleChapter").textContent = MAPS[index].subtitle;
+  lastHUD = "";
+  renderDetails();
+  renderHUD();
+  toast("Convoque seus guardiões perto das curvas da estrada.");
+  if (!storageAvailable)
+    toast("O navegador não permitiu salvar. Esta partida continua disponível.");
+  return true;
 }
-function spawnEnemy(){
- const i=state.spawned,final=state.wave%5===0&&i===state.spawnTotal-1;
- let type=final?'boss':state.wave>5&&i%7===0?'wraith':i%6===0&&state.wave>=2?'armored':i%4===0?'runner':'shade';
- let e=makeEnemy(type,state.wave);healthBar(e);e.group.position.set(route[0][0],.3,route[0][1]);actorsGroup.add(e.group);enemies.push(e);state.spawned++;
- if(final){uiToast('⚠ CHEFE DAS SOMBRAS!');sound(115,.5,'sawtooth',.08)}
+function placementValid(x, z) {
+  if (
+    !Number.isFinite(x) ||
+    !Number.isFinite(z) ||
+    Math.abs(x) > 10.7 ||
+    Math.abs(z) > 5.9
+  )
+    return false;
+  if (distanceToRoute(x, z, route) < 1.02) return false;
+  if (towers.some((t) => Math.hypot(t.x - x, t.z - z) < 1.28)) return false;
+  const data = view.world.userData;
+  if (
+    (data.obstacles || []).some((o) => Math.hypot(o.x - x, o.z - z) < o.r + 0.5)
+  )
+    return false;
+  const water = data.water;
+  if (
+    water &&
+    ((x - water.x) / (water.rx + 0.4)) ** 2 +
+      ((z - water.z) / (water.rz + 0.4)) ** 2 <
+      1
+  )
+    return false;
+  return true;
 }
-function putTower(key,x,z){
- const u=heroes[key];if(state.gold<u.cost){uiToast('Ouro insuficiente!');return}
- if(Math.abs(x)>11.35||Math.abs(z)>6.8||nearRoute(x,z)<1.58||towers.some(t=>Math.hypot(t.x-x,t.z-z)<1.27)){
-  uiToast('Escolha um terreno livre, longe da estrada.');return
- }
- state.gold-=u.cost;
- const group=makeHero(key);group.position.set(x,.15,z);actorsGroup.add(group);
- const t={key,u,group,x,z,level:0,branch:-1,paid:u.cost,damage:u.damage,range:u.range,rate:u.rate,cooldown:0,slow:key==='emilia'?.52:0,splash:key==='rem'?.92:0,buff:key==='beatrice'?.12:0,critical:key==='subaru'?.13:0};
- towers.push(t);state.placing=null;selected(t);updateHUD();sound(620,.17,'triangle');uiToast(u.name+' convocada!');refreshShop()
+function chooseHero(key) {
+  if (state.screen !== "battle" || state.ended || state.gold < HEROES[key].cost)
+    return;
+  state.selected = null;
+  state.placing = state.placing === key ? null : key;
+  view.selection(null);
+  renderDetails();
+  renderHUD(true);
+  audio.play("select");
+  $("hint").textContent = state.placing
+    ? `Convoque ${HEROES[key].name} em um terreno livre.`
+    : "";
+  $("placementHint").classList.toggle("hidden", !state.placing);
 }
-function selected(t){
- state.selected=t;rangeRing.visible=!!t;
- if(t){rangeRing.position.set(t.x,.32,t.z);rangeRing.scale.set(t.range,t.range,1)}
- renderDetails()
+function cancelPlacement() {
+  state.placing = null;
+  view.selection(state.selected);
+  $("placementHint").classList.add("hidden");
+  renderHUD(true);
+  renderDetails();
 }
-function rayPoint(event){
- const r=renderer.domElement.getBoundingClientRect(),mouse=new THREE.Vector2((event.clientX-r.left)/r.width*2-1,-(event.clientY-r.top)/r.height*2+1);
- raycaster.setFromCamera(mouse,camera);
- const hit=new THREE.Vector3();return raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),0),hit)?hit:null
-}
-function handleBoard(event){
- if(state.mode!=='battle'||state.gameOver||!$('battleDialog').classList.contains('hidden'))return;
- const p=rayPoint(event);if(!p)return;
- if(state.placing){putTower(state.placing,p.x,p.z);return}
- const hit=towers.filter(t=>Math.hypot(t.x-p.x,t.z-p.z)<.82).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z))[0];selected(hit||null)
-}
-function upgrade(t,branch){
- if(!t||t.level>=5)return;
- if(t.branch!==-1&&t.branch!==branch){uiToast('Este guardião já escolheu outro caminho.');return}
- const cost=Math.floor(t.u.cost*[.8,1.15,1.6,2.25,3.1][t.level]);
- if(state.gold<cost){uiToast('Ouro insuficiente para evoluir!');return}
- state.gold-=cost;t.paid+=cost;t.branch=branch;t.level++;
- if(branch===0){t.damage*=1.6;t.splash+=.08}
- if(branch===1){t.range*=1.19;t.damage*=1.12}
- if(branch===2){t.rate*=.78;t.damage*=1.05}
- if(t.key==='emilia'&&t.level>=3)t.slow=.62;
- if(t.key==='rem'&&t.level>=3)t.splash+=.42;
- if(t.key==='beatrice'&&t.level>=3)t.buff+=.05;
- t.group.clear();let newer=makeHero(t.key);while(newer.children.length)t.group.add(newer.children[0]);showHeroTier(t);
- if(t===state.selected){rangeRing.scale.set(t.range,t.range,1)}
- sound(720,.4,'triangle',.075);uiToast(t.u.name+' evoluiu para o nível '+t.level+'!');updateHUD();renderDetails()
-}
-function renderDetails(){
- const wrap=$('details'),up=$('upgradeRows');up.innerHTML='';
- let t=state.selected;
- if(!t){
-  $('detailsTitle').textContent=state.placing?heroes[state.placing].name+' • posicionar':'Selecione um guardião';
-  $('detailsText').textContent=state.placing?'Clique ou toque em um local livre do mapa.':'Selecione uma unidade na loja ou uma unidade já posicionada.';$('sellButton').classList.add('hidden');return
- }
- $('detailsTitle').textContent=t.u.name+' • Nv. '+t.level+' / 5';
- $('detailsText').textContent=t.u.desc+'  Dano: '+Math.round(t.damage)+' • Alcance: '+t.range.toFixed(1);
- branchLabels.forEach((name,i)=>{
-  let button=document.createElement('button');button.className='upgradeRow'+(t.branch!==-1&&t.branch!==i?' locked':'')+(t.branch===i?' done':'');
-  const next=t.level<5?t.u.paths[i][t.level]:'MAX';
-  const price=t.level<5?Math.floor(t.u.cost*[.8,1.15,1.6,2.25,3.1][t.level]):0;
-  button.innerHTML='<span><strong>'+['⚔ ','✧ ','➤ '][i]+name+'</strong><small>'+next+'</small></span><span class="price">'+(t.level>=5?'MAX':'◈ '+price)+'</span>';
-  button.disabled=t.level>=5||(t.branch!==-1&&t.branch!==i)||price>state.gold;
-  button.onclick=()=>upgrade(t,i);up.appendChild(button)
- });
- $('sellButton').classList.remove('hidden');$('sellButton').textContent='Vender guardião • +'+Math.round(t.paid*.7);
-}
-function refreshShop(){
- document.querySelectorAll('[data-hero]').forEach(b=>{const k=b.dataset.hero;b.classList.toggle('active',state.placing===k);b.disabled=state.gold<heroes[k].cost||state.gameOver})
-}
-function sellSelected(){
- const t=state.selected;if(!t)return;state.gold+=Math.round(t.paid*.7);actorsGroup.remove(t.group);towers=towers.filter(a=>a!==t);selected(null);updateHUD();refreshShop();sound(310,.15)
-}
-let previousHUD='';
-function updateHUD(){
- const signature=[state.lives,state.gold,state.wave,state.started,state.gameOver].join('|');
- if(signature===previousHUD)return;
- previousHUD=signature;
- $('hp').textContent=Math.max(0,state.lives);$('coins').textContent=state.gold;$('waveNo').textContent=state.wave+'/'+WAVES;
- $('startWave').disabled=state.started||state.gameOver;
- $('startWave').textContent=state.started?'ONDA EM CURSO':state.wave>=WAVES?'CONCLUÍDO':'▶ INICIAR ONDA '+(state.wave+1);
- refreshShop();
- // update shop button affordability after kills
- if(state.selected)renderDetails()
-}
-function levelScreen(){
- $('menu').classList.add('hidden');$('campaign').classList.remove('hidden');$('battle').classList.add('hidden');
- $('campaignGrid').innerHTML='';
- maps.forEach((m,i)=>{
-  let b=document.createElement('button');b.className='mapCard'+(i>=save.unlocked?' locked':'');
-  b.disabled=i>=save.unlocked;
-  const p=i>=save.unlocked?'🔒 Complete o capítulo anterior':'✦ Melhor onda: '+(save.best[i]||0)+' / '+WAVES+(save.wins[i]?' • VENCIDO':'');
-  b.innerHTML='<div class="mapPreview"></div><div class="mapInfo"><div class="tiny">'+m.short+'</div><h3>'+m.name+'</h3><p>'+m.desc+'</p><small>'+p+'</small></div>';
-  b.onclick=()=>startMap(i);$('campaignGrid').appendChild(b)
- })
-}
-function resetGame(){
- previousHUD='';
- state.started=false;state.spawning=0;state.wave=0;state.gold=500;state.lives=25;state.speed=1;state.abilityCd=0;state.gameOver=false;state.placing=null;state.mode='battle';$('speed').textContent='⏩ 1×';$('magic').textContent='❄ NEVASCA';$('magic').disabled=true;clock.getDelta();clearWorld()
-}
-function startMap(index){
- if(index>=save.unlocked)return;
- initThree();resetGame();state.map=index;route=maps[index].route;
- routeLengths=[];totalRoute=0;for(let i=1;i<route.length;i++){let a=route[i-1],b=route[i],v=Math.hypot(b[0]-a[0],b[1]-a[1]);routeLengths.push(v);totalRoute+=v}
- decorScene();$('campaign').classList.add('hidden');$('menu').classList.add('hidden');$('battle').classList.remove('hidden');$('battleName').textContent=maps[index].name;
- resize();updateHUD();renderDetails();showDialog('O DESTINO COMEÇA','Posicione guardiões próximos da estrada. Evolua cada um por um dos três caminhos e sobreviva a 15 ondas.','PREPARAR DEFESA',()=>hideDialog(),'VOLTAR AOS MAPAS',()=>leaveBattle());
-}
-function startWave(){
- if(state.started||state.gameOver||state.wave>=WAVES)return;
- state.started=true;state.wave++;state.spawned=0;state.spawnTime=0;state.spawnTotal=8+state.wave*2+(state.wave%5===0?1:0);
- state.abilityCd=state.wave===1?0:state.abilityCd;
- $('magic').disabled=state.abilityCd>0;
- hideDialog();updateHUD();sound(320,.25,'triangle');uiToast('ONDA '+state.wave+' / '+WAVES+(state.wave%5===0?' • PREPARE-SE PARA O CHEFE!':''));
-}
-function killEnemy(e){
- if(e.dead)return;e.dead=true;state.gold+=e.reward;
- const pos=e.group.position.clone();for(let i=0;i<7;i++)makeParticle(pos,e.type==='boss'?0xff84a6:e.type==='runner'?0x77edff:0xd4b3ff);
- actorsGroup.remove(e.group);
- if(e.boss)sound(290,.44,'sine',.09)
-}
-function makeParticle(pos,color){
- if(particles.length>100)return;
- let mesh=new THREE.Mesh(new THREE.OctahedronGeometry(.09+Math.random()*.1,0),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.95,depthWrite:false}));
- mesh.position.copy(pos);mesh.position.y+=.9;particleGroup.add(mesh);
- particles.push({mesh,life:.6,vel:new THREE.Vector3((Math.random()-.5)*3,Math.random()*3+1,(Math.random()-.5)*3)})
-}
-function shoot(t,e){
- const start=t.group.position.clone().add(new THREE.Vector3(0,1.45,0));
- const orb=new THREE.Mesh(new THREE.SphereGeometry(t.key==='rem'?.2:.135,9,7),new THREE.MeshBasicMaterial({color:t.u.color}));
- orb.position.copy(start);projectileGroup.add(orb);
- projectiles.push({mesh:orb,target:e,t,damage:t.damage*(Math.random()<t.critical?2:1),life:2.1});
- t.group.rotation.y+=.08;
- if(t.key==='rem'||t.level>=3)for(let i=0;i<2;i++)makeParticle(start,t.u.color);
-}
-function damage(e,value,t){
- e.hp-=value;
- if(t.slow){e.slowRate=Math.max(.22,1-t.slow);e.slowUntil=performance.now()/1000+1.6}
- if(t.splash>0)enemies.forEach(other=>{if(other!==e&&!other.dead&&other.group.position.distanceTo(e.group.position)<t.splash){other.hp-=value*.47}});
- if(e.hp<=0)killEnemy(e)
-}
-function finishWave(){
- state.started=false;state.spawnTime=0;$('magic').disabled=true;
- let bonus=85+state.wave*23;state.gold+=bonus;
- save.best[state.map]=Math.max(save.best[state.map]||0,state.wave);persist();
- if(state.wave>=WAVES){
-  state.gameOver=true;save.wins[state.map]=true;save.unlocked=Math.min(3,Math.max(save.unlocked,state.map+2));persist();
-  showDialog('CAPÍTULO CONCLUÍDO!','Você resistiu às 15 ondas e venceu o destino. '+(state.map<2?'Um novo mapa foi desbloqueado!':'Você venceu toda a campanha!'),'SELECIONAR MAPAS',()=>leaveBattle(),'JOGAR NOVAMENTE',()=>startMap(state.map));
-  sound(740,.6,'triangle',.08)
- }else{
-  showDialog('ONDA '+state.wave+' SUPERADA','Vitória! +'+bonus+' moedas de recompensa. Reforce seu esquadrão antes de continuar.','PRÓXIMA ONDA',()=>startWave(),'CONTINUAR MELHORANDO',()=>hideDialog());
- }
- updateHUD()
-}
-function fail(){
- state.started=false;state.gameOver=true;state.spawning=0;
- showDialog('O DESTINO FOI ROMPIDO','Os inimigos atravessaram o portal. Tente uma estratégia diferente e evolua seus guardiões.','TENTAR NOVAMENTE',()=>startMap(state.map),'SELECIONAR MAPAS',()=>leaveBattle());sound(110,.55,'sawtooth',.065);updateHUD()
-}
-function ability(){
- if(!state.started||state.abilityCd>0||state.gameOver)return;
- state.abilityCd=24;$('magic').disabled=true;
- sound(900,.65,'triangle',.07);
- enemies.forEach(e=>{if(e.dead)return;let p=e.group.position;e.hp-=e.boss?180:155;e.slowRate=.18;e.slowUntil=performance.now()/1000+4;for(let j=0;j<5;j++)makeParticle(p,0x8ff5ff);if(e.hp<=0)killEnemy(e)});
- uiToast('❄ MAGIA SUPREMA: NEVASCA GLACIAL!')
-}
-function showDialog(title,desc,main,fn,secondary,fn2){
- $('dialogTitle').textContent=title;$('dialogDesc').textContent=desc;
- $('dialogMain').textContent=main;$('dialogMain').onclick=fn;
- $('dialogSecond').textContent=secondary;$('dialogSecond').onclick=fn2;
- $('battleDialog').classList.remove('hidden')
-}
-function hideDialog(){$('battleDialog').classList.add('hidden')}
-function leaveBattle(){
- state.started=false;state.mode='campaign';state.gameOver=true;state.placing=null;
- $('battle').classList.add('hidden');levelScreen()
-}
-function update(dt){
- if(state.mode!=='battle'||state.gameOver)return;
- if(state.started){
-  state.spawnTime+=dt;
-  if(state.spawned<state.spawnTotal&&state.spawnTime>=.72){
-   state.spawnTime-=.72;spawnEnemy()
+function place(key, x, z) {
+  if (state.screen !== "battle" || state.ended || !HEROES[key]) return false;
+  const def = HEROES[key];
+  if (state.gold < def.cost) {
+    toast("Moedas insuficientes para esta convocação.");
+    return false;
   }
-  for(const e of enemies){
-   if(e.dead)continue;
-   let slowdown=performance.now()/1000<e.slowUntil?e.slowRate:1;
-   e.dist+=e.speed*slowdown*dt;
-   if(e.dist>=totalRoute){e.dead=true;state.lives-=e.boss?5:1;actorsGroup.remove(e.group);if(state.lives<=0){fail();break}continue}
-   let [x,z]=routePosition(e.dist);e.group.position.set(x,.28+Math.sin(performance.now()/300+e.dist)*.085,z);
-   e.group.rotation.y=-routeAngle(e.dist);e.bar.scale.x=Math.max(.001,e.hp/e.max);e.bar.position.x=-.48*(1-e.hp/e.max);
-   if(e.hp<=0)killEnemy(e)
+  if (!placementValid(x, z)) {
+    toast("Escolha um terreno livre, fora da estrada e da vegetação.");
+    return false;
   }
-  if(!state.gameOver){
-   for(const t of towers){
-    t.cooldown-=dt;
-    if(t.cooldown<=0){
-     let target=enemies.filter(e=>!e.dead&&Math.hypot(e.group.position.x-t.x,e.group.position.z-t.z)<t.range).sort((a,b)=>b.dist-a.dist)[0];
-     if(target){
-      let multiplier=1+towers.filter(a=>a!==t&&a.key==='beatrice'&&Math.hypot(a.x-t.x,a.z-t.z)<a.range).reduce((s,a)=>s+a.buff,0);
-      t.cooldown=t.rate/multiplier;shoot(t,target)
-     }
+  const group = createHero(key);
+  group.position.set(x, 0.02, z);
+  group.rotation.y = 0.25;
+  view.actors.add(group);
+  const t = {
+    id: nextId++,
+    key,
+    def,
+    group,
+    x,
+    z,
+    levels: [0, 0, 0],
+    stats: towerStats(key),
+    paid: def.cost,
+    cooldown: 0,
+    attack: 0,
+    kills: 0,
+  };
+  state.gold -= def.cost;
+  towers.push(t);
+  state.placing = null;
+  select(t);
+  $("placementHint").classList.add("hidden");
+  view.burst(x, z, def.color, 15);
+  view.shockwave(x, z, def.color, 1.2);
+  audio.play("place");
+  renderHUD(true);
+  return true;
+}
+function select(t) {
+  state.selected = t;
+  state.placing = null;
+  view.selection(t);
+  $("placementHint").classList.add("hidden");
+  renderDetails();
+  renderHUD(true);
+}
+function upgrade(branch) {
+  const t = state.selected;
+  if (!t || state.ended) return false;
+  const next = upgradeState(t.key, t.levels, branch);
+  if (!next.allowed || state.gold < next.cost) {
+    toast(next.reason || "Você precisa de mais moedas.");
+    return false;
+  }
+  state.gold -= next.cost;
+  t.paid += next.cost;
+  t.levels[branch]++;
+  t.stats = towerStats(t.key, t.levels);
+  const g = createHero(t.key, t.levels);
+  g.position.copy(t.group.position);
+  g.rotation.copy(t.group.rotation);
+  view.actors.remove(t.group);
+  t.group = g;
+  view.actors.add(g);
+  view.selection(t);
+  view.burst(t.x, t.z, t.def.color, 22, 1.3);
+  view.shockwave(t.x, t.z, t.def.color, 2);
+  audio.play("upgrade");
+  renderDetails();
+  renderHUD(true);
+  toast(`${t.def.name}: ${next.tier.name}`);
+  return true;
+}
+function sell() {
+  const t = state.selected;
+  if (!t || state.ended) return;
+  state.gold += Math.floor(t.paid * 0.7);
+  view.actors.remove(t.group);
+  towers = towers.filter((x) => x !== t);
+  select(null);
+  renderHUD(true);
+  audio.play("sell");
+}
+function renderDetails() {
+  const el = $("details"),
+    t = state.selected;
+  $("shop").classList.toggle("has-selection", !!t);
+  if (!t) {
+    el.innerHTML = `<div class="empty-details">${icon("shield")}<strong>${state.placing ? `Posicione ${HEROES[state.placing].name}.` : "Juntos, somos mais fortes."}</strong><p>Selecione um guardião no mapa para descobrir suas evoluções.</p></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="unit-detail-heading"><img class="mini-portrait" src="${images[t.key]}" alt=""><div><h3>${t.def.name}</h3><small>${t.def.role} · ${t.levels.join("–")}</small></div><button class="detail-close" id="unselect" aria-label="Fechar evoluções">×</button></div><div class="unit-stats"><span>${Math.round(t.stats.damage)}<small>DANO</small></span><span>${t.stats.range.toFixed(1)}<small>ALCANCE</small></span><span>${(1 / t.stats.interval).toFixed(1)}<small>ATAQUES/S</small></span></div><div class="upgrade-caption">Um caminho até nível 5 + outro até nível 2.</div><div class="upgrade-list">${t.def.paths
+    .map((p, i) => {
+      const u = upgradeState(t.key, t.levels, i);
+      return `<button class="upgrade-row ${!u.tier ? "maxed" : ""}" data-upgrade="${i}" ${!u.allowed || u.cost > state.gold || state.ended ? "disabled" : ""} title="${u.reason || u.tier?.description || p.description}"><span class="upgrade-head"><span>${p.name}</span><span class="upgrade-price">${!u.tier ? "COMPLETO" : !u.allowed ? "BLOQUEADO" : "◈ " + u.cost}</span></span><small>${u.tier?.name || "Forma suprema"}</small><span class="upgrade-pips">${Array.from({ length: 5 }, (_, j) => `<i class="${j < t.levels[i] ? "filled" : ""}"></i>`).join("")}</span></button>`;
+    })
+    .join(
+      "",
+    )}</div><button class="sell-button" id="sellButton">Vender guardião · +${Math.floor(t.paid * 0.7)} moedas</button>`;
+  $("unselect").onclick = () => select(null);
+  $("sellButton").onclick = sell;
+  el.querySelectorAll("[data-upgrade]").forEach(
+    (b) => (b.onclick = () => upgrade(Number(b.dataset.upgrade))),
+  );
+}
+function renderHUD(force = false) {
+  const sig = [
+    state.gold,
+    state.lives,
+    state.wave,
+    state.running,
+    state.ended,
+    state.placing,
+    state.speed,
+  ].join("|");
+  if (force || lastHUD !== sig) {
+    lastHUD = sig;
+    $("hp").textContent = Math.max(0, state.lives);
+    $("coins").textContent = state.gold;
+    $("waveNo").innerHTML = `${state.wave}<small> / ${WAVES}</small>`;
+    $("startWave").disabled = state.running || state.ended;
+    $("startWave").querySelector("span").textContent = state.ended
+      ? "Jornada concluída"
+      : state.running
+        ? "Onda em curso"
+        : `Iniciar onda ${state.wave + 1}`;
+    $("speed").innerHTML = `${state.speed}<span>×</span>`;
+    $("waveStatus").textContent = state.running
+      ? `Onda ${state.wave} em curso`
+      : state.ended
+        ? "Fim da jornada"
+        : "Prepare sua defesa";
+    document.querySelectorAll("[data-hero]").forEach((b) => {
+      b.disabled = state.ended || state.gold < HEROES[b.dataset.hero].cost;
+      b.classList.toggle("active", state.placing === b.dataset.hero);
+    });
+    if (state.selected) renderDetails();
+  }
+  $("enemiesLeft").textContent = state.running
+    ? `${enemies.filter((e) => !e.dead).length + state.plan.length - state.spawned} sombras restantes`
+    : "";
+  const emilia = towers.some((t) => t.key === "emilia");
+  $("magic").disabled =
+    !state.running || state.ended || state.abilityCd > 0 || !emilia;
+  $("abilityState").textContent = !emilia
+    ? "Convoque Emilia"
+    : state.abilityCd > 0
+      ? `Recarga · ${Math.ceil(state.abilityCd)}s`
+      : state.running
+        ? "Pronta para conjurar"
+        : "Disponível na onda";
+  const boss = enemies.find((e) => e.boss && !e.dead);
+  $("bossBar").classList.toggle("hidden", !boss);
+  if (boss) {
+    $("bossHp").textContent =
+      `${Math.ceil(Math.max(0, boss.hp))} / ${boss.maxHp}`;
+    $("bossFill").style.width = `${Math.max(0, boss.hp / boss.maxHp) * 100}%`;
+  }
+}
+function startWave() {
+  if (state.running || state.ended || state.screen !== "battle" || modalOpen)
+    return false;
+  if (!towers.length) {
+    toast("Convoque pelo menos um guardião antes da primeira onda.");
+    return false;
+  }
+  state.running = true;
+  state.wave++;
+  state.plan = wavePlan(state.wave);
+  state.spawned = 0;
+  state.spawnTimer = 0.72;
+  audio.setMood(state.wave % 5 === 0 ? "boss" : "battle");
+  audio.play("wave");
+  $("roundTip").textContent =
+    state.wave % 5 === 0
+      ? "Um poder ancestral se aproxima. Prepare sua magia."
+      : "Combine controle, impacto e apoio para defender a estrada.";
+  renderHUD(true);
+  return true;
+}
+const barGeometry = new THREE.PlaneGeometry(0.85, 0.07),
+  barBackMaterial = new THREE.MeshBasicMaterial({
+    color: 0x403e4c,
+    depthTest: false,
+    transparent: true,
+    opacity: 0.6,
+  }),
+  barMaterial = new THREE.MeshBasicMaterial({
+    color: 0x97cb7f,
+    depthTest: false,
+  });
+function attachHealth(e) {
+  const g = new THREE.Group(),
+    back = new THREE.Mesh(barGeometry, barBackMaterial),
+    front = new THREE.Mesh(barGeometry, barMaterial);
+  g.add(back, front);
+  front.position.z = 0.005;
+  g.quaternion.copy(view.camera.quaternion);
+  g.renderOrder = 10;
+  back.renderOrder = 10;
+  front.renderOrder = 11;
+  view.actors.add(g);
+  e.health = g;
+  e.bar = front;
+}
+function removeHealth(e) {
+  if (e.health) view.actors.remove(e.health);
+}
+function spawn() {
+  const type = state.plan[state.spawned++],
+    def = enemyStats(type, state.wave),
+    group = createEnemy(type);
+  const p = routePoint(route, 0);
+  group.position.set(p.x, 0.04, p.z);
+  group.rotation.y = p.angle;
+  view.actors.add(group);
+  const e = {
+    id: nextId++,
+    type,
+    ...def,
+    group,
+    hp: def.hp,
+    maxHp: def.hp,
+    dist: 0,
+    slowLeft: 0,
+    slow: 0,
+    blizzardLeft: 0,
+    dead: false,
+  };
+  attachHealth(e);
+  enemies.push(e);
+  if (e.boss) {
+    view.shockwave(p.x, p.z, "#dc6d9d", 3);
+    toast("O Guardião das Sombras despertou.");
+    audio.play("wave");
+  }
+}
+function kill(e, tower) {
+  if (e.dead) return;
+  e.dead = true;
+  state.gold += e.reward;
+  state.kills++;
+  if (tower) tower.kills++;
+  view.burst(
+    e.group.position.x,
+    e.group.position.z,
+    e.color,
+    e.boss ? 35 : 7,
+    e.boss ? 2 : 1,
+  );
+  view.actors.remove(e.group);
+  removeHealth(e);
+  if (e.boss) {
+    view.shockwave(e.group.position.x, e.group.position.z, e.color, 4);
+    audio.play("win");
+  }
+}
+function hit(e, value, tower) {
+  if (e.dead) return;
+  let amount = value;
+  if (e.type === "armored" && tower?.def.element === "físico") amount *= 0.7;
+  if (e.type === "wraith" && tower?.def.element === "yin") amount *= 0.8;
+  e.hp -= amount;
+  if (tower?.stats.slow) {
+    e.slow = tower.stats.slow * (e.boss ? 0.55 : 1);
+    e.slowLeft = 1.6;
+  }
+  if (e.hp <= 0) kill(e, tower);
+}
+function fire(t, e) {
+  t.attack = 1;
+  t.group.rotation.y = Math.atan2(
+    e.group.position.x - t.x,
+    e.group.position.z - t.z,
+  );
+  const mesh = view.projectile(t, e);
+  projectiles.push({
+    mesh,
+    target: e,
+    tower: t,
+    life: 3.5,
+    damage: t.stats.damage * (Math.random() < t.stats.critical ? 2 : 1),
+  });
+  if (t.key === "rem") view.shockwave(t.x, t.z, t.def.color, 0.7);
+}
+function cast() {
+  if (
+    !state.running ||
+    state.ended ||
+    state.abilityCd > 0 ||
+    !towers.some((t) => t.key === "emilia") ||
+    paused()
+  )
+    return false;
+  state.abilityCd = 24;
+  for (const e of enemies) {
+    if (e.dead) continue;
+    e.blizzardLeft = 4;
+    hit(e, e.boss ? 180 : 155);
+    view.burst(e.group.position.x, e.group.position.z, "#b6edff", 5);
+  }
+  for (const t of towers.filter((t) => t.key === "emilia")) {
+    t.attack = 1;
+    view.shockwave(t.x, t.z, "#a7edff", 6);
+  }
+  audio.play("ability");
+  toast("Nevasca · o inverno chegou a Lugunica.");
+  renderHUD(true);
+  return true;
+}
+function finishWave() {
+  state.running = false;
+  for (const p of projectiles) view.removeProjectile(p.mesh);
+  projectiles = [];
+  const bonus = 85 + state.wave * 23;
+  state.gold += bonus;
+  save.best[state.map] = Math.max(save.best[state.map], state.wave);
+  if (state.wave >= WAVES) {
+    state.ended = true;
+    save.wins[state.map] = true;
+    save.unlocked = Math.min(3, Math.max(save.unlocked, state.map + 2));
+    save.victories++;
+    persist();
+    audio.play("win");
+    openModal({
+      title: "O destino floresceu.",
+      eyebrow: "CAPÍTULO CONCLUÍDO",
+      sigil: "♧",
+      content: `<p>Você protegeu ${MAPS[state.map].name} e superou as 15 ondas.<br>${state.map < 2 ? "Um novo capítulo espera por você." : "Lugunica está em paz. Sua jornada está completa."}</p><div class="hero-traits"><span>${state.kills} sombras derrotadas</span><span>${state.lives} vidas preservadas</span></div>`,
+      actions: [
+        { label: "Continuar a jornada", run: campaign },
+        {
+          label: "Jogar novamente",
+          secondary: true,
+          run: () => startMap(state.map),
+        },
+      ],
+      dismiss: null,
+    });
+  } else {
+    persist();
+    audio.play("select");
+    toast(
+      `Onda ${state.wave} superada · +${bonus} moedas. Reforce sua defesa.`,
+    );
+  }
+  renderHUD(true);
+}
+function defeat() {
+  state.running = false;
+  state.ended = true;
+  save.best[state.map] = Math.max(
+    save.best[state.map],
+    Math.max(0, state.wave - 1),
+  );
+  persist();
+  audio.play("lose");
+  openModal({
+    title: "Ainda há uma nova chance.",
+    eyebrow: "O DESTINO PODE SER REESCRITO",
+    sigil: "✧",
+    content: `<p>A estrada foi tomada pelas sombras na onda ${state.wave}.<br>Novos laços e uma nova estratégia podem mudar essa história.</p>`,
+    actions: [
+      { label: "Recomeçar o capítulo", run: () => startMap(state.map) },
+      { label: "Voltar à campanha", secondary: true, run: campaign },
+    ],
+    dismiss: null,
+  });
+  renderHUD(true);
+}
+function simulate(dt) {
+  if (state.screen !== "battle" || state.ended) return;
+  state.elapsed += dt;
+  state.abilityCd = Math.max(0, state.abilityCd - dt);
+  for (const t of towers) t.attack = Math.max(0, t.attack - dt * 3);
+  if (!state.running) return;
+  state.spawnTimer += dt;
+  while (state.spawned < state.plan.length && state.spawnTimer >= 0.72) {
+    state.spawnTimer -= 0.72;
+    spawn();
+  }
+  for (const e of enemies) {
+    if (e.dead) continue;
+    e.slowLeft = Math.max(0, e.slowLeft - dt);
+    e.blizzardLeft = Math.max(0, e.blizzardLeft - dt);
+    e.dist +=
+      e.speed *
+      (1 -
+        Math.max(e.slowLeft > 0 ? e.slow : 0, e.blizzardLeft > 0 ? 0.82 : 0)) *
+      dt;
+    if (e.dist >= route.total) {
+      e.dead = true;
+      state.lives -= e.leak;
+      view.actors.remove(e.group);
+      removeHealth(e);
+      if (state.lives <= 0) {
+        defeat();
+        return;
+      }
+      continue;
     }
-   }
-   for(let i=projectiles.length-1;i>=0;i--){
-    const s=projectiles[i];s.life-=dt;
-    if(s.target.dead||s.life<=0){projectileGroup.remove(s.mesh);projectiles.splice(i,1);continue}
-    let goal=s.target.group.position.clone().add(new THREE.Vector3(0,.9,0));
-    let diff=goal.sub(s.mesh.position),distance=diff.length(),move=dt*(11+s.t.level*.6);
-    if(distance<=move+.13){
-     damage(s.target,s.damage,s.t);if(performance.now()-lastSound>140){sound(420+Math.random()*110,.09,'sine',.02);lastSound=performance.now()}
-     for(let j=0;j<3;j++)makeParticle(s.mesh.position,s.t.u.color);
-     projectileGroup.remove(s.mesh);projectiles.splice(i,1)
-    }else s.mesh.position.addScaledVector(diff,move/distance)
-   }
-   enemies=enemies.filter(e=>!e.dead);
-   if(state.spawned>=state.spawnTotal&&enemies.length===0)finishWave();
+    const p = routePoint(route, e.dist);
+    e.group.position.set(p.x, 0.04, p.z);
+    e.group.rotation.y = p.angle;
+    e.health.position.set(p.x, e.boss ? 3 : 1.75, p.z);
+    e.bar.scale.x = Math.max(0.001, e.hp / e.maxHp);
+    e.bar.position.x = -(1 - e.bar.scale.x) * 0.425;
   }
-  if(state.abilityCd>0){state.abilityCd=Math.max(0,state.abilityCd-dt);$('magic').textContent=state.abilityCd>0?'❄ '+Math.ceil(state.abilityCd)+'s':'❄ NEVASCA';$('magic').disabled=state.abilityCd>0||!state.started}
-  updateHUD()
- }
- for(const t of towers){
-  t.group.position.y=.14+Math.sin(performance.now()/430+t.x*1.4)*.055;
-  t.group.children.forEach(a=>{if(a.userData.orb)a.rotation.y+=dt*2})
- }
- for(const e of enemies){e.group.rotation.z=Math.sin(performance.now()/280+e.dist)*.025}
- for(let i=particles.length-1;i>=0;i--){
-  let p=particles[i];p.life-=dt;
-  if(p.life<=0){particleGroup.remove(p.mesh);particles.splice(i,1)}
-  else{p.mesh.position.addScaledVector(p.vel,dt);p.vel.y-=dt*4;p.mesh.material.opacity=Math.min(1,p.life*2)}
- }
+  for (const t of towers) {
+    t.cooldown -= dt;
+    if (t.cooldown > 0) continue;
+    let target = null;
+    for (const e of enemies)
+      if (
+        !e.dead &&
+        Math.hypot(e.group.position.x - t.x, e.group.position.z - t.z) <
+          t.stats.range &&
+        (!target || target.dist < e.dist)
+      )
+        target = e;
+    if (target) {
+      const buff = Math.min(
+        0.8,
+        towers.reduce(
+          (n, a) =>
+            a !== t &&
+            a.stats.buff &&
+            Math.hypot(a.x - t.x, a.z - t.z) < a.stats.range
+              ? n + a.stats.buff
+              : n,
+          0,
+        ),
+      );
+      t.cooldown += t.stats.interval / (1 + buff);
+      fire(t, target);
+    } else t.cooldown = 0;
+  }
+  for (let i = projectiles.length - 1; i >= 0; i--) {
+    const p = projectiles[i];
+    p.life -= dt;
+    if (p.target.dead || p.life <= 0) {
+      view.removeProjectile(p.mesh);
+      projectiles.splice(i, 1);
+      continue;
+    }
+    const destination = p.target.group.position
+        .clone()
+        .add(new THREE.Vector3(0, 0.9, 0)),
+      diff = destination.sub(p.mesh.position),
+      distance = diff.length(),
+      move = 13 * dt;
+    p.mesh.rotation.x += dt * 8;
+    if (distance < move + 0.15) {
+      const center = p.target.group.position.clone();
+      hit(p.target, p.damage, p.tower);
+      if (p.tower.stats.splash > 0) {
+        view.shockwave(
+          center.x,
+          center.z,
+          p.tower.def.color,
+          p.tower.stats.splash,
+        );
+        for (const other of enemies)
+          if (
+            other !== p.target &&
+            !other.dead &&
+            other.group.position.distanceTo(center) < p.tower.stats.splash
+          )
+            hit(other, p.damage * 0.5, p.tower);
+      }
+      view.burst(center.x, center.z, p.tower.def.color, 3);
+      if (state.elapsed - uiTimer > 0.14) {
+        audio.play(
+          { emilia: "ice", rem: "impact", beatrice: "yin", subaru: "sword" }[
+            p.tower.key
+          ],
+        );
+        uiTimer = state.elapsed;
+      }
+      view.removeProjectile(p.mesh);
+      projectiles.splice(i, 1);
+    } else p.mesh.position.addScaledVector(diff, move / distance);
+  }
+  enemies = enemies.filter((e) => !e.dead);
+  if (state.spawned >= state.plan.length && !enemies.length) finishWave();
 }
-function animate(){
- requestAnimationFrame(animate);let dt=Math.min(clock.getDelta(),.045);
- if(state.mode==='battle')update(dt*state.speed);
- if(renderer&&state.mode==='battle')renderer.render(scene,camera)
+function settings() {
+  openModal({
+    title: "Do seu jeito.",
+    eyebrow: "CONFIGURAÇÕES",
+    sigil: "☼",
+    content: `<div class="settings-row"><span>Música<small>Uma trilha original para sua jornada</small></span><input id="musicVolume" type="range" aria-label="Volume da música" min="0" max="100" value="${save.settings.music * 100}"></div><div class="settings-row"><span>Efeitos sonoros<small>Magia, impacto e pequenas conquistas</small></span><input id="sfxVolume" type="range" aria-label="Volume dos efeitos" min="0" max="100" value="${save.settings.sfx * 100}"></div><div class="settings-row"><span>Qualidade gráfica<small>Leve reduz sombras e resolução</small></span><select id="qualitySelect" aria-label="Qualidade gráfica"><option value="auto">Automática</option><option value="high">Alta</option><option value="low">Leve</option></select></div>`,
+    actions: [{ label: "Tudo pronto", run: closeModal }],
+  });
+  $("qualitySelect").value = save.settings.quality;
+  for (const id of ["musicVolume", "sfxVolume"])
+    $(id).oninput = () => {
+      save.settings.music = Number($("musicVolume").value) / 100;
+      save.settings.sfx = Number($("sfxVolume").value) / 100;
+      audio.setVolumes(save.settings.music, save.settings.sfx);
+      persist();
+    };
+  $("qualitySelect").onchange = () => {
+    save.settings.quality = $("qualitySelect").value;
+    view.setQuality(save.settings.quality);
+    persist();
+  };
 }
-function bindUI(){
- $('play').onclick=()=>levelScreen();$('campaignBack').onclick=()=>{$('campaign').classList.add('hidden');$('menu').classList.remove('hidden')};
- $('exit').onclick=()=>showDialog('SAIR DA PARTIDA?','O progresso desta partida será perdido. Vitórias completas permanecem salvas.','VOLTAR AO MAPA',()=>leaveBattle(),'CONTINUAR JOGANDO',()=>hideDialog());
- $('startWave').onclick=startWave;$('magic').onclick=ability;
- $('speed').onclick=()=>{state.speed=state.speed===1?2:state.speed===2?3:1;$('speed').textContent='⏩ '+state.speed+'×'};
- $('sellButton').onclick=sellSelected;$('musicToggle').onclick=musicToggle;
- $('how').onclick=()=>alert('1. Escolha um capítulo. 2. Clique num guardião da loja e posicione fora da estrada. 3. Inicie a onda. 4. Selecione um guardião para evoluir por PODER, ALCANCE ou VELOCIDADE: são 5 níveis por caminho. 5. Use NEVASCA durante a onda. 6. Vença 15 ondas para desbloquear o próximo capítulo.');
- document.querySelectorAll('[data-hero]').forEach(b=>{b.onclick=()=>{if(state.gold<heroes[b.dataset.hero].cost)return;state.placing=state.placing===b.dataset.hero?null:b.dataset.hero;selected(null);refreshShop();if(state.placing)uiToast('Toque em um terreno livre para invocar '+heroes[state.placing].name)}});
+function how() {
+  openModal({
+    title: "Pequenos laços. Grandes defesas.",
+    eyebrow: "COMO JOGAR",
+    content: `<div class="tutorial-steps"><div><b>01</b><p><strong>Convoque seus guardiões.</strong><br>Escolha um aliado e toque em um terreno livre, perto da estrada.</p></div><div><b>02</b><p><strong>Crie uma estratégia.</strong><br>Gelo controla, a maça atinge grupos e a magia fortalece os aliados.</p></div><div><b>03</b><p><strong>Evolua com propósito.</strong><br>Toque no guardião: um caminho vai até o nível 5 e outro até o nível 2.</p></div><div><b>04</b><p><strong>Reescreva o destino.</strong><br>Sobreviva às 15 ondas. Convoque Emilia para ativar Nevasca. Chefes chegam a cada 5 ondas.</p></div></div><p>Computador: clique para posicionar · E conjura Nevasca · Espaço inicia ou pausa · Esc cancela ou pausa.</p>`,
+    actions: [{ label: "Meu destino me espera", run: closeModal }],
+  });
 }
-bindUI();
+function guardian(key) {
+  const h = HEROES[key];
+  audio.play("select");
+  openModal({
+    title: h.name,
+    eyebrow: h.role,
+    sigil: "",
+    content: `<img class="detail-modal-portrait" src="${images[key]}" alt="Modelo 3D de ${h.name}"><p>${h.description}</p><div class="hero-traits">${h.paths.map((p) => `<span>${p.name}</span>`).join("")}</div><p>Convocação: ${h.cost} moedas · Três caminhos de evolução</p>`,
+    actions: [{ label: "Levar este laço à jornada", run: campaign }],
+  });
+}
+function pauseMenu() {
+  if (state.screen !== "battle" || state.ended) return;
+  openModal({
+    title: "Um respiro antes do destino.",
+    eyebrow: "PARTIDA PAUSADA",
+    sigil: "Ⅱ",
+    content: "<p>Sua defesa está a salvo. Continue quando estiver pronto.</p>",
+    actions: [
+      { label: "Continuar a defesa", run: closeModal },
+      { label: "Configurações", secondary: true, run: settings },
+      { label: "Voltar à campanha", secondary: true, run: confirmExit },
+    ],
+  });
+}
+function confirmExit() {
+  openModal({
+    title: "Deixar este capítulo?",
+    eyebrow: "A JORNADA CONTINUA",
+    content:
+      "<p>A defesa atual será encerrada. As ondas concluídas e os capítulos desbloqueados permanecem salvos.</p>",
+    actions: [
+      { label: "Continuar a defesa", run: closeModal },
+      { label: "Voltar à campanha", secondary: true, run: campaign },
+    ],
+  });
+}
+function bindUI() {
+  for (const id of ["play", "navCampaign"]) $(id).onclick = campaign;
+  $("navGuardians").onclick = () => {
+    if (state.screen !== "menu") home();
+    $("rosterSection").scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+  $("brandHome").onclick = (e) => {
+    e.preventDefault();
+    home();
+  };
+  $("campaignBack").onclick = home;
+  $("how").onclick = how;
+  $("settings").onclick = settings;
+  $("battleSettings").onclick = settings;
+  $("exit").onclick = confirmExit;
+  $("pause").onclick = pauseMenu;
+  $("cancelPlacement").onclick = cancelPlacement;
+  $("speed").onclick = () => {
+    state.speed = state.speed === 1 ? 2 : state.speed === 2 ? 3 : 1;
+    renderHUD(true);
+  };
+  $("startWave").onclick = startWave;
+  $("magic").onclick = cast;
+  $("modalClose").onclick = () => modalDismiss?.();
+  const canvas = view.renderer.domElement;
+  let pointer = null;
+  canvas.addEventListener("pointerdown", (event) => {
+    audio.unlock();
+    if (state.screen !== "battle" || state.ended || paused()) return;
+    pointer = {
+      id: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      startX: event.clientX,
+      startY: event.clientY,
+      moved: false,
+    };
+    canvas.setPointerCapture(event.pointerId);
+  });
+  canvas.addEventListener("pointermove", (event) => {
+    if (paused() || state.screen !== "battle") return;
+    if (pointer && pointer.id === event.pointerId && !state.placing) {
+      const dx = event.clientX - pointer.x,
+        dy = event.clientY - pointer.y;
+      if (
+        Math.hypot(
+          event.clientX - pointer.startX,
+          event.clientY - pointer.startY,
+        ) > 7
+      )
+        pointer.moved = true;
+      if (pointer.moved) view.pan(dx, dy);
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+    }
+    if (state.placing) {
+      const p = view.point(event);
+      if (p)
+        view.placement(
+          p.x,
+          p.z,
+          HEROES[state.placing].range,
+          placementValid(p.x, p.z),
+        );
+    }
+  });
+  canvas.addEventListener("pointerup", (event) => {
+    if (!pointer || pointer.id !== event.pointerId) return;
+    const moved = pointer.moved;
+    pointer = null;
+    if (state.screen !== "battle" || state.ended || paused() || moved) return;
+    const p = view.point(event);
+    if (!p) return;
+    if (state.placing) {
+      place(state.placing, p.x, p.z);
+      return;
+    }
+    let found = null;
+    for (const t of towers)
+      if (Math.hypot(p.x - t.x, p.z - t.z) < 0.9) found = t;
+    select(found);
+  });
+  canvas.addEventListener("pointercancel", () => {
+    pointer = null;
+  });
+  canvas.addEventListener("pointerleave", () => {
+    if (state.placing && !pointer) view.selection(null);
+  });
+  $("zoomIn").onclick = () => view.zoom(0.2);
+  $("zoomOut").onclick = () => view.zoom(-0.2);
+  $("resetView").onclick = () => view.resetCamera();
+  document.addEventListener("pointerdown", () => audio.unlock(), {
+    once: true,
+  });
+  document.addEventListener("keydown", (e) => {
+    audio.unlock();
+    if (e.key === "Tab" && modalOpen) {
+      const focusables = [
+        ...$("modal").querySelectorAll("button:not(.hidden),input,select"),
+      ].filter((el) => !el.disabled);
+      const first = focusables[0],
+        last = focusables.at(-1);
+      if (e.shiftKey && document.activeElement === first) {
+        last?.focus();
+        e.preventDefault();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        first?.focus();
+        e.preventDefault();
+      }
+      return;
+    }
+    if (["INPUT", "SELECT"].includes(e.target.tagName)) return;
+    if (e.key === "Escape") {
+      if (modalOpen) modalDismiss?.();
+      else if (state.placing) cancelPlacement();
+      else if (state.screen === "battle") pauseMenu();
+      return;
+    }
+    if (modalOpen || state.screen !== "battle") return;
+    if (e.code === "Space") {
+      e.preventDefault();
+      state.running ? pauseMenu() : startWave();
+    }
+    if (e.key.toLowerCase() === "e") cast();
+  });
+  document.addEventListener("visibilitychange", syncAudio);
+  window.addEventListener("pagehide", () => audio.destroy());
+}
+function roster() {
+  const bg = {
+    emilia: "#dfe9e6",
+    rem: "#d6e3e8",
+    beatrice: "#ede2dd",
+    subaru: "#e8e3d6",
+  };
+  $("menuRoster").innerHTML = Object.entries(HEROES)
+    .map(
+      ([key, h]) =>
+        `<button class="guardian-card" data-guardian="${key}" style="--accent:${h.color}"><img src="${images[key]}" alt="Modelo 3D de ${h.name}"><span class="element">${h.symbol}</span><span><strong>${h.name}</strong><small>${h.role}</small></span><svg class="card-arrow"><use href="#i-arrow"/></svg></button>`,
+    )
+    .join("");
+  $("shopUnits").innerHTML = Object.entries(HEROES)
+    .map(
+      ([key, h]) =>
+        `<button class="shop-unit" data-hero="${key}" style="--accent:${h.color};--card-bg:${bg[key]}" aria-label="Convocar ${h.name}, ${h.cost} moedas"><img src="${images[key]}" alt=""><span class="unit-badge">${h.symbol}</span><strong>${h.name}</strong><small>${icon("coin")}${h.cost}</small></button>`,
+    )
+    .join("");
+  document
+    .querySelectorAll("[data-guardian]")
+    .forEach((b) => (b.onclick = () => guardian(b.dataset.guardian)));
+  document
+    .querySelectorAll("[data-hero]")
+    .forEach((b) => (b.onclick = () => chooseHero(b.dataset.hero)));
+}
+let previous = performance.now(),
+  hudClock = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (!view) return;
+  const dt = Math.min((now - previous) / 1000, 0.05);
+  previous = now;
+  if (!document.hidden) {
+    if (!paused()) {
+      if (state.screen === "battle") {
+        accumulator += dt * state.speed;
+        while (accumulator >= 1 / 60 && !paused()) {
+          simulate(1 / 60);
+          accumulator -= 1 / 60;
+        }
+      }
+      view.update(dt, towers, enemies, preview);
+    }
+    view.render();
+    hudClock += dt;
+    if (hudClock > 0.12 && state.screen === "battle") {
+      renderHUD();
+      hudClock = 0;
+    }
+  }
+}
+function testingAPI() {
+  if (new URLSearchParams(location.search).has("test"))
+    window.__ASTRAL_TEST__ = {
+      get state() {
+        return state;
+      },
+      get towers() {
+        return towers;
+      },
+      get enemies() {
+        return enemies;
+      },
+      get save() {
+        return save;
+      },
+      get view() {
+        return view;
+      },
+      snapshot: () => ({
+        screen: state.screen,
+        wave: state.wave,
+        gold: state.gold,
+        lives: state.lives,
+        running: state.running,
+        ended: state.ended,
+        paused: paused(),
+        abilityCd: state.abilityCd,
+        kills: state.kills,
+        towers: towers.map((t) => ({
+          id: t.id,
+          key: t.key,
+          x: t.x,
+          z: t.z,
+          levels: [...t.levels],
+          stats: { ...t.stats },
+        })),
+        enemies: enemies.map((e) => ({
+          hp: e.hp,
+          maxHp: e.maxHp,
+          dist: e.dist,
+          boss: e.boss,
+          bar: e.bar.scale.x,
+        })),
+        save: structuredClone(save),
+      }),
+      step: (seconds) => {
+        const count = Math.ceil(seconds * 60);
+        for (let i = 0; i < count; i++) {
+          if (paused()) break;
+          simulate(1 / 60);
+        }
+        renderHUD(true);
+        view.render();
+      },
+      startMap,
+      startWave,
+      place,
+      placementValid,
+      select: (id) => select(towers.find((t) => t.id === id)),
+      upgrade,
+      cast,
+      closeModal,
+      home,
+      campaign,
+      project: (x, z) => view.project(x, z),
+      persist,
+    };
+}
+async function init() {
+  try {
+    view = new GameView($("stage"), save.settings.quality);
+    images = view.portraits(Object.keys(HEROES));
+    for (let i = 0; i < MAPS.length; i++) {
+      view.setWorld(i);
+      view.render();
+      mapImages[i] = view.renderer.domElement.toDataURL("image/webp", 0.85);
+    }
+    menuPreview();
+    roster();
+    bindUI();
+    testingAPI();
+    $("loading").classList.add("hidden");
+    requestAnimationFrame(frame);
+    persist();
+  } catch (error) {
+    console.error(error);
+    $("fatal").classList.remove("hidden");
+    $("fatalMessage").textContent =
+      `Não foi possível abrir o mundo 3D. Ative a aceleração gráfica ou tente um navegador atualizado. (${error.message})`;
+  }
+}
+init();
