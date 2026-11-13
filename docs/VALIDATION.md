@@ -1,5 +1,7 @@
 # Validação da Etapa 1
 
+A revisão de interface, HP, ataques e tela de evolução da versão 2.1 está documentada em [COMBAT-CLARITY.md](COMBAT-CLARITY.md).
+
 ## Reproduzir
 
 ```sh

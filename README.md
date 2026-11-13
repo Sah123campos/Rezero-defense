@@ -2,7 +2,7 @@
 
 Tower defense 3D para navegador, com quatro guardiões, três capítulos e partidas de 15 ondas. Esta reconstrução implementa a Etapa 1 e estabiliza a base para as próximas expansões.
 
-![Re:Zero — Astral Defense](docs/screenshots/desktop-menu.png)
+![Re:Zero — Astral Defense](docs/screenshots/vibrant-menu.png)
 
 ## Jogar e desenvolver
 
@@ -15,7 +15,10 @@ npm run dev
 Abra `http://127.0.0.1:5173`. O jogo usa módulos ES; sirva os arquivos por HTTP em vez de abrir `index.html` pelo protocolo `file:`.
 
 - Escolha um capítulo, selecione um guardião e clique/toque em um terreno livre.
-- Toque em um guardião posicionado para evoluir ou vender.
+- Toque em um guardião posicionado para evoluir ou vender. **Ver todas as evoluções** abre os três caminhos com seus 15 níveis, preços, efeitos e comparação de sete atributos.
+- No menu, abra um guardião e escolha **Ver todas as evoluções** para explorar o catálogo sem gastar moedas.
+- A base tem **25 pontos de defesa**. Comuns retiram 1, blindados 2 e chefes 5; a partida acaba em zero. Toque no indicador **DEFESA 25/25** para consultar quantos de cada tipo ainda precisam atravessar.
+- O contador **atravessaram** mostra inimigos que chegaram ao portal; as barras sobre os inimigos mostram o HP atual, sem diminuir com o zoom.
 - Use **+ / −** para aproximar; arraste o mapa ampliado para explorar e use **⌖** para centralizar.
 - Um caminho pode chegar ao nível 5; um segundo, ao nível 2. O terceiro fica bloqueado.
 - Emilia desacelera; Rem causa dano em área; Beatrice acelera aliados; Subaru oferece ataques rápidos e apoio tático.
@@ -31,9 +34,9 @@ npm test
 npm run build
 ```
 
-`dist/` contém a versão estática. Todos os caminhos são relativos; publique esse diretório no Pages ou continue servindo a raiz do repositório como antes. Three.js 0.160.1 fica em `vendor/`, com licença MIT incluída. O jogo, as fontes do sistema, os modelos, as texturas e o áudio não exigem CDNs nem serviços externos.
+`dist/` contém a versão estática. Todos os caminhos são relativos; publique esse diretório no Pages ou continue servindo a raiz do repositório como antes. Three.js 0.160.1 fica em `vendor/`, com licença MIT incluída. O jogo, as fontes locais Nunito e Lilita One, os modelos, as texturas e o áudio não exigem CDNs nem serviços externos. As licenças OFL das fontes estão em `vendor/fonts/`. Os arquivos carregados pelo navegador têm versão `2.1.0` para evitar misturar módulos anteriores após uma atualização do GitHub Pages.
 
-O teste de navegador está em `tests/browser.test.mjs`; veja `docs/VALIDATION.md` para executar e conhecer os cenários de QA. Ele usa `?test=1`, que disponibiliza uma API de simulação apenas para testes. A página normal não expõe essa API.
+Os testes de navegador estão em `tests/browser.test.mjs` e `tests/readability.test.mjs`, executados em sequência por `npm run test:browser`. Veja `docs/VALIDATION.md` e `docs/COMBAT-CLARITY.md` para reproduzir os cenários de QA e consultar as capturas. Ele usa `?test=1`, que disponibiliza uma API de simulação apenas para testes. A página normal não expõe essa API.
 
 ## Estrutura
 
@@ -44,6 +47,9 @@ O teste de navegador está em `tests/browser.test.mjs`; veja `docs/VALIDATION.md
 - `src/models.js`: modelos originais, detalhes e animações dos quatro guardiões e cinco tipos de inimigo.
 - `src/world.js`: três dioramas, vegetação instanciada, caminhos, água e arquitetura.
 - `src/audio.js`: trilha e efeitos originais sintetizados com Web Audio.
+- `src/combat-hud.js`: barras de vida em pixels da tela e números de dano com pool.
+- `src/combat-effects.js`: projéteis, trilhas, impactos e efeitos que usam tempo visual independente da velocidade da onda.
+- `src/upgrade-screen.js` e `.css`: catálogo, prévias e compras dos 15 níveis por guardião.
 
 O progresso anterior da chave `rezero-astral3d-save` é preservado e validado. Bloqueios de armazenamento não impedem a partida. O salvamento é local neste navegador; contas e sincronização ficam para uma etapa posterior.
 
