@@ -1,5 +1,5 @@
-import { GameView, THREE, MAPS } from "./src/view.js";
-import { createHero, createEnemy } from "./src/models.js";
+import { GameView, THREE, MAPS } from "./src/view.js?v=2.1.0";
+import { createHero, createEnemy } from "./src/models.js?v=2.1.0";
 import {
   HEROES,
   WAVES,
@@ -11,8 +11,10 @@ import {
   createRoute,
   routePoint,
   distanceToRoute,
-} from "./src/rules.js";
-import { AudioManager } from "./src/audio.js";
+} from "./src/rules.js?v=2.1.0";
+import { AudioManager } from "./src/audio.js?v=2.1.0";
+import { CombatHUD } from "./src/combat-hud.js?v=2.1.0";
+import { UpgradeScreen } from "./src/upgrade-screen.js?v=2.1.0";
 
 const $ = (id) => document.getElementById(id),
   icon = (name) => `<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
@@ -31,6 +33,7 @@ const persist = () => {
   }
 };
 const audio = new AudioManager(save.settings);
+let combatHUD, evolutions;
 let view,
   images = {},
   mapImages = [],
@@ -45,6 +48,8 @@ let state = {
   wave: 0,
   gold: 500,
   lives: 25,
+  leaked: 0,
+  lostDefense: 0,
   running: false,
   ended: false,
   speed: 1,
@@ -71,10 +76,13 @@ function toast(message) {
   toast.timer = setTimeout(() => $("toast").classList.add("hidden"), 2800);
 }
 function paused() {
-  return modalOpen || document.hidden;
+  return modalOpen || !!evolutions?.isOpen || document.hidden;
 }
 function syncAudio() {
-  audio.pause(document.hidden || (modalOpen && state.screen === "battle"));
+  audio.pause(
+    document.hidden ||
+      ((modalOpen || evolutions?.isOpen) && state.screen === "battle"),
+  );
 }
 function closeModal() {
   if (!modalOpen) return;
@@ -116,6 +124,7 @@ function openModal({
   );
 }
 function switchScreen(screen) {
+  evolutions?.close();
   closeModal();
   state.screen = screen;
   document.body.dataset.screen = screen;
@@ -128,6 +137,7 @@ function switchScreen(screen) {
   syncAudio();
 }
 function removeActors() {
+  combatHUD?.clear();
   for (const t of towers) view.actors.remove(t.group);
   for (const e of enemies) {
     view.actors.remove(e.group);
@@ -146,19 +156,20 @@ function menuPreview() {
   removeActors();
   view.setWorld(0);
   const spots = [
-    [-4.3, -0.3],
-    [-2.8, 1.2],
-    [1.5, 0.4],
-    [3.2, 2.3],
+    [-4.6, 1.4],
+    [-1.4, 3.2],
+    [2.2, 1.0],
+    [5.4, 3.0],
   ];
   Object.keys(HEROES).forEach((key, i) => {
     const g = createHero(key);
     g.position.set(spots[i][0], 0, spots[i][1]);
     g.rotation.y = 0.3;
-    g.scale.setScalar(1.25);
+    g.scale.setScalar(2.05);
     view.actors.add(g);
-    preview.push({ group: g });
+    preview.push({ key, group: g, attack: 0 });
   });
+  view.showcase();
   view.render();
 }
 function home() {
@@ -195,6 +206,8 @@ function startMap(index) {
     wave: 0,
     gold: 500,
     lives: 25,
+    leaked: 0,
+    lostDefense: 0,
     running: false,
     ended: false,
     speed: 1,
@@ -215,7 +228,9 @@ function startMap(index) {
   lastHUD = "";
   renderDetails();
   renderHUD();
-  toast("Convoque seus guardiões perto das curvas da estrada.");
+  toast(
+    "Defesa 25/25 · Comuns tiram 1, blindados 2 e chefes 5. Proteja o portal!",
+  );
   if (!storageAvailable)
     toast("O navegador não permitiu salvar. Esta partida continua disponível.");
   return true;
@@ -362,13 +377,14 @@ function renderDetails() {
   el.innerHTML = `<div class="unit-detail-heading"><img class="mini-portrait" src="${images[t.key]}" alt=""><div><h3>${t.def.name}</h3><small>${t.def.role} · ${t.levels.join("–")}</small></div><button class="detail-close" id="unselect" aria-label="Fechar evoluções">×</button></div><div class="unit-stats"><span>${Math.round(t.stats.damage)}<small>DANO</small></span><span>${t.stats.range.toFixed(1)}<small>ALCANCE</small></span><span>${(1 / t.stats.interval).toFixed(1)}<small>ATAQUES/S</small></span></div><div class="upgrade-caption">Um caminho até nível 5 + outro até nível 2.</div><div class="upgrade-list">${t.def.paths
     .map((p, i) => {
       const u = upgradeState(t.key, t.levels, i);
-      return `<button class="upgrade-row ${!u.tier ? "maxed" : ""}" data-upgrade="${i}" ${!u.allowed || u.cost > state.gold || state.ended ? "disabled" : ""} title="${u.reason || u.tier?.description || p.description}"><span class="upgrade-head"><span>${p.name}</span><span class="upgrade-price">${!u.tier ? "COMPLETO" : !u.allowed ? "BLOQUEADO" : "◈ " + u.cost}</span></span><small>${u.tier?.name || "Forma suprema"}</small><span class="upgrade-pips">${Array.from({ length: 5 }, (_, j) => `<i class="${j < t.levels[i] ? "filled" : ""}"></i>`).join("")}</span></button>`;
+      return `<button class="upgrade-row ${!u.tier ? "maxed" : ""}" data-upgrade="${i}" ${!u.allowed || u.cost > state.gold || state.ended ? "disabled" : ""} title="${u.reason || u.tier?.description || p.description}"><span class="upgrade-head"><span>${p.name}</span><span class="upgrade-price">${!u.tier ? "COMPLETO" : !u.allowed ? "BLOQUEADO" : "◈ " + u.cost}</span></span><small>${u.tier?.name || "Forma suprema"}</small><span class="upgrade-description">${u.tier?.description || p.description}</span><span class="upgrade-pips">${Array.from({ length: 5 }, (_, j) => `<i class="${j < t.levels[i] ? "filled" : ""}"></i>`).join("")}</span></button>`;
     })
     .join(
       "",
-    )}</div><button class="sell-button" id="sellButton">Vender guardião · +${Math.floor(t.paid * 0.7)} moedas</button>`;
+    )}</div><button class="evolution-open-button" id="showEvolutions">✦ Ver todas as evoluções</button><button class="sell-button" id="sellButton">Vender guardião · +${Math.floor(t.paid * 0.7)} moedas</button>`;
   $("unselect").onclick = () => select(null);
   $("sellButton").onclick = sell;
+  $("showEvolutions").onclick = () => evolutions.open(t);
   el.querySelectorAll("[data-upgrade]").forEach(
     (b) => (b.onclick = () => upgrade(Number(b.dataset.upgrade))),
   );
@@ -386,6 +402,10 @@ function renderHUD(force = false) {
   if (force || lastHUD !== sig) {
     lastHUD = sig;
     $("hp").textContent = Math.max(0, state.lives);
+    $("hp")
+      .closest(".health")
+      .classList.toggle("is-critical", state.lives <= 5);
+    $("leakCount").textContent = `${state.leaked} atravessaram`;
     $("coins").textContent = state.gold;
     $("waveNo").innerHTML = `${state.wave}<small> / ${WAVES}</small>`;
     $("startWave").disabled = state.running || state.ended;
@@ -448,33 +468,21 @@ function startWave() {
   renderHUD(true);
   return true;
 }
-const barGeometry = new THREE.PlaneGeometry(0.85, 0.07),
-  barBackMaterial = new THREE.MeshBasicMaterial({
-    color: 0x403e4c,
-    depthTest: false,
-    transparent: true,
-    opacity: 0.6,
-  }),
-  barMaterial = new THREE.MeshBasicMaterial({
-    color: 0x97cb7f,
-    depthTest: false,
-  });
 function attachHealth(e) {
-  const g = new THREE.Group(),
-    back = new THREE.Mesh(barGeometry, barBackMaterial),
-    front = new THREE.Mesh(barGeometry, barMaterial);
-  g.add(back, front);
-  front.position.z = 0.005;
-  g.quaternion.copy(view.camera.quaternion);
-  g.renderOrder = 10;
-  back.renderOrder = 10;
-  front.renderOrder = 11;
-  view.actors.add(g);
-  e.health = g;
-  e.bar = front;
+  combatHUD.add(e);
 }
 function removeHealth(e) {
-  if (e.health) view.actors.remove(e.health);
+  combatHUD.remove(e);
+}
+function defenseInfo() {
+  const hp = Math.max(0, state.lives);
+  openModal({
+    title: "Proteja o portal!",
+    eyebrow: "COMO FUNCIONA A DEFESA",
+    sigil: "🛡",
+    content: `<p>Sua base começa com <strong>25 pontos de defesa</strong>. Cada inimigo que chega ao portal retira pontos. <strong>A partida acaba quando a defesa chega a zero.</strong></p><div class="defense-rules"><div><b>−1</b><span>Sombras, velozes e espectros<small>Precisam passar ${hp} com a defesa atual.</small></span></div><div><b>−2</b><span>Inimigos blindados<small>Precisam passar ${Math.ceil(hp / 2)} com a defesa atual.</small></span></div><div><b>−5</b><span>Chefes<small>Precisam passar ${Math.ceil(hp / 5)} com a defesa atual.</small></span></div></div><p>Essas quantidades consideram apenas um tipo por vez. Quando os tipos se misturam, o dano de todos se soma.</p><div class="hero-traits"><span>Defesa: ${hp}/25</span><span>${state.leaked} inimigos atravessaram</span></div>`,
+    actions: [{ label: "Entendi! Proteger a base", run: closeModal }],
+  });
 }
 function spawn() {
   const type = state.plan[state.spawned++],
@@ -531,6 +539,8 @@ function hit(e, value, tower) {
   if (e.type === "armored" && tower?.def.element === "físico") amount *= 0.7;
   if (e.type === "wraith" && tower?.def.element === "yin") amount *= 0.8;
   e.hp -= amount;
+  combatHUD.damage(e, amount, tower?.def.color || "#aafaff");
+  view.impact(e, tower?.def.color || "#45e8ff");
   if (tower?.stats.slow) {
     e.slow = tower.stats.slow * (e.boss ? 0.55 : 1);
     e.slowLeft = 1.6;
@@ -538,11 +548,12 @@ function hit(e, value, tower) {
   if (e.hp <= 0) kill(e, tower);
 }
 function fire(t, e) {
-  t.attack = 1;
+  if (t.attack < 0.15) t.attack = 1;
   t.group.rotation.y = Math.atan2(
     e.group.position.x - t.x,
     e.group.position.z - t.z,
   );
+  view.attackCue(t, e);
   const mesh = view.projectile(t, e);
   projectiles.push({
     mesh,
@@ -570,9 +581,10 @@ function cast() {
     view.burst(e.group.position.x, e.group.position.z, "#b6edff", 5);
   }
   for (const t of towers.filter((t) => t.key === "emilia")) {
-    t.attack = 1;
+    if (t.attack < 0.15) t.attack = 1;
     view.shockwave(t.x, t.z, "#a7edff", 6);
   }
+  view.blizzard(towers);
   audio.play("ability");
   toast("Nevasca · o inverno chegou a Lugunica.");
   renderHUD(true);
@@ -629,7 +641,7 @@ function defeat() {
     title: "Ainda há uma nova chance.",
     eyebrow: "O DESTINO PODE SER REESCRITO",
     sigil: "✧",
-    content: `<p>A estrada foi tomada pelas sombras na onda ${state.wave}.<br>Novos laços e uma nova estratégia podem mudar essa história.</p>`,
+    content: `<p>A defesa do portal chegou a <strong>0/25</strong> na onda ${state.wave}.<br><strong>${state.leaked} inimigos atravessaram</strong> e causaram ${state.lostDefense} pontos de dano no total.</p><p>Sombras tiram 1 ponto, blindados 2 e chefes 5. Reforce as curvas e tente outra estratégia!</p>`,
     actions: [
       { label: "Recomeçar o capítulo", run: () => startMap(state.map) },
       { label: "Voltar à campanha", secondary: true, run: campaign },
@@ -642,7 +654,7 @@ function simulate(dt) {
   if (state.screen !== "battle" || state.ended) return;
   state.elapsed += dt;
   state.abilityCd = Math.max(0, state.abilityCd - dt);
-  for (const t of towers) t.attack = Math.max(0, t.attack - dt * 3);
+
   if (!state.running) return;
   state.spawnTimer += dt;
   while (state.spawned < state.plan.length && state.spawnTimer >= 0.72) {
@@ -661,6 +673,13 @@ function simulate(dt) {
     if (e.dist >= route.total) {
       e.dead = true;
       state.lives -= e.leak;
+      state.leaked++;
+      state.lostDefense += e.leak;
+      document.body.classList.remove("base-hit");
+      requestAnimationFrame(() => document.body.classList.add("base-hit"));
+      toast(
+        `${e.boss ? "Chefe" : e.type === "armored" ? "Blindado" : "Inimigo"} atravessou! −${e.leak} de defesa · ${Math.max(0, state.lives)}/25 restantes.`,
+      );
       view.actors.remove(e.group);
       removeHealth(e);
       if (state.lives <= 0) {
@@ -672,9 +691,6 @@ function simulate(dt) {
     const p = routePoint(route, e.dist);
     e.group.position.set(p.x, 0.04, p.z);
     e.group.rotation.y = p.angle;
-    e.health.position.set(p.x, e.boss ? 3 : 1.75, p.z);
-    e.bar.scale.x = Math.max(0.001, e.hp / e.maxHp);
-    e.bar.position.x = -(1 - e.bar.scale.x) * 0.425;
   }
   for (const t of towers) {
     t.cooldown -= dt;
@@ -780,7 +796,7 @@ function how() {
   openModal({
     title: "Pequenos laços. Grandes defesas.",
     eyebrow: "COMO JOGAR",
-    content: `<div class="tutorial-steps"><div><b>01</b><p><strong>Convoque seus guardiões.</strong><br>Escolha um aliado e toque em um terreno livre, perto da estrada.</p></div><div><b>02</b><p><strong>Crie uma estratégia.</strong><br>Gelo controla, a maça atinge grupos e a magia fortalece os aliados.</p></div><div><b>03</b><p><strong>Evolua com propósito.</strong><br>Toque no guardião: um caminho vai até o nível 5 e outro até o nível 2.</p></div><div><b>04</b><p><strong>Reescreva o destino.</strong><br>Sobreviva às 15 ondas. Convoque Emilia para ativar Nevasca. Chefes chegam a cada 5 ondas.</p></div></div><p>Computador: clique para posicionar · E conjura Nevasca · Espaço inicia ou pausa · Esc cancela ou pausa.</p>`,
+    content: `<div class="tutorial-steps"><div><b>01</b><p><strong>Convoque seus guardiões.</strong><br>Escolha um aliado e toque em um terreno livre, perto da estrada.</p></div><div><b>02</b><p><strong>Crie uma estratégia.</strong><br>Gelo controla, a maça atinge grupos e a magia fortalece os aliados.</p></div><div><b>03</b><p><strong>Evolua com propósito.</strong><br>Toque no guardião: um caminho vai até o nível 5 e outro até o nível 2.</p></div><div><b>04</b><p><strong>Reescreva o destino.</strong><br>Sobreviva às 15 ondas. Convoque Emilia para ativar Nevasca. Chefes chegam a cada 5 ondas.</p></div></div><p><strong>Defesa 25/25:</strong> comuns −1, blindados −2 e chefes −5. Ao chegar a 0, você perde. Toque no ? ao lado da defesa para ver quantos ainda podem passar.</p><p>Computador: clique para posicionar · E conjura Nevasca · Espaço inicia ou pausa · Esc cancela ou pausa.</p>`,
     actions: [{ label: "Meu destino me espera", run: closeModal }],
   });
 }
@@ -792,7 +808,16 @@ function guardian(key) {
     eyebrow: h.role,
     sigil: "",
     content: `<img class="detail-modal-portrait" src="${images[key]}" alt="Modelo 3D de ${h.name}"><p>${h.description}</p><div class="hero-traits">${h.paths.map((p) => `<span>${p.name}</span>`).join("")}</div><p>Convocação: ${h.cost} moedas · Três caminhos de evolução</p>`,
-    actions: [{ label: "Levar este laço à jornada", run: campaign }],
+    actions: [
+      {
+        label: "Ver todas as evoluções",
+        run: () => {
+          closeModal();
+          evolutions.open(key);
+        },
+      },
+      { label: "Levar este laço à jornada", secondary: true, run: campaign },
+    ],
   });
 }
 function pauseMenu() {
@@ -837,6 +862,7 @@ function bindUI() {
   $("battleSettings").onclick = settings;
   $("exit").onclick = confirmExit;
   $("pause").onclick = pauseMenu;
+  $("defenseInfo").onclick = defenseInfo;
   $("cancelPlacement").onclick = cancelPlacement;
   $("speed").onclick = () => {
     state.speed = state.speed === 1 ? 2 : state.speed === 2 ? 3 : 1;
@@ -917,6 +943,7 @@ function bindUI() {
   });
   document.addEventListener("keydown", (e) => {
     audio.unlock();
+    if (evolutions?.isOpen) return;
     if (e.key === "Tab" && modalOpen) {
       const focusables = [
         ...$("modal").querySelectorAll("button:not(.hidden),input,select"),
@@ -951,10 +978,10 @@ function bindUI() {
 }
 function roster() {
   const bg = {
-    emilia: "#dfe9e6",
-    rem: "#d6e3e8",
-    beatrice: "#ede2dd",
-    subaru: "#e8e3d6",
+    emilia: "#2864a5",
+    rem: "#195ea1",
+    beatrice: "#8b358e",
+    subaru: "#b86421",
   };
   $("menuRoster").innerHTML = Object.entries(HEROES)
     .map(
@@ -994,6 +1021,7 @@ function frame(now) {
       view.update(dt, towers, enemies, preview);
     }
     view.render();
+    combatHUD.update(paused() ? 0 : dt, enemies);
     hudClock += dt;
     if (hudClock > 0.12 && state.screen === "battle") {
       renderHUD();
@@ -1042,7 +1070,7 @@ function testingAPI() {
           maxHp: e.maxHp,
           dist: e.dist,
           boss: e.boss,
-          bar: e.bar.scale.x,
+          bar: Math.max(0, e.hp / e.maxHp),
         })),
         save: structuredClone(save),
       }),
@@ -1054,6 +1082,13 @@ function testingAPI() {
         }
         renderHUD(true);
         view.render();
+        combatHUD.update(0, enemies);
+      },
+      get combatHUD() {
+        return combatHUD;
+      },
+      get evolutions() {
+        return evolutions;
       },
       startMap,
       startWave,
@@ -1067,11 +1102,27 @@ function testingAPI() {
       campaign,
       project: (x, z) => view.project(x, z),
       persist,
+      defenseInfo,
     };
 }
 async function init() {
   try {
     view = new GameView($("stage"), save.settings.quality);
+    combatHUD = new CombatHUD($("stage"), view.camera);
+    evolutions = new UpgradeScreen({
+      getGold: () => state.gold,
+      buy: (tower, branch) => {
+        if (!towers.includes(tower) || state.ended) return false;
+        select(tower);
+        return upgrade(branch);
+      },
+      getPortrait: (key, levels) => view.portrait(key, levels),
+      onOpen: () => {
+        closeModal();
+        syncAudio();
+      },
+      onClose: () => syncAudio(),
+    });
     images = view.portraits(Object.keys(HEROES));
     for (let i = 0; i < MAPS.length; i++) {
       view.setWorld(i);

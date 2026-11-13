@@ -1,6 +1,7 @@
-import * as THREE from "../vendor/three.module.js";
-import { createWorld, animateWorld, MAPS } from "./world.js";
-import { createHero, animateHero, animateEnemy } from "./models.js";
+import * as THREE from "../vendor/three.module.js?v=2.1.0";
+import { createWorld, animateWorld, MAPS } from "./world.js?v=2.1.0";
+import { createHero, animateHero, animateEnemy } from "./models.js?v=2.1.0";
+import { CombatEffects } from "./combat-effects.js?v=2.1.0";
 
 export class GameView {
   constructor(container, quality = "auto") {
@@ -15,17 +16,17 @@ export class GameView {
     });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.0;
+    this.renderer.toneMappingExposure = 1.03;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    this.renderer.setClearColor(0xe9eee4, 0);
+    this.renderer.setClearColor(0x122b62, 0);
     this.renderer.domElement.setAttribute(
       "aria-label",
       "Diorama tridimensional de Lugunica",
     );
     container.prepend(this.renderer.domElement);
     this.scene = new THREE.Scene();
-    this.scene.add(new THREE.HemisphereLight(0xe3f5ff, 0x677046, 1.7));
-    this.sun = new THREE.DirectionalLight(0xffeed0, 2.7);
+    this.scene.add(new THREE.HemisphereLight(0xbbe5ff, 0x496932, 1.3));
+    this.sun = new THREE.DirectionalLight(0xffedc9, 2.7);
     this.sun.position.set(-10, 22, 13);
     this.sun.castShadow = true;
     Object.assign(this.sun.shadow.camera, {
@@ -39,7 +40,7 @@ export class GameView {
     this.sun.shadow.normalBias = 0.035;
     this.sun.shadow.bias = -0.00015;
     this.scene.add(this.sun);
-    const fill = new THREE.DirectionalLight(0xc4dfff, 0.8);
+    const fill = new THREE.DirectionalLight(0xb3caff, 0.7);
     fill.position.set(12, 10, -9);
     this.scene.add(fill);
     this.camera = new THREE.OrthographicCamera(-18, 18, 12, -12, 0.1, 150);
@@ -87,12 +88,9 @@ export class GameView {
     this.scene.add(this.marker);
     this.raycaster = new THREE.Raycaster();
     this.plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-    this.effects = [];
-    this.effectGeometry = new THREE.OctahedronGeometry(0.09);
-    this.effectMaterial = new THREE.MeshBasicMaterial({
-      transparent: true,
-      depthWrite: false,
-    });
+    this.visuals = new CombatEffects(this.fx, this.camera);
+    this.portraitCache = new Map();
+    this.menuMotion = 0;
     this.setQuality(quality);
     this.observer = new ResizeObserver(() => this.resize());
     this.observer.observe(container);
@@ -109,6 +107,7 @@ export class GameView {
     );
     this.renderer.shadowMap.enabled = !this.low;
     this.sun.shadow.mapSize.set(this.low ? 512 : 2048, this.low ? 512 : 2048);
+    this.visuals.low = this.low;
     this.resize();
   }
   setWorld(index) {
@@ -215,148 +214,143 @@ export class GameView {
     this.range.children.forEach((m) => m.material.color.setHex(col));
     this.marker.visible = false;
   }
+  get effects() {
+    return this.visuals.effects;
+  }
   clearEffects() {
-    for (const e of this.effects) {
-      this.fx.remove(e.mesh);
-      if (e.ownedGeometry) e.mesh.geometry.dispose();
-      e.mesh.material.dispose();
-    }
-    this.effects = [];
+    this.visuals.clear();
   }
-  burst(x, z, color, count = 12, force = 1) {
-    for (
-      let i = 0;
-      i < count && this.effects.length < (this.low ? 65 : 150);
-      i++
-    ) {
-      const mesh = new THREE.Mesh(
-        this.effectGeometry,
-        this.effectMaterial.clone(),
-      );
-      mesh.material.color.set(color);
-      mesh.position.set(x, 0.6 + Math.random(), z);
-      this.fx.add(mesh);
-      this.effects.push({
-        mesh,
-        life: 0.6 + Math.random() * 0.4,
-        max: 1,
-        vx: (Math.random() - 0.5) * 3 * force,
-        vy: 1 + Math.random() * 3 * force,
-        vz: (Math.random() - 0.5) * 3 * force,
-      });
-    }
+  burst(...args) {
+    this.visuals.burst(...args);
   }
-  shockwave(x, z, color, radius = 2) {
-    const mesh = new THREE.Mesh(
-      new THREE.RingGeometry(0.94, 1, 48),
-      new THREE.MeshBasicMaterial({
-        color,
-        transparent: true,
-        opacity: 0.9,
-        side: THREE.DoubleSide,
-        depthWrite: false,
-      }),
-    );
-    mesh.rotation.x = -Math.PI / 2;
-    mesh.position.set(x, 0.15, z);
-    this.fx.add(mesh);
-    this.effects.push({
-      mesh,
-      life: 0.65,
-      max: 0.65,
-      ring: true,
-      radius,
-      ownedGeometry: true,
-    });
+  shockwave(...args) {
+    this.visuals.shockwave(...args);
   }
-  projectile(tower, target) {
-    const color = tower.def.color,
-      key = tower.key;
-    let geometry;
-    if (key === "emilia") geometry = new THREE.OctahedronGeometry(0.19);
-    else if (key === "subaru")
-      geometry = new THREE.BoxGeometry(0.06, 0.08, 0.42);
-    else if (key === "rem") geometry = new THREE.IcosahedronGeometry(0.22);
-    else geometry = new THREE.TorusGeometry(0.15, 0.05, 5, 10);
-    const mesh = new THREE.Mesh(
-      geometry,
-      new THREE.MeshStandardMaterial({
-        color,
-        emissive: color,
-        emissiveIntensity: 1.4,
-        roughness: 0.3,
-      }),
-    );
-    mesh.position.set(tower.x, 1.45, tower.z);
-    this.fx.add(mesh);
-    return mesh;
+  projectile(...args) {
+    return this.visuals.projectile(...args);
   }
   removeProjectile(mesh) {
-    this.fx.remove(mesh);
-    mesh.geometry.dispose();
-    mesh.material.dispose();
+    this.visuals.removeProjectile(mesh);
+  }
+  attackCue(tower, enemy) {
+    this.visuals.attack(tower, enemy);
+  }
+  impact(enemy, color) {
+    this.visuals.impact(enemy, color);
+  }
+  blizzard(towers) {
+    this.visuals.blizzard(towers);
   }
   update(dt, towers = [], enemies = [], preview = []) {
     this.time += dt;
     if (this.world) animateWorld(this.world, this.time);
-    for (const t of [...towers, ...preview])
-      animateHero(t.group, this.time, t.attack || 0);
+    for (const t of [...towers, ...preview]) {
+      t.attack = Math.max(0, (t.attack || 0) - dt / 0.42);
+      animateHero(t.group, this.time, t.attack);
+    }
     for (const e of enemies)
       if (!e.dead) animateEnemy(e.group, this.time, true);
-    for (let i = this.effects.length - 1; i >= 0; i--) {
-      const e = this.effects[i];
-      e.life -= dt;
-      if (e.life <= 0) {
-        this.fx.remove(e.mesh);
-        if (e.ownedGeometry) e.mesh.geometry.dispose();
-        e.mesh.material.dispose();
-        this.effects.splice(i, 1);
-        continue;
-      }
-      e.mesh.material.opacity = Math.min(1, e.life * 1.5);
-      if (e.ring) {
-        const s = e.radius * (1 - e.life / e.max) + 0.2;
-        e.mesh.scale.setScalar(s);
-      } else {
-        e.mesh.position.x += e.vx * dt;
-        e.mesh.position.y += e.vy * dt;
-        e.mesh.position.z += e.vz * dt;
-        e.vy -= 4 * dt;
-        e.mesh.rotation.x += dt * 2;
-        e.mesh.rotation.z += dt;
+    this.visuals.update(dt);
+    if (this.portal) {
+      this.portal.visible = this.screen === "menu";
+      if (this.portal.visible) {
+        this.portal.position.y = 3.1 + Math.sin(this.time * 0.9) * 0.14;
+        this.portal.children.forEach((child, i) => {
+          if (child.userData.orbit)
+            child.rotation.z = this.time * (i % 2 ? -0.13 : 0.18);
+        });
       }
     }
+    if (this.screen === "menu" && preview.length) {
+      this.menuMotion += dt;
+      if (this.menuMotion > 2.8) {
+        this.menuMotion = 0;
+        const t = preview[Math.floor(this.time / 2.8) % preview.length];
+        t.attack = 1;
+        this.burst(t.group.position.x, t.group.position.z, 0x6eefff, 6, 0.7);
+      }
+    }
+  }
+  showcase() {
+    if (this.portal) return;
+    this.portal = new THREE.Group();
+    this.portal.position.set(0.8, 3.1, -2.8);
+    this.portal.rotation.y = 0.35;
+    for (let i = 0; i < 3; i++) {
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(
+          2.4 + i * 0.15,
+          i === 1 ? 0.055 : 0.025,
+          6,
+          100,
+        ),
+        new THREE.MeshBasicMaterial({
+          color: i === 1 ? 0xc47aff : 0x65e9ff,
+          transparent: true,
+          opacity: 0.7,
+          toneMapped: false,
+          depthWrite: false,
+        }),
+      );
+      ring.userData.orbit = true;
+      for (let j = 0; j < 12; j++) {
+        const rune = new THREE.Mesh(
+          new THREE.OctahedronGeometry(0.075),
+          new THREE.MeshBasicMaterial({
+            color: i === 1 ? 0xf8d768 : 0xb8faff,
+            toneMapped: false,
+          }),
+        );
+        const a = (j * Math.PI) / 6;
+        rune.position.set(
+          Math.cos(a) * (2.4 + i * 0.15),
+          Math.sin(a) * (2.4 + i * 0.15),
+          0,
+        );
+        ring.add(rune);
+      }
+      this.portal.add(ring);
+    }
+    const glow = this.visuals.sprite(0x4268ff, 7, 0.65);
+    this.portal.add(glow);
+    this.scene.add(this.portal);
   }
   render() {
     this.renderer.render(this.scene, this.camera);
   }
-  portraits(keys) {
+  portrait(key, levels = [0, 0, 0]) {
+    const cacheKey = key + ":" + levels.join(",");
+    if (!this.portraitCache.has(cacheKey)) this.portraits([key], levels);
+    return this.portraitCache.get(cacheKey);
+  }
+  portraits(keys, levels = [0, 0, 0]) {
     const width = this.renderer.domElement.width,
       height = this.renderer.domElement.height,
       pixel = this.renderer.getPixelRatio();
     this.renderer.setPixelRatio(1);
     this.renderer.setSize(300, 300, false);
     const s = new THREE.Scene();
-    s.add(new THREE.HemisphereLight(0xeef6ff, 0x8d8170, 1.7));
-    const light = new THREE.DirectionalLight(0xffeed7, 2.7);
+    s.add(new THREE.HemisphereLight(0xcceaff, 0x50476d, 1.4));
+    const light = new THREE.DirectionalLight(0xfff2df, 2.6);
     light.position.set(-3, 7, 5);
     s.add(light);
     const camera = new THREE.OrthographicCamera(
       -1.12,
       1.12,
-      1.25,
-      -1.25,
+      1.4,
+      -1.4,
       0.1,
       30,
     );
     camera.position.set(2.3, 2.8, 8);
-    camera.lookAt(0, 1.05, 0);
+    camera.lookAt(0, 1.2, 0);
     const images = {};
     for (const key of keys) {
-      const g = createHero(key);
+      const g = createHero(key, levels);
       s.add(g);
       this.renderer.render(s, camera);
       images[key] = this.renderer.domElement.toDataURL("image/png");
+      this.portraitCache.set(key + ":" + levels.join(","), images[key]);
       s.remove(g);
     }
     this.renderer.setPixelRatio(pixel);
