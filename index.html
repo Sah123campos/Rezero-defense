@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#0b0a1f">
+<meta name="theme-color" content="#0b0a1f">\n<meta name="description" content="Re:Zero Defense — tower defense de fã com personagens originais, mundos fantásticos e evolução estratégica.">
 <title>Re:Zero Defense</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23c79bff'/%3E%3Cstop offset='1' stop-color='%238fd4ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%230b0a1f'/%3E%3Cpath d='M32 7 L53 16 V34 C53 46 43 55 32 59 C21 55 11 46 11 34 V16 Z' fill='url(%23g)'/%3E%3Cpath d='M32 19 l3.2 8.4 h8.8 l-6.6 6 2.2 9.2 -7.6-5.4 -7.6 5.4 2.2-9.2 -6.6-6 h8.8 z' fill='%230b0a1f'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -250,6 +250,82 @@
     padding:.32em .7em;box-shadow:0 4px 0 #b98a1f,inset 0 2px 0 rgba(255,255,255,.6)}
   .menuCrystalsLine svg{width:18px;height:18px;fill:#2f80e4;stroke:none}
   @media (max-width:560px){ #scMenu{justify-content:center;padding:0 14px} }
+
+/* RE:ZERO DEFENSE — polish pass (responsive, readable, tactile) */
+:root{--panel-glass:rgba(19,15,43,.92);--gold2:#fff0a8}
+button,.btn,.mbtn,.hbtn,.tower,.ptile{touch-action:manipulation}
+button:focus-visible,.card:focus-visible{outline:3px solid #fff0a8;outline-offset:3px}
+.screen{overflow:auto;overscroll-behavior:contain}
+#scMenu .menuPanel{width:min(440px,92vw);border-color:rgba(255,225,125,.78);box-shadow:0 26px 70px #0009,inset 0 2px 0 #ffffff25,0 0 35px #a88cff20}
+#scMenu .logo{font-size:clamp(42px,8.5vmin,86px);letter-spacing:-1px}
+.mbtn{min-height:54px}
+.card{border-color:#ffffff20;transition:transform .16s ease,border-color .16s ease,filter .16s ease}
+.card:hover{transform:translateY(-3px);border-color:#c79bff80;filter:brightness(1.06)}
+.card .thumb{overflow:hidden;background:linear-gradient(135deg,#211a45,#101025)}
+.card .meta{padding:14px}
+.card h3{letter-spacing:.15px}
+#shop{backdrop-filter:blur(10px);border-color:#ffffff20;gap:8px;padding:9px}
+.tower{min-height:94px;border-color:#ffffff20;box-shadow:inset 0 1px #ffffff12,0 3px 8px #0002}
+.tower .nm{font-size:clamp(10px,1.15vw,12px)}
+.tower .cost{font-size:12px}
+#inspect{backdrop-filter:blur(14px);background:linear-gradient(90deg,#0c0a20e8,#0c0a20fa 18%);border-left:1px solid #ffffff17;padding:18px 16px 16px}
+.ptile{min-height:74px;justify-content:center;cursor:default}
+.ptile.next{cursor:pointer}
+.ptile .ic{font-size:21px}
+.ptile .pname{font-size:clamp(8px,.75vw,10px)}
+.ptile .pc{font-size:11px}
+.hud{gap:8px;padding:12px 14px;flex-wrap:wrap}
+.stat,.hbtn{backdrop-filter:blur(8px);box-shadow:0 4px 12px #0002}
+.hbtn{min-height:38px}
+#modal .box{border-color:#ffffff24;background:linear-gradient(160deg,#292052,#15112e)}
+#rotate{display:none!important}
+@media(max-width:900px){
+  .hud{padding:8px;gap:5px}.stat{padding:6px 9px;font-size:12px}.hbtn{padding:6px 9px;font-size:12px}
+  #shop{width:clamp(150px,26vw,190px);gap:5px;padding:6px}
+  .tower{min-height:83px;padding:4px}
+  #inspect{width:min(390px,52vw)!important;padding:12px}
+  .ptile{min-height:66px}
+}
+@media(max-width:600px){
+  #scMenu{justify-content:center;padding:12px}
+  #scMenu .menuPanel{padding:20px 18px;border-width:2px;border-radius:22px}
+  #scMenu .logo{font-size:clamp(40px,12vw,62px)}
+  #scMenu .sub{font-size:13px;line-height:1.45}
+  .menuNav{gap:9px;margin-top:14px}.mbtn{min-height:48px;padding:.48em .8em}
+  .hud{left:0;right:0;justify-content:center;background:linear-gradient(#080618eF,#08061899);padding:7px 6px}
+  .hud .spacer{display:none}
+  .stat{font-size:11px;padding:5px 7px;border-radius:9px}
+  .hbtn{font-size:11px;padding:6px 8px;border-radius:9px;min-height:32px}
+  #shop{top:auto;bottom:0;left:0;right:0;transform:none;width:100%;max-height:31%;height:auto;
+    grid-template-columns:repeat(5,minmax(0,1fr));border-radius:16px 16px 0 0;border:1px solid #ffffff20;
+    border-bottom:0;background:#100d27f5;box-shadow:0 -7px 25px #0005;overflow-x:auto;overflow-y:hidden}
+  .tower{min-width:0;min-height:78px;border-radius:10px}
+  .tower canvas{max-width:42px}
+  .tower .nm{font-size:9px}.tower .cost{font-size:10px}
+  .airbadge{font-size:7px}
+  #inspect{top:auto;bottom:30%;left:0;right:0;width:100%!important;max-height:48%;padding:10px 12px;
+    transform:none;border-radius:16px 16px 0 0;border:1px solid #ffffff20;background:#100d27f7;
+    box-shadow:0 -8px 25px #0005;gap:6px}
+  #inspect.on{animation:inspectUp .18s ease}
+  @keyframes inspectUp{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+  #ipCanvas{width:58px;height:58px}
+  .ipHead{gap:8px}.ipInfo h3{font-size:15px}.ipInfo .cls{font-size:10px}.ipStats{font-size:10px}
+  .uptree{gap:4px}.pcol{gap:3px}.phead{font-size:8px;padding:3px 1px}
+  .ptile{min-height:54px;padding:3px 1px}.ptile .ic{font-size:16px}.ptile .pname{font-size:7px;height:2em}.ptile .pc{font-size:9px}
+  .sellrow .btn{font-size:11px;padding:6px 8px;margin:0}
+  .scrolly{max-height:72vh;padding:10px}
+  .maps{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .card .thumb{height:85px}.card .meta{padding:9px}.card h3{font-size:13px}.card p{font-size:10px}
+  .grid{gap:10px}
+}
+@media(max-width:380px){
+  .hud{gap:4px}.stat{padding:4px 5px;font-size:10px}.hbtn{padding:5px 6px;font-size:10px}
+  #shop{grid-template-columns:repeat(4,minmax(0,1fr));max-height:33%}
+  #inspect{bottom:33%;max-height:45%}
+  .ptile{min-height:48px}.ptile .pname{font-size:6.5px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
 </style>
 </head>
 <body>
@@ -265,8 +341,8 @@
         <div class="stat">🌊 <b id="hudWave">0</b>/<span id="hudWaveMax">20</span></div>
         <div class="spacer"></div>
         <div class="hbtn" id="btnSpeed">▶ 1x</div>
-        <div class="hbtn" id="btnPause">⏸</div>
-        <div class="hbtn go" id="btnGo">Iniciar onda ▶</div>
+        <div class="hbtn" id="btnPause" aria-label="Pausar ou continuar">⏸</div>
+        <div class="hbtn go" id="btnGo" aria-label="Iniciar próxima onda">Iniciar onda ▶</div>
       </div>
       <div id="shop"></div>
       <div id="inspect"></div>
