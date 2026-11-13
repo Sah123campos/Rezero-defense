@@ -141,14 +141,16 @@ function createHead(parent, key) {
   const fp = faceGeo.attributes.position;
   for (let i = 0; i < fp.count; i++) { const x = fp.getX(i), y = fp.getY(i); fp.setZ(i, .37 - x * x * .76 - y * y * .4); }
   faceGeo.computeVertexNormals(); add(head, new THREE.Mesh(faceGeo, faceMaterial(key)), 0, -.03, 0);
-  const scalp = mesh(new THREE.SphereGeometry(.46, 28, 16, 0, PI * 2, 0, PI * .57), p.hair);
+  // Stop the cap above the brows. A hemispherical cap extended below eye height
+  // previously hid the face patch behind an opaque band in the front view.
+  const scalp = mesh(new THREE.SphereGeometry(.46, 28, 16, 0, PI * 2, 0, PI * .43), p.hair);
   scalp.scale.set(1, .92, .92); add(head, scalp, 0, .035, -.015);
   // Sculpted, overlapping fringe pieces form the silhouette and frame the face.
   const fringe = group(head, 'fringe', 0, .32, .255);
   const fringeCount = key === 'subaru' ? 7 : 5;
   for (let i = 0; i < fringeCount; i++) {
     const u = (i - (fringeCount - 1) / 2);
-    const length = key === 'rem' ? .29 + (u > 0 ? .22 : .04) : key === 'subaru' ? .2 + (i % 3) * .055 : .27 + (i % 2) * .08;
+    const length = key === 'rem' ? .2 + (u > 0 ? .22 : .015) : key === 'subaru' ? .2 + (i % 3) * .055 : .18 + (i % 2) * .025;
     const lock = hairLock(key === 'subaru' ? .17 : .2, length, i % 3 === 0 ? p.shadow : p.hair, key === 'rem' ? -.05 : u * -.018);
     lock.rotation.z = key === 'subaru' ? -u * .23 : -u * .08;
     add(fringe, lock, u * (key === 'subaru' ? .1 : .145), -.025 * Math.abs(u), .065 - Math.abs(u) * .025);
@@ -195,7 +197,7 @@ function createHead(parent, key) {
   } else {
     const spikes = group(head, 'hair-back', 0, .34, -.08);
     for (let i = -3; i <= 3; i++) {
-      const lock = hairLock(.2, .28 + (3 - Math.abs(i)) * .035, p.hair, -i * .035, .15);
+      const lock = hairLock(.2, .18 + (3 - Math.abs(i)) * .022, p.hair, -i * .035, .15);
       lock.rotation.z = PI + i * .29; add(spikes, lock, i * .105, 0, -.07);
     }
     for (const s of [-1, 1]) add(head, hairLock(.16, .2, p.hair, s * .03), s * .4, .05, -.04);
