@@ -294,7 +294,11 @@ function refreshShop(){
 function sellSelected(){
  const t=state.selected;if(!t)return;state.gold+=Math.round(t.paid*.7);actorsGroup.remove(t.group);towers=towers.filter(a=>a!==t);selected(null);updateHUD();refreshShop();sound(310,.15)
 }
+let previousHUD='';
 function updateHUD(){
+ const signature=[state.lives,state.gold,state.wave,state.started,state.gameOver].join('|');
+ if(signature===previousHUD)return;
+ previousHUD=signature;
  $('hp').textContent=Math.max(0,state.lives);$('coins').textContent=state.gold;$('waveNo').textContent=state.wave+'/'+WAVES;
  $('startWave').disabled=state.started||state.gameOver;
  $('startWave').textContent=state.started?'ONDA EM CURSO':state.wave>=WAVES?'CONCLUÍDO':'▶ INICIAR ONDA '+(state.wave+1);
@@ -314,6 +318,7 @@ function levelScreen(){
  })
 }
 function resetGame(){
+ previousHUD='';
  state.started=false;state.spawning=0;state.wave=0;state.gold=500;state.lives=25;state.speed=1;state.abilityCd=0;state.gameOver=false;state.placing=null;state.mode='battle';$('speed').textContent='⏩ 1×';$('magic').textContent='❄ NEVASCA';$('magic').disabled=true;clock.getDelta();clearWorld()
 }
 function startMap(index){
@@ -357,7 +362,7 @@ function damage(e,value,t){
  if(e.hp<=0)killEnemy(e)
 }
 function finishWave(){
- state.started=false;$('magic').disabled=true;
+ state.started=false;state.spawnTime=0;$('magic').disabled=true;
  let bonus=85+state.wave*23;state.gold+=bonus;
  save.best[state.map]=Math.max(save.best[state.map]||0,state.wave);persist();
  if(state.wave>=WAVES){
@@ -448,7 +453,7 @@ function update(dt){
 }
 function animate(){
  requestAnimationFrame(animate);let dt=Math.min(clock.getDelta(),.045);
- if(state.mode==='battle')update(dt);
+ if(state.mode==='battle')update(dt*state.speed);
  if(renderer&&state.mode==='battle')renderer.render(scene,camera)
 }
 function bindUI(){
