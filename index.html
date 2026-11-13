@@ -1,67 +1,332 @@
 <!doctype html>
 <html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#151426">
-<meta name="description" content="Re:Zero Astral Defense, tower defense 3D de fantasia com três capítulos, 15 ondas, chefes e evoluções.">
-<title>Re:Zero • Astral Defense 3D</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23151426'/%3E%3Ctext x='50' y='74' font-size='73' text-anchor='middle'%3E%E2%9D%84%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="./astral3d.css?v=3">
-</head>
-<body>
-<main id="menu" class="page">
- <header class="topbar"><div class="brand">RE:ZERO <b>✦ ASTRAL DEFENSE</b></div><button class="pill" id="musicToggle">♫ Música: OFF</button></header>
- <section class="hero">
- <div>
- <div class="tiny">UMA NOVA JORNADA • TOWER DEFENSE 3D</div>
- <h1>DESAFIE<br><span>O DESTINO.</span></h1>
- <p>Convide Emilia, Rem, Beatrice e Subaru para defender Lugunica contra hordas de sombras. Explore três mundos em 3D, descubra poderes mágicos e crie a estratégia perfeita.</p>
- <div class="buttons"><button class="button" id="play">✦ COMEÇAR A JORNADA</button><button class="button alt" id="how">COMO JOGAR</button></div>
- <p class="tiny" style="margin-top:26px;color:#b9aadd">3 CAPÍTULOS ✦ 15 ONDAS POR MAPA ✦ CHEFES ✦ EVOLUÇÕES</p>
- </div>
- <div class="heroArt" aria-hidden="true"><div class="artSilhouette"></div><div class="artOverlay"><strong>THE ASTRAL PROPHECY</strong><span>Uma nova história começa.</span></div></div>
- </section>
- <section class="section">
- <div class="tiny">CONHEÇA O ESQUADRÃO</div><h2>Os quatro guardiões</h2>
- <div class="roster">
- <div class="rosterCard"><div class="avatar" style="--unit:#b4e8ff">❄</div><div><strong>Emilia</strong><span>Controle e congelamento</span></div></div>
- <div class="rosterCard"><div class="avatar" style="--unit:#609de6">✦</div><div><strong>Rem</strong><span>Dano em área</span></div></div>
- <div class="rosterCard"><div class="avatar" style="--unit:#ba8ce2">✧</div><div><strong>Beatrice</strong><span>Apoio mágico</span></div></div>
- <div class="rosterCard"><div class="avatar" style="--unit:#f0a783">⚔</div><div><strong>Subaru</strong><span>Ataques rápidos</span></div></div>
- </div></section>
- <p class="footer">Projeto de fã não oficial. Re:Zero e seus personagens pertencem aos respectivos criadores. A arte tridimensional e a música deste protótipo são produzidas por código.</p>
-</main>
-<section class="page hidden" id="campaign" aria-label="Seleção de capítulos">
- <header class="topbar"><button class="button alt small" id="campaignBack">← VOLTAR</button><div class="brand">ASTRAL <b>✦ CAMPANHA</b></div><span class="pill">3 MUNDOS</span></header>
- <div class="section" style="padding-top:46px"><div class="tiny">ESCOLHA SEU CAMINHO</div><h2>Capítulos da profecia</h2><p style="color:#b7b2ce">Complete 15 ondas de um capítulo para abrir o próximo.</p><div class="cardGrid" id="campaignGrid"></div></div>
-</section>
-<section id="battle" class="hidden" aria-label="Campo de batalha">
- <header class="battleTop">
-  <button class="button flat small" id="exit" aria-label="Sair da batalha">✕</button>
-  <div class="battleTitle" id="battleName">FLORESTA DE LUGUNICA</div>
-  <div class="stats"><div class="stat">♥ <span id="hp">25</span></div><div class="stat">◈ <span id="coins">500</span></div><div class="stat">ONDA <span id="waveNo">0/15</span></div></div>
- </header>
- <div class="battleMain">
-  <div id="viewport" class="viewport">
-   <div class="hudHint" id="hint">Selecione um guardião na loja e toque no campo de batalha para posicioná-lo.</div>
-   <div class="fullOverlay" id="battleDialog">
-    <div class="dialog"><div class="tiny">A PROFECIA AGUARDA</div><h2 id="dialogTitle">PREPARE SEU EXÉRCITO</h2><p id="dialogDesc">Comece sua jornada.</p><div class="buttons"><button class="button" id="dialogMain">COMEÇAR</button><button class="button alt" id="dialogSecond">VOLTAR</button></div></div>
-   </div>
-  </div>
-  <aside class="shop">
-   <h3>✦ GUARDIÕES</h3><div class="shopSub">Escolha uma unidade e posicione no terreno</div>
-   <div class="shopUnits">
-    <button class="shopItem" data-hero="emilia"><span class="avatar" style="--unit:#b4e8ff">❄</span><strong>Emilia</strong><small>◈ 165</small></button>
-    <button class="shopItem" data-hero="rem"><span class="avatar" style="--unit:#609de6">✦</span><strong>Rem</strong><small>◈ 220</small></button>
-    <button class="shopItem" data-hero="beatrice"><span class="avatar" style="--unit:#ba8ce2">✧</span><strong>Beatrice</strong><small>◈ 245</small></button>
-    <button class="shopItem" data-hero="subaru"><span class="avatar" style="--unit:#f0a783">⚔</span><strong>Subaru</strong><small>◈ 115</small></button>
-   </div>
-   <div class="details" id="details"><h4 id="detailsTitle">Selecione um guardião</h4><p id="detailsText">Veja as evoluções e habilidades ao selecionar uma unidade.</p><div class="upgradeRows" id="upgradeRows"></div><button id="sellButton" class="sellBtn hidden">Vender guardião</button></div>
-  </aside>
- </div>
- <footer class="battleBottom"><button class="action magic" id="magic" disabled>❄ NEVASCA</button><button class="action alt" id="speed">⏩ 1×</button><button class="action major" id="startWave">▶ INICIAR ONDA 1</button></footer>
-</section>
-<div id="toast" class="toast hidden" role="status"></div>
-<script type="module" src="./astral3d.js?v=3"></script>
-</body></html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#edf0e5" />
+    <meta
+      name="description"
+      content="Defenda Lugunica com Emilia, Rem, Beatrice e Subaru. Um tower defense 3D de fantasia, estratégia e novos destinos."
+    />
+    <title>Re:Zero — Astral Defense</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232c5146'/%3E%3Cpath d='M32 9v46M12 20l40 24M12 44l40-24M24 13l8 8 8-8M24 51l8-8 8 8' stroke='%23f4e4b8' fill='none' stroke-width='3'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./astral3d.css" />
+  </head>
+  <body data-screen="menu">
+    <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <symbol id="i-star" viewBox="0 0 24 24">
+          <path d="m12 2 2.8 7.2L22 12l-7.2 2.8L12 22l-2.8-7.2L2 12l7.2-2.8Z" />
+        </symbol>
+        <symbol id="i-snow" viewBox="0 0 24 24">
+          <path
+            d="M12 2v20M3.3 7l17.4 10M3.3 17 20.7 7M8 4l4 4 4-4M8 20l4-4 4 4M3 11l5-1-1-5M17 19l-1-5 5-1M3 13l5 1-1 5M17 5l-1 5 5 1"
+          />
+        </symbol>
+        <symbol id="i-arrow" viewBox="0 0 24 24">
+          <path d="M4 12h15m-6-6 6 6-6 6" />
+        </symbol>
+        <symbol id="i-play" viewBox="0 0 24 24">
+          <path d="m8 5 11 7-11 7Z" />
+        </symbol>
+        <symbol id="i-heart" viewBox="0 0 24 24">
+          <path
+            d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0l-1 1-1-1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"
+          />
+        </symbol>
+        <symbol id="i-coin" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" />
+          <path d="m12 7 4 5-4 5-4-5Z" />
+        </symbol>
+        <symbol id="i-settings" viewBox="0 0 24 24">
+          <path
+            d="m9 3-.8 3-3 .8-2.1 3.7 2.1 2.2-.8 3L7 19l3-.8 2.2 2.1 3.7-2.1.8-3 3-.8V10l-3-.8-.8-3-3.7-2.1L10 6.2Z"
+          />
+          <circle cx="12" cy="12" r="3" />
+        </symbol>
+        <symbol id="i-pause" viewBox="0 0 24 24">
+          <path d="M8 5v14M16 5v14" />
+        </symbol>
+        <symbol id="i-close" viewBox="0 0 24 24">
+          <path d="m6 6 12 12M6 18 18 6" />
+        </symbol>
+        <symbol id="i-shield" viewBox="0 0 24 24">
+          <path d="m12 2 8 3v7c0 5-8 10-8 10S4 17 4 12V5Z" />
+          <path d="m8 12 3 3 5-6" />
+        </symbol>
+        <symbol id="i-lock" viewBox="0 0 24 24">
+          <rect x="5" y="10" width="14" height="11" rx="2" />
+          <path d="M8 10V6a4 4 0 0 1 8 0v4m-4 5v2" />
+        </symbol>
+        <symbol id="i-volume" viewBox="0 0 24 24">
+          <path
+            d="m11 4-6 5H2v6h3l6 5Zm5 4a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"
+          />
+        </symbol>
+        <symbol id="i-leaf" viewBox="0 0 24 24">
+          <path d="M20 3C4 2 1 10 6 16s15 0 14-13ZM4 21 16 8" />
+        </symbol>
+      </defs>
+    </svg>
+    <div id="stage" aria-label="Cenário 3D interativo">
+      <div id="loading">
+        <span class="loading-sigil">✧</span
+        ><strong>Um novo destino está tomando forma.</strong
+        ><small>Preparando Lugunica…</small>
+      </div>
+    </div>
+    <header class="main-header" id="mainHeader">
+      <a
+        href="#"
+        class="brand"
+        id="brandHome"
+        aria-label="Re:Zero Astral Defense, início"
+        ><span class="brand-mark"
+          ><svg><use href="#i-snow" /></svg></span
+        ><span class="brand-word">Re:ZERO<small>ASTRAL DEFENSE</small></span></a
+      >
+      <nav aria-label="Menu principal">
+        <button id="navCampaign">Campanha</button
+        ><button id="navGuardians">Guardiões</button
+        ><button id="how">Como jogar <span>?</span></button>
+      </nav>
+      <div class="header-end">
+        <span class="edition">A JORNADA COMEÇA AQUI</span
+        ><button class="icon-button" id="settings" aria-label="Configurações">
+          <svg><use href="#i-settings" /></svg>
+        </button>
+      </div>
+    </header>
+    <main id="menu" class="menu-screen">
+      <section class="hero-copy">
+        <div class="eyebrow"><span></span> UM NOVO DESTINO, A CADA DEFESA</div>
+        <h1>
+          Proteja o que<br />torna este mundo<br /><em>extraordinário.</em>
+        </h1>
+        <p>
+          Reúna seus guardiões. Domine a magia.<br />Escreva um novo destino
+          para Lugunica.
+        </p>
+        <button class="primary-button" id="play">
+          <svg><use href="#i-play" /></svg>Começar a jornada<svg
+            class="button-arrow"
+          >
+            <use href="#i-arrow" />
+          </svg>
+        </button>
+        <div class="hero-footnote">
+          <svg><use href="#i-shield" /></svg> Sua estratégia. Seus guardiões.
+          Sua história.
+        </div>
+      </section>
+      <div class="scene-caption">
+        <span class="live-dot"></span> FLORESTA DE LUGUNICA
+        <span class="caption-separator">/</span> CAPÍTULO I
+      </div>
+      <div class="scene-note">
+        <svg><use href="#i-leaf" /></svg>
+        <div>
+          Um mundo para proteger.<small>Uma nova chance para recomeçar.</small>
+        </div>
+      </div>
+      <section class="roster-section" id="rosterSection">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">LAÇOS QUE MUDAM O DESTINO</span>
+            <h2>Conheça seus guardiões</h2>
+          </div>
+          <span class="section-aside"
+            >Quatro aliados. Infinitas estratégias.
+            <svg><use href="#i-star" /></svg
+          ></span>
+        </div>
+        <div id="menuRoster" class="menu-roster"></div>
+      </section>
+      <footer class="menu-footer">
+        <span>UM PROJETO DE FÃ • UMA AVENTURA ORIGINAL</span
+        ><span
+          >3 capítulos <i>✧</i> 15 ondas por capítulo <i>✧</i> Evoluções
+          estratégicas</span
+        ><span>FEITO PARA JOGAR. FEITO PARA RECOMEÇAR.</span>
+      </footer>
+    </main>
+    <section
+      id="campaign"
+      class="campaign-screen hidden"
+      aria-label="Seleção de mapas"
+    >
+      <div class="campaign-heading">
+        <button class="text-button" id="campaignBack">
+          ← Voltar ao início
+        </button>
+        <div class="eyebrow">CADA CAMINHO GUARDA UMA HISTÓRIA</div>
+        <h1>Os capítulos de Lugunica</h1>
+        <p>Vença as 15 ondas para revelar o próximo destino.</p>
+      </div>
+      <div id="campaignGrid" class="campaign-grid"></div>
+      <p class="campaign-save">
+        <svg><use href="#i-shield" /></svg> Sua jornada é salva automaticamente
+        neste navegador.
+      </p>
+    </section>
+    <section
+      id="battle"
+      class="battle-screen hidden"
+      aria-label="Campo de batalha"
+    >
+      <header class="battle-header">
+        <button id="exit" class="icon-button" aria-label="Sair da batalha">
+          ←
+        </button>
+        <div class="battle-location">
+          <small id="battleChapter">CAPÍTULO I</small
+          ><strong id="battleName">Floresta de Lugunica</strong>
+        </div>
+        <div class="battle-stats">
+          <div class="stat health">
+            <svg><use href="#i-heart" /></svg><span id="hp">25</span
+            ><small>VIDAS</small>
+          </div>
+          <div class="stat gold">
+            <svg><use href="#i-coin" /></svg><span id="coins">500</span
+            ><small>MOEDAS</small>
+          </div>
+          <div class="stat">
+            <svg><use href="#i-shield" /></svg
+            ><span id="waveNo">0<small> / 15</small></span
+            ><small>ONDA</small>
+          </div>
+        </div>
+        <button
+          class="icon-button"
+          id="battleSettings"
+          aria-label="Configurações"
+        >
+          <svg><use href="#i-settings" /></svg>
+        </button>
+      </header>
+      <div class="view-controls" aria-label="Controles da câmera">
+        <button id="zoomIn" aria-label="Aproximar mapa" title="Aproximar mapa">
+          +</button
+        ><button id="zoomOut" aria-label="Afastar mapa" title="Afastar mapa">
+          −</button
+        ><button
+          id="resetView"
+          aria-label="Centralizar mapa"
+          title="Centralizar mapa"
+        >
+          ⌖</button
+        ><span>Arraste para explorar ao aproximar</span>
+      </div>
+      <div class="map-status">
+        <span class="live-dot"></span
+        ><span id="waveStatus">Prepare sua defesa</span
+        ><span id="enemiesLeft"></span>
+      </div>
+      <div class="placement-hint hidden" id="placementHint">
+        <svg><use href="#i-star" /></svg
+        ><span id="hint">Escolha um terreno livre.</span
+        ><button id="cancelPlacement" aria-label="Cancelar posicionamento">
+          ×
+        </button>
+      </div>
+      <div id="bossBar" class="boss-bar hidden">
+        <div>
+          <strong>Guardião das sombras</strong><span id="bossHp"></span>
+        </div>
+        <div class="boss-track"><span id="bossFill"></span></div>
+      </div>
+      <aside class="shop" id="shop">
+        <div class="shop-heading">
+          <div>
+            <span class="eyebrow">SEU ESQUADRÃO</span>
+            <h2>Guardiões</h2>
+          </div>
+          <span class="small-sigil">✧</span>
+        </div>
+        <p class="shop-sub">Escolha um aliado e toque no terreno.</p>
+        <div id="shopUnits" class="shop-units"></div>
+        <div class="details" id="details">
+          <div class="empty-details">
+            <svg><use href="#i-shield" /></svg
+            ><strong>Juntos, somos mais fortes.</strong>
+            <p>Selecione um guardião no mapa para descobrir suas evoluções.</p>
+          </div>
+        </div>
+        <div class="shop-tip">
+          <span>✧</span>
+          <p>
+            Emilia controla. Rem causa impacto.<br />Beatrice fortalece. Subaru
+            acelera.
+          </p>
+        </div>
+      </aside>
+      <footer class="battle-bottom">
+        <div class="battle-bottom-left">
+          <button class="icon-button" id="pause" aria-label="Pausar">
+            <svg><use href="#i-pause" /></svg></button
+          ><button
+            class="speed-button"
+            id="speed"
+            aria-label="Alterar velocidade"
+          >
+            1<span>×</span>
+          </button>
+          <div class="round-tip" id="roundTip">
+            Uma boa defesa começa com bons laços.
+          </div>
+        </div>
+        <div class="battle-actions">
+          <button class="ability-button" id="magic" disabled>
+            <svg><use href="#i-snow" /></svg
+            ><span>Nevasca<small id="abilityState">Convoque Emilia</small></span
+            ><kbd>E</kbd></button
+          ><button class="primary-button next-wave" id="startWave">
+            <svg><use href="#i-play" /></svg><span>Iniciar onda 1</span>
+          </button>
+        </div>
+      </footer>
+    </section>
+    <div
+      class="modal-backdrop hidden"
+      id="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modalTitle"
+    >
+      <div class="modal-card">
+        <button
+          id="modalClose"
+          class="modal-close icon-button"
+          aria-label="Fechar"
+        >
+          <svg><use href="#i-close" /></svg>
+        </button>
+        <div class="modal-sigil" id="modalSigil">✧</div>
+        <div class="eyebrow" id="modalEyebrow">O DESTINO ESTÁ EM SUAS MÃOS</div>
+        <h2 id="modalTitle"></h2>
+        <div id="modalContent"></div>
+        <div id="modalActions" class="modal-actions"></div>
+      </div>
+    </div>
+    <div id="toast" class="toast hidden" role="status"></div>
+    <div id="fatal" class="fatal hidden" role="alert">
+      <span>✧</span>
+      <h1>O portal precisa de uma nova chance.</h1>
+      <p id="fatalMessage">
+        Não foi possível iniciar a renderização 3D. Atualize o navegador e
+        habilite a aceleração gráfica.
+      </p>
+      <button onclick="location.reload()" class="primary-button">
+        Tentar novamente
+      </button>
+    </div>
+    <script type="module" src="./astral3d.js"></script>
+  </body>
+</html>
